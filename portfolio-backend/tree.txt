@@ -1,0 +1,89 @@
+./
+├── .gitattributes
+├── .gitignore
+├── .idea/
+│   ├── .gitignore
+│   ├── compiler.xml
+│   ├── encodings.xml
+│   ├── jarRepositories.xml
+│   ├── misc.xml
+│   └── workspace.xml
+├── .mvn/
+│   └── wrapper/
+│       └── maven-wrapper.properties
+├── HELP.md
+├── mvnw
+├── mvnw.cmd
+├── pom.xml
+├── readme
+├── src/
+│   ├── main/
+│   │   ├── java/
+│   │   │   └── com/
+│   │   │       └── Portbil/
+│   │   │           └── portfolio_backend/
+│   │   │               ├── config/
+│   │   │               ├── controller/
+│   │   │               │   ├── AuthController.java
+│   │   │               │   └── UserController.java
+│   │   │               ├── dto/
+│   │   │               │   └── UserDTO.java
+│   │   │               ├── entity/
+│   │   │               │   ├── Role.java
+│   │   │               │   └── User.java
+│   │   │               ├── exception/
+│   │   │               │   └── GlobalExceptionHandler.java
+│   │   │               ├── PortfolioBackendApplication.java
+│   │   │               ├── repository/
+│   │   │               │   └── UserRepository.java
+│   │   │               ├── security/
+│   │   │               │   ├── CustomUserDetailsService.java
+│   │   │               │   ├── JwtAuthenticationFilter.java
+│   │   │               │   ├── JwtUtil.java
+│   │   │               │   └── SecurityConfig.java
+│   │   │               └── service/
+│   │   │                   ├── EmailService.java
+│   │   │                   └── UserService.java
+│   │   └── resources/
+│   │       └── application.yml
+│   └── test/
+│       └── java/
+│           └── com/
+│               └── Portbil/
+│                   └── portfolio_backend/
+│                       └── PortfolioBackendApplicationTests.java
+├── target/
+│   ├── classes/
+│   │   ├── application.yml
+│   │   └── com/
+│   │       └── Portbil/
+│   │           └── portfolio_backend/
+│   │               ├── controller/
+│   │               │   ├── AuthController.class
+│   │               │   └── UserController.class
+│   │               ├── dto/
+│   │               │   └── UserDTO.class
+│   │               ├── entity/
+│   │               │   ├── Role.class
+│   │               │   ├── User$UserBuilder.class
+│   │               │   └── User.class
+│   │               ├── exception/
+│   │               │   └── GlobalExceptionHandler.class
+│   │               ├── PortfolioBackendApplication.class
+│   │               ├── repository/
+│   │               │   └── UserRepository.class
+│   │               ├── security/
+│   │               │   ├── CustomUserDetailsService.class
+│   │               │   ├── JwtAuthenticationFilter.class
+│   │               │   ├── JwtUtil.class
+│   │               │   └── SecurityConfig.class
+│   │               └── service/
+│   │                   ├── EmailService.class
+│   │                   └── UserService.class
+│   ├── generated-sources/
+│   │   └── annotations/
+│   ├── generated-test-sources/
+│   │   └── test-annotations/
+│   └── test-classes/
+├── tree.js
+└── tree.txt

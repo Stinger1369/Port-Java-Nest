@@ -1,0 +1,8 @@
+📂 config → Configuration de l'application (Spring Security, CORS, etc.)
+📂 controller → Contrôleurs REST
+📂 dto → Objets de transfert de données (Data Transfer Objects)
+📂 entity → Modèles de base de données (JPA Entities)
+📂 repository → Interfaces pour interagir avec la base de données
+📂 service → Logique métier et gestion des services
+📂 exception → Gestion des exceptions globales
+📂 security → Configuration et filtres de sécurité
