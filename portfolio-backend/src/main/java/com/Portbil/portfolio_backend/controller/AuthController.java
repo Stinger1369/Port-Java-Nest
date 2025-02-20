@@ -97,7 +97,7 @@ public class AuthController {
     }
 
     /**
-     * ✅ Demande de réinitialisation du mot de passe (envoie un email avec un lien sécurisé)
+     * ✅ Demande de réinitialisation du mot de passe avec expiration du token (15 minutes)
      */
     @PostMapping("/forgot-password")
     public ResponseEntity<?> forgotPassword(@RequestBody Map<String, String> request) {
@@ -105,14 +105,14 @@ public class AuthController {
 
         try {
             userService.forgotPassword(email);
-            return ResponseEntity.ok(Map.of("message", "Password reset email sent successfully."));
+            return ResponseEntity.ok(Map.of("message", "Password reset email sent successfully. The link is valid for 15 minutes."));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
 
     /**
-     * ✅ Réinitialiser le mot de passe avec le token
+     * ✅ Réinitialisation du mot de passe avec validation du token et vérification des anciens mots de passe.
      */
     @PostMapping("/reset-password")
     public ResponseEntity<?> resetPassword(@RequestBody Map<String, String> request) {

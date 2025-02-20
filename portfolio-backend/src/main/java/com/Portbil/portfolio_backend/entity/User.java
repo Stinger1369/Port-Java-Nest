@@ -7,11 +7,10 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.time.LocalDate;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Set;
+import java.time.LocalDateTime;
+import java.util.*;
 
-@Document(collection = "users") // Stockage dans MongoDB
+@Document(collection = "users")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -23,7 +22,8 @@ public class User implements UserDetails {
     private String id;
     private String email;
     private String password;
-    private String resetToken; // ✅ Ajout du champ pour la réinitialisation du mot de passe
+    private String resetToken; // ✅ Token pour réinitialisation du mot de passe
+    private LocalDateTime resetTokenExpiration; // ✅ Expiration du token (ajouté)
 
     // Champs optionnels
     private String firstName;
@@ -40,9 +40,12 @@ public class User implements UserDetails {
     private String bio;
 
     @Builder.Default
-    private Set<Role> roles = Collections.singleton(Role.USER); // Rôle par défaut
+    private Set<Role> roles = Collections.singleton(Role.USER);
 
-    // Champs pour vérification d'email
+    // ✅ Liste des anciens mots de passe hachés (évite la réutilisation des anciens mots de passe)
+    @Builder.Default
+    private List<String> previousPasswords = new ArrayList<>();
+
     private boolean isVerified;
     private String confirmationCode;
 
