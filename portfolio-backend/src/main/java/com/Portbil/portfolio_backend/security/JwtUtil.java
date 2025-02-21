@@ -15,8 +15,11 @@ public class JwtUtil {
     @Value("${jwt.secret}")
     private String secret;
 
-    public String extractUsername(String token) {
-        return extractClaim(token, Claims::getSubject);
+    /**
+     * ✅ Extrait l'ID utilisateur du token
+     */
+    public String extractUserId(String token) {
+        return extractClaim(token, Claims::getSubject); // ✅ Retourne **l'ID utilisateur** (pas l'email)
     }
 
     public Date extractExpiration(String token) {
@@ -36,17 +39,23 @@ public class JwtUtil {
         return extractExpiration(token).before(new Date());
     }
 
+    /**
+     * ✅ Génère un JWT contenant **l'ID utilisateur** comme `subject`
+     */
     public String generateToken(UserDetails userDetails) {
         return Jwts.builder()
-                .setSubject(userDetails.getUsername())
+                .setSubject(userDetails.getUsername()) // ✅ Utilise l'ID utilisateur
                 .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 10))
+                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 10)) // 10 heures
                 .signWith(SignatureAlgorithm.HS256, secret)
                 .compact();
     }
 
+    /**
+     * ✅ Vérifie la validité du token
+     */
     public boolean validateToken(String token, UserDetails userDetails) {
-        final String username = extractUsername(token);
-        return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
+        final String userId = extractUserId(token);
+        return (userId.equals(userDetails.getUsername()) && !isTokenExpired(token));
     }
 }

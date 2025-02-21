@@ -1,0 +1,81 @@
+.login-container {
+  text-align: center;
+  padding: 20px;
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+input {
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+button {
+  background-color: #646cff;
+  color: white;
+  padding: 10px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: #535bf2;
+}
+
+.verify-options {
+  margin-top: 15px;
+}
+
+.verify-btn,
+.resend-btn {
+  margin-top: 10px;
+  padding: 10px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  display: block;
+  width: 100%;
+}
+
+.verify-btn {
+  background-color: #ff6b6b;
+  color: white;
+}
+
+.verify-btn:hover {
+  background-color: #ff4c4c;
+}
+
+.resend-btn {
+  background-color: #ffa502;
+  color: white;
+}
+
+.resend-btn:hover {
+  background-color: #ff8c00;
+}
+.register-option {
+  margin-top: 15px;
+}
+
+.register-btn {
+  margin-top: 10px;
+  padding: 10px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  display: block;
+  width: 100%;
+  background-color: #28a745;
+  color: white;
+}
+
+.register-btn:hover {
+  background-color: #218838;
+}

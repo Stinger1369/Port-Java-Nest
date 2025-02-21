@@ -17,6 +17,7 @@ const Profile = () => {
     <div>
       <h2>Profil</h2>
       <p>Bienvenue dans votre espace personnel.</p>
+      <button onClick={() => navigate("/edit-profile")}>Modifier mon profil</button>
     </div>
   );
 };

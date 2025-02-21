@@ -1,4 +1,4 @@
-.login-container {
+.register-container {
   text-align: center;
   padding: 20px;
 }
@@ -16,7 +16,7 @@ input {
 }
 
 button {
-  background-color: #646cff;
+  background-color: #28a745;
   color: white;
   padding: 10px;
   border: none;
@@ -25,5 +25,10 @@ button {
 }
 
 button:hover {
-  background-color: #535bf2;
+  background-color: #218838;
+}
+
+.error-message {
+  color: red;
+  margin-bottom: 10px;
 }

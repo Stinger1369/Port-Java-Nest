@@ -1,18 +1,19 @@
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import axios from "axios";
+import { fetchUser } from "./userSlice"; // Import pour récupérer l'utilisateur après connexion
 
 // Définition du type pour l'état de l'authentification
 interface AuthState {
-  user: any | null;
+  userId: string | null;
   token: string | null;
   loading: boolean;
   error: string | null;
   message: string | null;
 }
 
-// État initial
+// ✅ **État initial**
 const initialState: AuthState = {
-  user: null,
+  userId: localStorage.getItem("userId"), // Stocker l'ID de l'utilisateur
   token: localStorage.getItem("token"),
   loading: false,
   error: null,
@@ -22,19 +23,36 @@ const initialState: AuthState = {
 // ✅ **Connexion utilisateur**
 export const login = createAsyncThunk(
   "auth/login",
-  async ({ email, password }: { email: string; password: string }, thunkAPI) => {
+  async ({ email, password }, { rejectWithValue, dispatch }) => {
     try {
       const response = await axios.post("http://localhost:8080/api/auth/login", {
         email,
         password,
       });
-      localStorage.setItem("token", response.data.token);
-      return response.data;
-    } catch (error: any) {
-      return thunkAPI.rejectWithValue(error.response?.data?.error || "Login failed");
+
+      console.log("📥 Réponse brute du serveur :", response.data);
+
+      const { token, userId } = response.data;
+
+      if (!token || !userId) {
+        throw new Error("Login response is missing token or userId");
+      }
+
+      // Plus besoin de vérifier `verified` ici, le backend s'en charge
+      console.log("✅ Connexion réussie :", { token, userId });
+
+      localStorage.setItem("token", token);
+      localStorage.setItem("userId", userId);
+      dispatch(fetchUser());
+
+      return { token, userId };
+    } catch (error) {
+      console.error("❌ Login failed:", error.response?.data || error.message);
+      return rejectWithValue(error.response?.data?.error || "Login failed");
     }
   }
 );
+
 
 // ✅ **Inscription utilisateur**
 export const register = createAsyncThunk(
@@ -52,18 +70,18 @@ export const register = createAsyncThunk(
   }
 );
 
-// ✅ **Vérification de l'email**
+// ✅ **Vérification du code reçu par email**
 export const verifyEmail = createAsyncThunk(
   "auth/verifyEmail",
-  async ({ email, code }: { email: string; code: string }, thunkAPI) => {
+  async ({ email, code }: { email: string; code: string }, { rejectWithValue }) => {
     try {
-      const response = await axios.post("http://localhost:8080/api/auth/verify", {
-        email,
-        code,
-      });
+      const response = await axios.post("http://localhost:8080/api/auth/verify", { email, code });
+
+      console.log("✅ Vérification réussie :", response.data);
       return response.data;
     } catch (error: any) {
-      return thunkAPI.rejectWithValue(error.response?.data?.error || "Verification failed");
+      console.error("❌ Échec de la vérification :", error.response?.data || error.message);
+      return rejectWithValue(error.response?.data?.error || "Échec de la vérification.");
     }
   }
 );
@@ -107,48 +125,69 @@ export const resetPassword = createAsyncThunk(
   }
 );
 
+// ✅ **Déconnexion utilisateur**
+export const logout = createAsyncThunk("auth/logout", async (_, { dispatch }) => {
+  console.log("🚪 Déconnexion...");
+  localStorage.removeItem("token");
+  localStorage.removeItem("userId");
+  dispatch(clearAuthState());
+});
+
+// ✅ **Déconnexion automatique après une période d'inactivité**
+const setAutoLogout = (dispatch: any, delay: number) => {
+  setTimeout(() => {
+    dispatch(logout());
+  }, delay);
+};
+
 // ✅ **Création du slice Redux**
 const authSlice = createSlice({
   name: "auth",
   initialState,
   reducers: {
-    logout: (state) => {
-      state.user = null;
+    clearAuthState: (state) => {
+      console.log("🧹 Nettoyage de l'état utilisateur");
+      state.userId = null;
       state.token = null;
       state.message = null;
+      state.error = null;
       localStorage.removeItem("token");
+      localStorage.removeItem("userId");
     },
-    loginSuccess: (state, action: PayloadAction<{ token: string }>) => {
+    loginSuccess: (state, action: PayloadAction<{ token: string; userId: string }>) => {
+      console.log("🔄 Stockage réussi :", action.payload);
       state.token = action.payload.token;
+      state.userId = action.payload.userId;
       localStorage.setItem("token", action.payload.token);
+      localStorage.setItem("userId", action.payload.userId);
     },
   },
   extraReducers: (builder) => {
     builder
-      // 📌 **Gestion de l'état de connexion**
       .addCase(login.pending, (state) => {
         state.loading = true;
         state.error = null;
         state.message = null;
       })
       .addCase(login.fulfilled, (state, action) => {
+        console.log("✅ Connexion Redux réussie :", action.payload);
         state.loading = false;
         state.token = action.payload.token;
+        state.userId = action.payload.userId;
         state.message = "Login successful!";
-        localStorage.setItem("token", action.payload.token);
       })
       .addCase(login.rejected, (state, action) => {
+        console.error("❌ Connexion échouée :", action.payload);
         state.loading = false;
         state.error = action.payload as string;
       })
 
-      // 📌 **Gestion de l'état d'inscription**
       .addCase(register.pending, (state) => {
         state.loading = true;
         state.error = null;
         state.message = null;
       })
-      .addCase(register.fulfilled, (state, action) => {
+      .addCase(register.fulfilled, (state) => {
         state.loading = false;
         state.message = "Registration successful! Please verify your email.";
       })
@@ -157,7 +196,6 @@ const authSlice = createSlice({
         state.error = action.payload as string;
       })
 
-      // 📌 **Vérification de l'email**
       .addCase(verifyEmail.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -172,22 +210,6 @@ const authSlice = createSlice({
         state.error = action.payload as string;
       })
 
-      // 📌 **Demande de réinitialisation du mot de passe**
-      .addCase(forgotPassword.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-        state.message = null;
-      })
-      .addCase(forgotPassword.fulfilled, (state, action) => {
-        state.loading = false;
-        state.message = "Password reset link sent!";
-      })
-      .addCase(forgotPassword.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload as string;
-      })
-
-      // 📌 **Réinitialisation du mot de passe avec vérification**
       .addCase(resetPassword.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -200,10 +222,17 @@ const authSlice = createSlice({
       .addCase(resetPassword.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
+      })
+
+      .addCase(logout.fulfilled, (state) => {
+        console.log("✅ Déconnexion réussie");
+        state.token = null;
+        state.userId = null;
+        state.message = "Logged out successfully!";
       });
   },
 });
 
 // ✅ **Exports**
-export const { logout, loginSuccess } = authSlice.actions;
+export const { clearAuthState, loginSuccess } = authSlice.actions;
 export default authSlice.reducer;

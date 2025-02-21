@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import axios from "axios";
+import { RootState } from "../../redux/store"; // Assure-toi que le chemin est correct
 
 // Interface utilisateur
 interface User {
@@ -30,25 +31,41 @@ const initialState: UserState = {
   error: null,
   message: null,
 };
-
-// ✅ **Récupérer les informations de l'utilisateur connecté**
+// ✅ **Récupérer l'utilisateur après connexion**
 export const fetchUser = createAsyncThunk(
   "user/fetchUser",
   async (_, { rejectWithValue }) => {
     try {
       const token = localStorage.getItem("token");
-      if (!token) throw new Error("No token found");
+      const userId = localStorage.getItem("userId");
 
-      const response = await axios.get("http://localhost:8080/api/users/me", {
+      if (!token || !userId) {
+        console.warn("❌ Aucun token ou userId trouvé dans localStorage");
+        return rejectWithValue("No token or userId found");
+      }
+
+      console.log("🔹 Fetching user with ID:", userId);
+
+      const response = await axios.get(`http://localhost:8080/api/users/${userId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
+      // Vérifier si l'utilisateur a des données
+      if (!response.data) {
+        console.warn("⚠️ L'utilisateur n'a pas encore complété son profil.");
+        return rejectWithValue("User profile is incomplete");
+      }
+
+      console.log("✅ Utilisateur récupéré :", response.data);
       return response.data;
     } catch (error: any) {
+      console.error("❌ Fetch user failed:", error.response?.data);
       return rejectWithValue(error.response?.data?.error || "Failed to fetch user");
     }
   }
 );
+
+
 
 // ✅ **Mettre à jour le profil utilisateur**
 export const updateUser = createAsyncThunk(
@@ -58,12 +75,16 @@ export const updateUser = createAsyncThunk(
       const token = localStorage.getItem("token");
       if (!token) throw new Error("No token found");
 
+      console.log("🔹 Sending update request for user:", userData);
+
       const response = await axios.put(`http://localhost:8080/api/users/${userData.id}`, userData, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
+      console.log("✅ Update successful:", response.data);
       return response.data;
     } catch (error: any) {
+      console.error("❌ Update failed:", error.response?.data);
       return rejectWithValue(error.response?.data?.error || "Failed to update user");
     }
   }

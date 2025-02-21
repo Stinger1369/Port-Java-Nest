@@ -10,27 +10,28 @@ spring:
   devtools:
     restart:
       enabled: true
-      additional-paths: src/main/java
     livereload:
       enabled: true
 
   mail:
     host: smtp.ionos.fr
-    port: 465  # ✅ Utilisation de SSL avec le port 465
+    port: 465
     username: renvarchits@lolaparfums.com
     password: Dyhiatasseda90%
     protocol: smtp
-    default-encoding: UTF-8
     properties:
       mail:
-        debug: true  # ✅ Activer les logs détaillés pour voir les erreurs SMTP
+        debug: true
         smtp:
           auth: true
           ssl:
-            enable: true  # ✅ SSL activé car on utilise le port 465
-          starttls:
-            enable: false  # ❌ Désactivé, car on utilise SSL
+            enable: true
 
 jwt:
   secret: "Z2VubmVyZXIgdW5lIGNs6SBzdWZmaXNhbWFtZW50IGRlIDMyIGJ5dGVz"
-  expirationMs: 86400000  # 24 heures en millisecondes
+  expirationMs: 86400000
+
+logging:
+  level:
+    org.springframework.security: DEBUG
+    org.springframework.web: DEBUG

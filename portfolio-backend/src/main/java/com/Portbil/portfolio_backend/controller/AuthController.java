@@ -68,24 +68,33 @@ public class AuthController {
         String email = credentials.get("email");
         String password = credentials.get("password");
 
+        System.out.println("🔹 Tentative de connexion pour : " + email);
+
         // Vérifier si l'utilisateur existe et est bien vérifié
         User user = userService.getUserByEmail(email).orElse(null);
         if (user == null) {
+            System.out.println("❌ Utilisateur introuvable dans la base de données.");
             return ResponseEntity.status(403).body(Map.of("error", "User not found."));
         }
+
         if (!user.isVerified()) {
+            System.out.println("⚠️ Utilisateur trouvé mais non vérifié : " + email);
             return ResponseEntity.status(403).body(Map.of("error", "Account not verified. Check your email."));
         }
 
-        // ✅ Vérification manuelle du mot de passe
+        // ✅ Vérification du mot de passe
         if (!userService.checkPassword(user, password)) {
+            System.out.println("❌ Mot de passe incorrect pour l'utilisateur : " + email);
             return ResponseEntity.status(403).body(Map.of("error", "Invalid password."));
         }
 
         // ✅ Authentification via AuthenticationManager
         try {
+            System.out.println("✅ Vérification via AuthenticationManager...");
             authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(email, password));
         } catch (Exception e) {
+            System.out.println("❌ Échec de l'authentification pour " + email + " - " + e.getMessage());
+            e.printStackTrace(); // Afficher l'erreur complète dans la console
             return ResponseEntity.status(403).body(Map.of("error", "Authentication failed."));
         }
 
@@ -93,8 +102,14 @@ public class AuthController {
         UserDetails userDetails = userDetailsService.loadUserByUsername(email);
         String jwt = jwtUtil.generateToken(userDetails);
 
-        return ResponseEntity.ok(Map.of("token", jwt));
+        System.out.println("✅ Connexion réussie pour " + email + " - Token généré.");
+
+        return ResponseEntity.ok(Map.of(
+                "token", jwt,
+                "userId", user.getId()
+        ));
     }
+
 
     /**
      * ✅ Demande de réinitialisation du mot de passe avec expiration du token (15 minutes)
