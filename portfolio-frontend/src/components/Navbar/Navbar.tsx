@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "../../redux/store";
 import { logout } from "../../redux/features/authSlice";
-import "./Navbar.css"; // Importation du CSS spécifique
+import "./Navbar.css";
 
 const Navbar = () => {
   const dispatch = useDispatch();
@@ -19,6 +19,7 @@ const Navbar = () => {
         {token ? (
           <>
             <Link to="/profile">Profile</Link>
+            <Link to="/portfolio">Portfolio</Link> {/* ✅ Ajout du lien */}
             <button onClick={handleLogout}>Logout</button>
           </>
         ) : (

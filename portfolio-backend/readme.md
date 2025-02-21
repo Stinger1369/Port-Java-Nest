@@ -1,4 +1,4 @@
-# 📁 Structure du projet
+`# 📁 Structure du projet
 
 📂 **config** → Configuration de l'application (Spring Security, CORS, etc.)  
 📂 **controller** → Contrôleurs REST  
@@ -25,3 +25,4 @@
 
 
 
+`

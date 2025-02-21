@@ -23,7 +23,7 @@ public class User implements UserDetails {
     private String email;
     private String password;
     private String resetToken; // ✅ Token pour réinitialisation du mot de passe
-    private LocalDateTime resetTokenExpiration; // ✅ Expiration du token (ajouté)
+    private LocalDateTime resetTokenExpiration; // ✅ Expiration du token
 
     // Champs optionnels
     private String firstName;
@@ -48,6 +48,10 @@ public class User implements UserDetails {
 
     private boolean isVerified;
     private String confirmationCode;
+
+    // ✅ Ajout de la liste des formations de l'utilisateur
+    @Builder.Default
+    private List<String> educationIds = new ArrayList<>();
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

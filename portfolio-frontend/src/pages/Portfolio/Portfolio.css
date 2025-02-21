@@ -1,0 +1,76 @@
+/* 🎨 Styles globaux du portfolio */
+.portfolio-container {
+  display: flex;
+  min-height: 100vh;
+  background: #f4f4f9;
+  font-family: "Poppins", sans-serif;
+}
+
+/* 🎯 Barre de navigation latérale */
+.portfolio-navbar {
+  width: 250px;
+  background: #2c3e50;
+  color: white;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  border-radius: 15px 0 0 15px;
+  box-shadow: 4px 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.portfolio-navbar a {
+  text-decoration: none;
+  color: #ecf0f1;
+  font-size: 16px;
+  font-weight: 500;
+  padding: 12px 20px;
+  border-radius: 8px;
+  transition: background 0.3s ease, transform 0.2s ease;
+}
+
+.portfolio-navbar a:hover {
+  background: #34495e;
+  transform: translateX(5px);
+}
+
+/* ✅ Section active (highlight) */
+.portfolio-navbar a.active {
+  background: #1abc9c;
+  color: white;
+}
+
+/* 📦 Contenu principal */
+.portfolio-content {
+  flex-grow: 1;
+  padding: 40px;
+  background: white;
+  border-radius: 0 15px 15px 0;
+  box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.1);
+  margin-left: 10px;
+}
+
+/* 🎭 Responsive design */
+@media (max-width: 768px) {
+  .portfolio-container {
+    flex-direction: column;
+  }
+
+  .portfolio-navbar {
+    width: 100%;
+    flex-direction: row;
+    overflow-x: auto;
+    border-radius: 15px 15px 0 0;
+    box-shadow: none;
+  }
+
+  .portfolio-navbar a {
+    flex-grow: 1;
+    text-align: center;
+  }
+
+  .portfolio-content {
+    border-radius: 0 0 15px 15px;
+    margin-left: 0;
+  }
+}
