@@ -1,0 +1,68 @@
+portfolio-frontend/
+├── .gitignore
+├── .yarn/
+│   ├── install-state.gz
+│   └── releases/
+│       └── yarn-4.6.0.cjs
+├── .yarnrc.yml
+├── eslint.config.js
+├── index.html
+├── package.json
+├── public/
+│   └── vite.svg
+├── README.md
+├── src/
+│   ├── App.css
+│   ├── App.tsx
+│   ├── assets/
+│   │   └── react.svg
+│   ├── components/
+│   │   ├── Navbar/
+│   │   │   ├── Navbar.css
+│   │   │   └── Navbar.tsx
+│   │   └── ProtectedRoute.tsx
+│   ├── index.css
+│   ├── main.tsx
+│   ├── pages/
+│   │   ├── Home/
+│   │   │   ├── Home.css
+│   │   │   └── Home.tsx
+│   │   ├── Portfolio/
+│   │   │   ├── Education/
+│   │   │   │   ├── AddEducation/
+│   │   │   │   │   └── AddEducation.tsx
+│   │   │   │   ├── Education.css
+│   │   │   │   └── Education.tsx
+│   │   │   ├── Portfolio.css
+│   │   │   └── Portfolio.tsx
+│   │   └── Profile/
+│   │       ├── EditProfile/
+│   │       │   └── EditProfile.tsx
+│   │       ├── ForgotPassword/
+│   │       │   ├── ForgotPassword.css
+│   │       │   └── ForgotPassword.tsx
+│   │       ├── Login/
+│   │       │   ├── Login.css
+│   │       │   └── Login.tsx
+│   │       ├── Profile.tsx
+│   │       ├── Register/
+│   │       │   ├── Register.css
+│   │       │   └── Register.tsx
+│   │       ├── ResetPassword/
+│   │       │   ├── ResetPassword.css
+│   │       │   └── ResetPassword.tsx
+│   │       └── VerifyAccount/
+│   │           └── VerifyAccount.tsx
+│   ├── redux/
+│   │   ├── features/
+│   │   │   ├── authSlice.ts
+│   │   │   ├── educationSlice.ts
+│   │   │   └── userSlice.ts
+│   │   └── store.ts
+│   ├── styles.css
+│   └── vite-env.d.ts
+├── tree.js
+├── tsconfig.app.json
+├── tsconfig.json
+├── tsconfig.node.json
+└── vite.config.ts

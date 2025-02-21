@@ -55,16 +55,24 @@ export const fetchEducationsByUser = createAsyncThunk(
 // ✅ **Ajouter une formation avec le token**
 export const addEducation = createAsyncThunk(
   "education/add",
-  async (educationData: Education, { rejectWithValue }) => {
+  async (educationData: Omit<Education, "id" | "userId">, { rejectWithValue }) => {
     try {
       const token = getAuthToken();
+      const userId = localStorage.getItem("userId"); // ✅ Récupération du userId
+
       if (!token) {
         return rejectWithValue("Token non trouvé, veuillez vous reconnecter.");
       }
+      if (!userId) {
+        return rejectWithValue("ID utilisateur manquant, veuillez vous reconnecter.");
+      }
 
-      const response = await axios.post("http://localhost:8080/api/educations", educationData, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      // ✅ Ajouter le userId à l'objet envoyé
+      const response = await axios.post(
+        "http://localhost:8080/api/educations",
+        { ...educationData, userId }, // Ajout du userId
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
 
       console.log("✅ Formation ajoutée :", response.data);
       return response.data;
@@ -74,6 +82,7 @@ export const addEducation = createAsyncThunk(
     }
   }
 );
+
 
 // ✅ **Mettre à jour une formation avec le token**
 export const updateEducation = createAsyncThunk(

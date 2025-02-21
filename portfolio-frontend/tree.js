@@ -1,8 +1,26 @@
-const fs = require('fs');
-const path = require('path');
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
+// Permet d'obtenir `__dirname` en mode ESM
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Liste des dossiers et fichiers à exclure
+const EXCLUDED_DIRS = new Set([
+    'node_modules', '.git', 'dist', 'build', 'coverage', 'out', 'logs'
+]);
+const EXCLUDED_FILES = new Set([
+    'package-lock.json', 'yarn.lock', 'tree.txt', '.DS_Store'
+]);
+
+/**
+ * Génère l'arborescence du dossier
+ */
 function generateTree(dir, prefix = '') {
-    const files = fs.readdirSync(dir);
+    const files = fs.readdirSync(dir)
+        .filter(file => !EXCLUDED_DIRS.has(file) && !EXCLUDED_FILES.has(file)); // Exclure les dossiers et fichiers
+
     const entries = files.map((file, index) => {
         const filePath = path.join(dir, file);
         const isDirectory = fs.statSync(filePath).isDirectory();
@@ -15,7 +33,7 @@ function generateTree(dir, prefix = '') {
 }
 
 // Dossier cible (par défaut : dossier où le script est exécuté)
-const targetDir = process.argv[2] || '.';
+const targetDir = process.argv[2] ? path.resolve(__dirname, process.argv[2]) : __dirname;
 
 // Vérifier si le dossier existe
 if (!fs.existsSync(targetDir)) {
