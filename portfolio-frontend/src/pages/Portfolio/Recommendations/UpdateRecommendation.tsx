@@ -16,13 +16,16 @@ interface Props {
 
 const UpdateRecommendation = ({ recommendation, onClose }: Props) => {
   const dispatch = useDispatch<AppDispatch>();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [updatedRecommendation, setUpdatedRecommendation] = useState({
     id: recommendation.id,
     recommenderName: recommendation.recommenderName || "",
     recommenderPosition: recommendation.recommenderPosition || "",
     recommendationText: recommendation.recommendationText || "",
-    dateReceived: recommendation.dateReceived || new Date().toISOString().split("T")[0],
+    dateReceived: recommendation.dateReceived
+      ? recommendation.dateReceived.split("T")[0] // ✅ Correction du format date
+      : new Date().toISOString().split("T")[0], // Par défaut, date du jour
   });
 
   useEffect(() => {
@@ -32,7 +35,9 @@ const UpdateRecommendation = ({ recommendation, onClose }: Props) => {
         recommenderName: recommendation.recommenderName || "",
         recommenderPosition: recommendation.recommenderPosition || "",
         recommendationText: recommendation.recommendationText || "",
-        dateReceived: recommendation.dateReceived || new Date().toISOString().split("T")[0],
+        dateReceived: recommendation.dateReceived
+          ? recommendation.dateReceived.split("T")[0]
+          : new Date().toISOString().split("T")[0],
       });
     }
   }, [recommendation]);
@@ -45,10 +50,26 @@ const UpdateRecommendation = ({ recommendation, onClose }: Props) => {
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    dispatch(updateRecommendation({ id: updatedRecommendation.id, recommendationData: updatedRecommendation }));
-    onClose();
+
+    // ✅ Vérification des champs obligatoires avant l'envoi
+    if (!updatedRecommendation.recommenderName.trim() || !updatedRecommendation.recommendationText.trim()) {
+      console.error("❌ Erreur : Les champs 'Nom du recommendeur' et 'Texte de recommandation' sont obligatoires.");
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      await dispatch(updateRecommendation({ id: updatedRecommendation.id, recommendationData: updatedRecommendation })).unwrap();
+      console.log("✅ Recommandation mise à jour avec succès !");
+      onClose();
+    } catch (error) {
+      console.error("❌ Erreur lors de la mise à jour :", error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -56,12 +77,46 @@ const UpdateRecommendation = ({ recommendation, onClose }: Props) => {
       <div className="modal-content">
         <h3>Modifier la Recommandation</h3>
         <form onSubmit={handleSubmit}>
-          <input type="text" name="recommenderName" value={updatedRecommendation.recommenderName} onChange={handleChange} required />
-          <input type="text" name="recommenderPosition" value={updatedRecommendation.recommenderPosition} onChange={handleChange} />
-          <textarea name="recommendationText" value={updatedRecommendation.recommendationText} onChange={handleChange} required />
-          <input type="date" name="dateReceived" value={updatedRecommendation.dateReceived} onChange={handleChange} required />
-          <button type="submit">Mettre à jour</button>
-          <button type="button" onClick={onClose}>Annuler</button>
+          <label>Nom du recommendeur *</label>
+          <input
+            type="text"
+            name="recommenderName"
+            value={updatedRecommendation.recommenderName}
+            onChange={handleChange}
+            required
+          />
+
+          <label>Poste du recommendeur</label>
+          <input
+            type="text"
+            name="recommenderPosition"
+            value={updatedRecommendation.recommenderPosition}
+            onChange={handleChange}
+          />
+
+          <label>Texte de recommandation *</label>
+          <textarea
+            name="recommendationText"
+            value={updatedRecommendation.recommendationText}
+            onChange={handleChange}
+            required
+          />
+
+          <label>Date de réception *</label>
+          <input
+            type="date"
+            name="dateReceived"
+            value={updatedRecommendation.dateReceived}
+            onChange={handleChange}
+            required
+          />
+
+          <button type="submit" disabled={isSubmitting}>
+            {isSubmitting ? "Mise à jour en cours..." : "Mettre à jour"}
+          </button>
+          <button type="button" onClick={onClose} disabled={isSubmitting}>
+            Annuler
+          </button>
         </form>
       </div>
     </div>

@@ -23,7 +23,7 @@ const EditProfile = () => {
     address: "",
     city: "",
     country: "",
-    gender: "",
+    sex: "", // ✅ Ajout du champ sex
     bio: "",
   });
 
@@ -40,13 +40,13 @@ const EditProfile = () => {
         address: user.address || "",
         city: user.city || "",
         country: user.country || "",
-        gender: user.gender || "",
+        sex: user.sex || "", // ✅ Ajout de la récupération de sex
         bio: user.bio || "",
       });
     }
   }, [token, user, userId, dispatch, navigate]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
@@ -84,8 +84,13 @@ const EditProfile = () => {
         <label>Pays :</label>
         <input type="text" name="country" value={formData.country} onChange={handleChange} />
 
-        <label>Genre :</label>
-        <input type="text" name="gender" value={formData.gender} onChange={handleChange} />
+        <label>Sexe :</label>
+        <select name="sex" value={formData.sex} onChange={handleChange}>
+          <option value="">Ne pas préciser</option>
+          <option value="Man">Homme</option>
+          <option value="Woman">Femme</option>
+          <option value="Other">Autre</option>
+        </select>
 
         <label>Bio :</label>
         <textarea name="bio" value={formData.bio} onChange={handleChange} />

@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import axios from "axios";
+import { BASE_URL } from "../../config/hostname"; // ✅ Utilisation de hostname.ts
 
 interface Recommendation {
   id?: string;
@@ -32,19 +33,20 @@ export const fetchRecommendationsByUser = createAsyncThunk(
       const token = getAuthToken();
       if (!token) return rejectWithValue("⚠️ Token non trouvé, veuillez vous reconnecter.");
 
-      const response = await axios.get(`http://localhost:8080/api/recommendations/user/${userId}`, {
+      const response = await axios.get(`${BASE_URL}/api/recommendations/user/${userId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
       console.log("✅ Recommandations récupérées :", response.data);
 
+      // ✅ Correction : Adapter les champs de l'API au format attendu
       return response.data.map((rec: any) => ({
-        id: rec._id?.$oid || rec.id, // 🔄 Adaptation MongoDB
+        id: rec._id?.$oid || rec.id,
         userId: rec.userId,
         recommenderName: rec.recommenderName || "Anonyme",
         recommenderPosition: rec.recommenderPosition || "Non spécifié",
-        recommendationText: rec.content || "Aucun texte fourni.", // ⚠️ Correction ici
-        dateReceived: rec.createdAt?.$date || new Date().toISOString(), // ⚠️ Correction ici
+        recommendationText: rec.content ?? "", // ✅ Évite le `null`
+        dateReceived: rec.createdAt || new Date().toISOString(), // ✅ Corrige le champ
       }));
     } catch (error: any) {
       console.error("❌ Erreur API :", error.response?.data || error.message);
@@ -65,19 +67,20 @@ export const addRecommendation = createAsyncThunk(
       if (!userId) return rejectWithValue("⚠️ ID utilisateur manquant, veuillez vous reconnecter.");
 
       const response = await axios.post(
-        "http://localhost:8080/api/recommendations",
+        `${BASE_URL}/api/recommendations`,
         { ...recommendationData, userId },
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
       console.log("✅ Recommandation ajoutée :", response.data);
+
       return {
         id: response.data._id?.$oid || response.data.id,
         userId: response.data.userId,
         recommenderName: response.data.recommenderName,
         recommenderPosition: response.data.recommenderPosition || "Non spécifié",
-        recommendationText: response.data.content || "Aucun texte fourni.", // ⚠️ Correction ici
-        dateReceived: response.data.createdAt?.$date || new Date().toISOString(), // ⚠️ Correction ici
+        recommendationText: response.data.content ?? "", // ✅ Corrige `null`
+        dateReceived: response.data.createdAt || new Date().toISOString(),
       };
     } catch (error: any) {
       console.error("❌ Erreur lors de l'ajout :", error.response?.data);
@@ -95,19 +98,23 @@ export const updateRecommendation = createAsyncThunk(
       if (!token) return rejectWithValue("⚠️ Token non trouvé, veuillez vous reconnecter.");
 
       const response = await axios.put(
-        `http://localhost:8080/api/recommendations/${id}`,
-        recommendationData,
+        `${BASE_URL}/api/recommendations/${id}`,
+        {
+          ...recommendationData,
+          content: recommendationData.recommendationText, // ✅ Assure l'envoi correct des données
+        },
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
       console.log("✅ Recommandation mise à jour :", response.data);
+
       return {
         id: response.data._id?.$oid || response.data.id,
         userId: response.data.userId,
         recommenderName: response.data.recommenderName,
         recommenderPosition: response.data.recommenderPosition || "Non spécifié",
-        recommendationText: response.data.content || "Aucun texte fourni.", // ⚠️ Correction ici
-        dateReceived: response.data.createdAt?.$date || new Date().toISOString(), // ⚠️ Correction ici
+        recommendationText: response.data.content ?? "", // ✅ Correction ici
+        dateReceived: response.data.createdAt || new Date().toISOString(),
       };
     } catch (error: any) {
       console.error("❌ Erreur lors de la mise à jour :", error.response?.data);
@@ -124,7 +131,7 @@ export const deleteRecommendation = createAsyncThunk(
       const token = getAuthToken();
       if (!token) return rejectWithValue("⚠️ Token non trouvé, veuillez vous reconnecter.");
 
-      await axios.delete(`http://localhost:8080/api/recommendations/${id}`, {
+      await axios.delete(`${BASE_URL}/api/recommendations/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -144,24 +151,21 @@ const recommendationSlice = createSlice({
   reducers: {},
   extraReducers: (builder) => {
     builder
-      // **Récupérer les recommandations**
+      // 🔹 **Récupérer les recommandations**
       .addCase(fetchRecommendationsByUser.pending, (state) => {
         state.status = "loading";
         state.error = null;
-        console.log("⏳ Chargement des recommandations...");
       })
       .addCase(fetchRecommendationsByUser.fulfilled, (state, action: PayloadAction<Recommendation[]>) => {
         state.status = "succeeded";
-        console.log("✅ Recommandations reçues :", action.payload);
-        state.recommendations = Array.isArray(action.payload) ? action.payload : [];
+        state.recommendations = action.payload;
       })
       .addCase(fetchRecommendationsByUser.rejected, (state, action) => {
         state.status = "failed";
         state.error = action.payload as string;
-        console.error("❌ Erreur lors de la récupération des recommandations :", state.error);
       })
 
-      // **Ajouter une recommandation**
+      // 🔹 **Ajouter une recommandation**
       .addCase(addRecommendation.pending, (state) => {
         state.status = "loading";
       })
@@ -174,7 +178,7 @@ const recommendationSlice = createSlice({
         state.error = action.payload as string;
       })
 
-      // **Mettre à jour une recommandation**
+      // 🔹 **Mettre à jour une recommandation**
       .addCase(updateRecommendation.pending, (state) => {
         state.status = "loading";
       })
@@ -189,7 +193,7 @@ const recommendationSlice = createSlice({
         state.error = action.payload as string;
       })
 
-      // **Supprimer une recommandation**
+      // 🔹 **Supprimer une recommandation**
       .addCase(deleteRecommendation.pending, (state) => {
         state.status = "loading";
       })

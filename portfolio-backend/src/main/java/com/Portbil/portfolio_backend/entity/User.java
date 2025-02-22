@@ -34,7 +34,10 @@ public class User implements UserDetails {
     private String address;
     private String city;
     private String country;
-    private String gender;
+
+    // ✅ Nouveau champ `sex` avec options limitées
+    private String sex;
+
     private String profilePictureUrl;
     private Set<String> interests;
     private String bio;

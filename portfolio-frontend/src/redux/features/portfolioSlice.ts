@@ -1,4 +1,3 @@
-// portfolioSlice.ts
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import axios from "axios";
 
@@ -34,7 +33,7 @@ const initialState: PortfolioState = {
 // ✅ Récupérer le token d'authentification
 const getAuthToken = () => localStorage.getItem("token");
 
-// ✅ **Récupérer le portfolio détaillé d'un utilisateur**
+// ✅ **Récupérer le portfolio par `userId` (Authentifié)**
 export const fetchPortfolioByUser = createAsyncThunk(
   "portfolio/fetchByUser",
   async (userId: string, { rejectWithValue }) => {
@@ -50,6 +49,22 @@ export const fetchPortfolioByUser = createAsyncThunk(
       return response.data;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || "Échec du chargement du portfolio.");
+    }
+  }
+);
+
+// ✅ **Récupérer le portfolio public par `firstName` et `lastName`**
+export const fetchPortfolioByUsername = createAsyncThunk(
+  "portfolio/fetchByUsername",
+  async ({ firstName, lastName }: { firstName: string; lastName: string }, { rejectWithValue }) => {
+    try {
+      const response = await axios.get(
+        `http://localhost:8080/api/portfolio/public/${firstName}/${lastName}`
+      );
+
+      return response.data;
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.error || "Aucun portfolio trouvé.");
     }
   }
 );
@@ -81,6 +96,7 @@ const portfolioSlice = createSlice({
   reducers: {},
   extraReducers: (builder) => {
     builder
+      // 🔹 **Récupérer le portfolio par `userId`**
       .addCase(fetchPortfolioByUser.pending, (state) => {
         state.status = "loading";
         state.error = null;
@@ -93,6 +109,22 @@ const portfolioSlice = createSlice({
         state.status = "failed";
         state.error = action.payload as string;
       })
+
+      // 🔹 **Récupérer le portfolio par `firstName` et `lastName`**
+      .addCase(fetchPortfolioByUsername.pending, (state) => {
+        state.status = "loading";
+        state.error = null;
+      })
+      .addCase(fetchPortfolioByUsername.fulfilled, (state, action: PayloadAction<Portfolio>) => {
+        state.status = "succeeded";
+        state.portfolio = action.payload;
+      })
+      .addCase(fetchPortfolioByUsername.rejected, (state, action) => {
+        state.status = "failed";
+        state.error = action.payload as string;
+      })
+
+      // 🔹 **Mettre à jour le portfolio**
       .addCase(updatePortfolio.pending, (state) => {
         state.status = "loading";
       })

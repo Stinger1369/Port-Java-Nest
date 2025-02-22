@@ -10,7 +10,7 @@ import ResetPassword from "./pages/Profile/ResetPassword/ResetPassword";
 import ProtectedRoute from "./components/ProtectedRoute";
 import EditProfile from "./pages/Profile/EditProfile/EditProfile";
 import Portfolio from "./pages/Portfolio/Portfolio";
-import PortfolioGlobal from "./pages/Portfolio/PortfolioGlobal/PortfolioGlobal"; // ✅ Import du Portfolio Global
+import PortfolioGlobal from "./pages/Portfolio/PortfolioGlobal/PortfolioGlobal"; // ✅ Portfolio Global par `firstName` et `lastName`
 import Education from "./pages/Portfolio/Education/Education";
 import Experience from "./pages/Portfolio/Experience/Experience";
 import Skills from "./pages/Portfolio/Skills/Skills";
@@ -26,16 +26,24 @@ const App = () => {
     <Router>
       <Navbar />
       <Routes>
+        {/* ✅ Page d'accueil */}
         <Route path="/" element={<Home />} />
+
+        {/* ✅ Authentification */}
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/verify-account" element={<VerifyAccount />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
-        <Route path="/edit-profile" element={<EditProfile />} />
 
-        {/* ✅ Routes du Portfolio */}
-        <Route path="/portfolio" element={<Portfolio />}>
+        {/* ✅ Edition du profil (nécessite connexion) */}
+        <Route path="/edit-profile" element={<ProtectedRoute><EditProfile /></ProtectedRoute>} />
+
+        {/* ✅ Portfolio Public via `firstName` et `lastName` */}
+        <Route path="/portfolio/:firstName/:lastName" element={<PortfolioGlobal />} />
+
+        {/* ✅ Portfolio connecté */}
+        <Route path="/portfolio" element={<ProtectedRoute><Portfolio /></ProtectedRoute>}>
           <Route path="global" element={<PortfolioGlobal />} /> {/* ✅ Portfolio complet */}
           <Route path="education" element={<Education />} />
           <Route path="experience" element={<Experience />} />
@@ -48,15 +56,8 @@ const App = () => {
           <Route path="interests" element={<Interests />} />
         </Route>
 
-        {/* ✅ Route protégée pour Profile */}
-        <Route
-          path="/profile"
-          element={
-            <ProtectedRoute>
-              <Profile />
-            </ProtectedRoute>
-          }
-        />
+        {/* ✅ Profil utilisateur (nécessite connexion) */}
+        <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
       </Routes>
     </Router>
   );

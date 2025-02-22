@@ -9,6 +9,7 @@ interface Props {
 
 const AddRecommendation = ({ onClose }: Props) => {
   const dispatch = useDispatch<AppDispatch>();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [recommendation, setRecommendation] = useState({
     recommenderName: "",
@@ -25,7 +26,7 @@ const AddRecommendation = ({ onClose }: Props) => {
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     const userId = localStorage.getItem("userId");
@@ -34,8 +35,22 @@ const AddRecommendation = ({ onClose }: Props) => {
       return;
     }
 
-    dispatch(addRecommendation({ ...recommendation, userId }));
-    onClose();
+    if (!recommendation.recommenderName.trim() || !recommendation.recommendationText.trim()) {
+      console.error("❌ Erreur : Les champs 'Nom du recommendeur' et 'Texte de recommandation' sont obligatoires.");
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      await dispatch(addRecommendation({ ...recommendation, userId })).unwrap();
+      console.log("✅ Recommandation ajoutée avec succès !");
+      onClose();
+    } catch (error) {
+      console.error("❌ Erreur lors de l'ajout :", error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -43,12 +58,36 @@ const AddRecommendation = ({ onClose }: Props) => {
       <div className="modal-content">
         <h3>Ajouter une Recommandation</h3>
         <form onSubmit={handleSubmit}>
-          <input type="text" name="recommenderName" value={recommendation.recommenderName} onChange={handleChange} placeholder="Nom du recommendeur" required />
-          <input type="text" name="recommenderPosition" value={recommendation.recommenderPosition} onChange={handleChange} placeholder="Poste du recommendeur" />
-          <textarea name="recommendationText" value={recommendation.recommendationText} onChange={handleChange} placeholder="Texte de recommandation" required />
+          <input
+            type="text"
+            name="recommenderName"
+            value={recommendation.recommenderName}
+            onChange={handleChange}
+            placeholder="Nom du recommendeur"
+            required
+          />
+          <input
+            type="text"
+            name="recommenderPosition"
+            value={recommendation.recommenderPosition}
+            onChange={handleChange}
+            placeholder="Poste du recommendeur"
+          />
+          <textarea
+            name="recommendationText"
+            value={recommendation.recommendationText}
+            onChange={handleChange}
+            placeholder="Texte de recommandation"
+            required
+          />
           <input type="date" name="dateReceived" value={recommendation.dateReceived} onChange={handleChange} required />
-          <button type="submit">Ajouter</button>
-          <button type="button" onClick={onClose}>Annuler</button>
+
+          <button type="submit" disabled={isSubmitting}>
+            {isSubmitting ? "Ajout en cours..." : "Ajouter"}
+          </button>
+          <button type="button" onClick={onClose} disabled={isSubmitting}>
+            Annuler
+          </button>
         </form>
       </div>
     </div>

@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import axios from "axios";
+import { BASE_URL } from "../../config/hostname"; // ✅ Import de l'URL centralisée
 
 interface Skill {
   id?: string;
@@ -22,7 +23,7 @@ const initialState: SkillState = {
   error: null,
 };
 
-// ✅ **Fonction pour récupérer le token stocké**
+// ✅ **Récupérer le token**
 const getAuthToken = () => localStorage.getItem("token");
 
 // ✅ **Récupérer tous les skills d'un utilisateur**
@@ -31,11 +32,9 @@ export const fetchSkillsByUser = createAsyncThunk(
   async (userId: string, { rejectWithValue }) => {
     try {
       const token = getAuthToken();
-      if (!token) {
-        return rejectWithValue("Token non trouvé, veuillez vous reconnecter.");
-      }
+      if (!token) return rejectWithValue("⚠️ Token non trouvé, veuillez vous reconnecter.");
 
-      const response = await axios.get(`http://localhost:8080/api/skills/user/${userId}`, {
+      const response = await axios.get(`${BASE_URL}/api/skills/user/${userId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -54,19 +53,14 @@ export const addSkill = createAsyncThunk(
   async (skillData: Omit<Skill, "id" | "userId">, { rejectWithValue }) => {
     try {
       const token = getAuthToken();
-      const userId = localStorage.getItem("userId"); // ✅ Récupération de l'userId
+      const userId = localStorage.getItem("userId");
 
-      if (!token) {
-        return rejectWithValue("Token non trouvé, veuillez vous reconnecter.");
-      }
-      if (!userId) {
-        return rejectWithValue("ID utilisateur manquant, veuillez vous reconnecter.");
-      }
+      if (!token) return rejectWithValue("⚠️ Token non trouvé, veuillez vous reconnecter.");
+      if (!userId) return rejectWithValue("⚠️ ID utilisateur manquant, veuillez vous reconnecter.");
 
-      // ✅ Ajouter le userId à l'objet envoyé
       const response = await axios.post(
-        "http://localhost:8080/api/skills",
-        { ...skillData, userId }, // Ajout du userId
+        `${BASE_URL}/api/skills`,
+        { ...skillData, userId }, // ✅ Ajout du userId
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
@@ -85,11 +79,9 @@ export const updateSkill = createAsyncThunk(
   async ({ id, skillData }: { id: string; skillData: Skill }, { rejectWithValue }) => {
     try {
       const token = getAuthToken();
-      if (!token) {
-        return rejectWithValue("Token non trouvé, veuillez vous reconnecter.");
-      }
+      if (!token) return rejectWithValue("⚠️ Token non trouvé, veuillez vous reconnecter.");
 
-      const response = await axios.put(`http://localhost:8080/api/skills/${id}`, skillData, {
+      const response = await axios.put(`${BASE_URL}/api/skills/${id}`, skillData, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -108,11 +100,9 @@ export const deleteSkill = createAsyncThunk(
   async (id: string, { rejectWithValue }) => {
     try {
       const token = getAuthToken();
-      if (!token) {
-        return rejectWithValue("Token non trouvé, veuillez vous reconnecter.");
-      }
+      if (!token) return rejectWithValue("⚠️ Token non trouvé, veuillez vous reconnecter.");
 
-      await axios.delete(`http://localhost:8080/api/skills/${id}`, {
+      await axios.delete(`${BASE_URL}/api/skills/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -132,7 +122,7 @@ const skillSlice = createSlice({
   reducers: {},
   extraReducers: (builder) => {
     builder
-      // **Récupérer les skills**
+      // 🔹 **Récupérer les skills**
       .addCase(fetchSkillsByUser.pending, (state) => {
         state.status = "loading";
         state.error = null;
@@ -149,7 +139,7 @@ const skillSlice = createSlice({
         console.error("❌ Erreur lors de la récupération des skills :", state.error);
       })
 
-      // **Ajouter un skill**
+      // 🔹 **Ajouter un skill**
       .addCase(addSkill.pending, (state) => {
         state.status = "loading";
       })
@@ -162,7 +152,7 @@ const skillSlice = createSlice({
         state.error = action.payload as string;
       })
 
-      // **Mettre à jour un skill**
+      // 🔹 **Mettre à jour un skill**
       .addCase(updateSkill.pending, (state) => {
         state.status = "loading";
       })
@@ -177,7 +167,7 @@ const skillSlice = createSlice({
         state.error = action.payload as string;
       })
 
-      // **Supprimer un skill**
+      // 🔹 **Supprimer un skill**
       .addCase(deleteSkill.pending, (state) => {
         state.status = "loading";
       })

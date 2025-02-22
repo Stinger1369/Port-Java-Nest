@@ -24,6 +24,20 @@ const Profile = () => {
   if (status === "loading") return <p>Chargement des données...</p>;
   if (status === "failed") return <p style={{ color: "red" }}>Erreur : {error}</p>;
 
+  // ✅ Fonction pour afficher correctement le sexe
+  const getSexLabel = (sex: string | undefined) => {
+    switch (sex) {
+      case "Man":
+        return "Homme";
+      case "Woman":
+        return "Femme";
+      case "Other":
+        return "Autre";
+      default:
+        return "Non spécifié";
+    }
+  };
+
   return (
     <div>
       <h2>Profil</h2>
@@ -35,7 +49,7 @@ const Profile = () => {
           <p><strong>Adresse :</strong> {user.address || "Non renseignée"}</p>
           <p><strong>Ville :</strong> {user.city || "Non renseignée"}</p>
           <p><strong>Pays :</strong> {user.country || "Non renseigné"}</p>
-          <p><strong>Genre :</strong> {user.gender || "Non spécifié"}</p>
+          <p><strong>Sexe :</strong> {getSexLabel(user.sex)}</p> {/* ✅ Affichage du sexe correct */}
           <p><strong>Biographie :</strong> {user.bio || "Pas de biographie"}</p>
 
           <button onClick={() => navigate("/edit-profile")}>Modifier mon profil</button>

@@ -21,6 +21,8 @@ portfolio-frontend/
 │   │   │   ├── Navbar.css
 │   │   │   └── Navbar.tsx
 │   │   └── ProtectedRoute.tsx
+│   ├── config/
+│   │   └── hostname.ts
 │   ├── index.css
 │   ├── main.tsx
 │   ├── pages/
@@ -50,7 +52,7 @@ portfolio-frontend/
 │   │   │   ├── Interests/
 │   │   │   │   ├── AddInterest.tsx
 │   │   │   │   ├── Interest.css
-│   │   │   │   ├── Interest.tsx
+│   │   │   │   ├── Interests.tsx
 │   │   │   │   └── UpdateInterest.tsx
 │   │   │   ├── Languages/
 │   │   │   │   ├── AddLanguage.tsx
@@ -59,6 +61,9 @@ portfolio-frontend/
 │   │   │   │   └── UpdateLanguage.tsx
 │   │   │   ├── Portfolio.css
 │   │   │   ├── Portfolio.tsx
+│   │   │   ├── PortfolioGlobal/
+│   │   │   │   ├── PortfolioGlobal.css
+│   │   │   │   └── PortfolioGlobal.tsx
 │   │   │   ├── Projects/
 │   │   │   │   ├── AddProject.tsx
 │   │   │   │   ├── Projects.css

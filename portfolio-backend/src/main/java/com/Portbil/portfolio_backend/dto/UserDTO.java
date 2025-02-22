@@ -4,8 +4,8 @@ import lombok.Data;
 
 @Data
 public class UserDTO {
-    private String email;      // ✅ Ajout du champ email
-    private String password;   // ✅ Ajout du champ password
+    private String email;
+    private String password;
 
     private String firstName;
     private String lastName;
@@ -13,6 +13,9 @@ public class UserDTO {
     private String address;
     private String city;
     private String country;
-    private String gender;
+
+    // ✅ Ajout du champ `sex`
+    private String sex;
+
     private String bio;
 }

@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import axios from "axios";
+import { BASE_URL } from "../../config/hostname"; // ✅ Import de l'URL du backend
 
 interface SocialLink {
   id?: string;
@@ -20,6 +21,7 @@ const initialState: SocialLinkState = {
   error: null,
 };
 
+// ✅ **Récupérer le token d'authentification**
 const getAuthToken = () => localStorage.getItem("token");
 
 // ✅ **Récupérer les liens sociaux d'un utilisateur**
@@ -30,17 +32,12 @@ export const fetchSocialLinksByUser = createAsyncThunk(
       const token = getAuthToken();
       if (!token) return rejectWithValue("⚠️ Token non trouvé, veuillez vous reconnecter.");
 
-      const response = await axios.get(`http://localhost:8080/api/social-links/user/${userId}`, {
+      const response = await axios.get(`${BASE_URL}/api/social-links/user/${userId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
       console.log("✅ Liens sociaux récupérés :", response.data);
-      return response.data.map((link: any) => ({
-        id: link._id?.$oid || link.id, // 🔄 Adaptation MongoDB
-        userId: link.userId,
-        platform: link.platform,
-        url: link.url,
-      }));
+      return response.data;
     } catch (error: any) {
       console.error("❌ Erreur API :", error.response?.data || error.message);
       return rejectWithValue(error.response?.data?.error || "Échec du chargement des liens sociaux.");
@@ -60,18 +57,13 @@ export const addSocialLink = createAsyncThunk(
       if (!userId) return rejectWithValue("⚠️ ID utilisateur manquant, veuillez vous reconnecter.");
 
       const response = await axios.post(
-        "http://localhost:8080/api/social-links",
+        `${BASE_URL}/api/social-links`,
         { ...socialLinkData, userId },
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
       console.log("✅ Lien social ajouté :", response.data);
-      return {
-        id: response.data._id?.$oid || response.data.id,
-        userId: response.data.userId,
-        platform: response.data.platform,
-        url: response.data.url,
-      };
+      return response.data;
     } catch (error: any) {
       console.error("❌ Erreur lors de l'ajout :", error.response?.data);
       return rejectWithValue(error.response?.data?.error || "Échec de l'ajout du lien social.");
@@ -88,18 +80,13 @@ export const updateSocialLink = createAsyncThunk(
       if (!token) return rejectWithValue("⚠️ Token non trouvé, veuillez vous reconnecter.");
 
       const response = await axios.put(
-        `http://localhost:8080/api/social-links/${id}`,
+        `${BASE_URL}/api/social-links/${id}`,
         socialLinkData,
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
       console.log("✅ Lien social mis à jour :", response.data);
-      return {
-        id: response.data._id?.$oid || response.data.id,
-        userId: response.data.userId,
-        platform: response.data.platform,
-        url: response.data.url,
-      };
+      return response.data;
     } catch (error: any) {
       console.error("❌ Erreur lors de la mise à jour :", error.response?.data);
       return rejectWithValue(error.response?.data?.error || "Échec de la mise à jour du lien social.");
@@ -115,7 +102,7 @@ export const deleteSocialLink = createAsyncThunk(
       const token = getAuthToken();
       if (!token) return rejectWithValue("⚠️ Token non trouvé, veuillez vous reconnecter.");
 
-      await axios.delete(`http://localhost:8080/api/social-links/${id}`, {
+      await axios.delete(`${BASE_URL}/api/social-links/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -135,7 +122,7 @@ const socialLinkSlice = createSlice({
   reducers: {},
   extraReducers: (builder) => {
     builder
-      // **Récupérer les liens sociaux**
+      // 🔹 **Récupérer les liens sociaux**
       .addCase(fetchSocialLinksByUser.pending, (state) => {
         state.status = "loading";
         state.error = null;
@@ -144,7 +131,7 @@ const socialLinkSlice = createSlice({
       .addCase(fetchSocialLinksByUser.fulfilled, (state, action: PayloadAction<SocialLink[]>) => {
         state.status = "succeeded";
         console.log("✅ Liens sociaux reçus :", action.payload);
-        state.socialLinks = Array.isArray(action.payload) ? action.payload : [];
+        state.socialLinks = action.payload;
       })
       .addCase(fetchSocialLinksByUser.rejected, (state, action) => {
         state.status = "failed";
@@ -152,7 +139,7 @@ const socialLinkSlice = createSlice({
         console.error("❌ Erreur lors de la récupération des liens sociaux :", state.error);
       })
 
-      // **Ajouter un lien social**
+      // 🔹 **Ajouter un lien social**
       .addCase(addSocialLink.pending, (state) => {
         state.status = "loading";
       })
@@ -165,7 +152,7 @@ const socialLinkSlice = createSlice({
         state.error = action.payload as string;
       })
 
-      // **Mettre à jour un lien social**
+      // 🔹 **Mettre à jour un lien social**
       .addCase(updateSocialLink.pending, (state) => {
         state.status = "loading";
       })
@@ -180,7 +167,7 @@ const socialLinkSlice = createSlice({
         state.error = action.payload as string;
       })
 
-      // **Supprimer un lien social**
+      // 🔹 **Supprimer un lien social**
       .addCase(deleteSocialLink.pending, (state) => {
         state.status = "loading";
       })

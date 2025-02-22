@@ -1,30 +1,51 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState, AppDispatch } from "../../../redux/store";
-import { fetchPortfolioByUser } from "../../../redux/features/portfolioSlice";
-import "./PortfolioGlobal.css"; // Styles pour le CV
+import { fetchPortfolioByUser, fetchPortfolioByUsername } from "../../../redux/features/portfolioSlice";
+import { useParams } from "react-router-dom";
+import "./PortfolioGlobal.css"; // ✅ Styles du CV
 
 const PortfolioGlobal = () => {
   console.log("🔄 Rendering PortfolioGlobal");
 
   const dispatch = useDispatch<AppDispatch>();
-  const userId = localStorage.getItem("userId");
+  const { firstName, lastName } = useParams(); // ✅ Récupère les paramètres URL
 
   // Récupération des données Redux
   const { portfolio, status: portfolioStatus, error: portfolioError } = useSelector(
     (state: RootState) => state.portfolio
   );
+  const user = useSelector((state: RootState) => state.user.user);
 
-  console.log("📜 Portfolio Status:", portfolioStatus);
-  console.log("📜 Portfolio Data:", portfolio);
-  console.log("❌ Portfolio Error:", portfolioError);
+  // ✅ Détecte si on est en mode "public" ou "connecté"
+  const isPublicView = Boolean(firstName && lastName);
+  const isUserAuthenticated = Boolean(user && !isPublicView);
 
-  // ✅ **Récupérer le portfolio détaillé**
   useEffect(() => {
-    if (userId) {
-      dispatch(fetchPortfolioByUser(userId));
+    if (isPublicView) {
+      dispatch(fetchPortfolioByUsername({ firstName, lastName })); // ✅ Charge via Nom + Prénom
+    } else {
+      const userId = localStorage.getItem("userId");
+      if (userId) {
+        dispatch(fetchPortfolioByUser(userId)); // ✅ Charge via userId (connecté)
+      }
     }
-  }, [dispatch, userId]);
+  }, [dispatch, firstName, lastName]);
+
+  // ✅ Générer l'URL du portfolio
+  const baseURL = "http://localhost:5173/portfolio";
+  const portfolioURL = user
+    ? `${baseURL}/${user.firstName}/${user.lastName}`
+    : "";
+
+  // ✅ Copie du lien dans le presse-papier
+  const [copied, setCopied] = useState(false);
+  const copyToClipboard = () => {
+    if (!portfolioURL) return;
+    navigator.clipboard.writeText(portfolioURL);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   if (portfolioStatus === "loading") {
     return <p>⏳ Chargement du portfolio...</p>;
@@ -35,12 +56,29 @@ const PortfolioGlobal = () => {
   }
 
   if (!portfolio) {
-    return <p>📜 En attente de création du portfolio...</p>;
+    return <p>📜 Aucun portfolio trouvé.</p>;
   }
 
   return (
     <div className="portfolio-global-container">
-      <h1 className="portfolio-title">Mon Portfolio</h1>
+      <h1 className="portfolio-title">
+        {isPublicView ? `Portfolio de ${firstName} ${lastName}` : "Mon Portfolio"}
+      </h1>
+
+      {/* ✅ Bouton visible uniquement si le user est connecté (pas en mode public) */}
+      {isUserAuthenticated && portfolioURL && (
+        <div className="portfolio-link-container">
+          <button className="portfolio-link-btn" onClick={copyToClipboard}>
+            📎 Copier le lien du portfolio
+          </button>
+          {copied && <span className="copied-message">✅ Lien copié !</span>}
+          <p className="portfolio-url">
+            <a href={portfolioURL} target="_blank" rel="noopener noreferrer">
+              {portfolioURL}
+            </a>
+          </p>
+        </div>
+      )}
 
       {portfolio.educations?.length > 0 && (
         <section className="cv-section">

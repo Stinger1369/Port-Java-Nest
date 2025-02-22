@@ -1,8 +1,9 @@
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import axios from "axios";
 import { RootState } from "../../redux/store"; // Assure-toi que le chemin est correct
+import { BASE_URL } from "../../config/hostname"; // ✅ Import de l'URL du backend
 
-// Interface utilisateur
+// ✅ Interface utilisateur mise à jour
 interface User {
   id: string;
   email: string;
@@ -12,11 +13,11 @@ interface User {
   address?: string;
   city?: string;
   country?: string;
-  gender?: string;
+  sex?: "Man" | "Woman" | "Other" | ""; // ✅ Ajout du champ sex
   bio?: string;
 }
 
-// État initial de Redux
+// ✅ État initial Redux
 interface UserState {
   user: User | null;
   status: "idle" | "loading" | "succeeded" | "failed";
@@ -24,13 +25,13 @@ interface UserState {
   message: string | null;
 }
 
-// État initial
 const initialState: UserState = {
   user: null,
   status: "idle",
   error: null,
   message: null,
 };
+
 // ✅ **Récupérer l'utilisateur après connexion**
 export const fetchUser = createAsyncThunk(
   "user/fetchUser",
@@ -46,11 +47,10 @@ export const fetchUser = createAsyncThunk(
 
       console.log("🔹 Fetching user with ID:", userId);
 
-      const response = await axios.get(`http://localhost:8080/api/users/${userId}`, {
+      const response = await axios.get(`${BASE_URL}/api/users/${userId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      // Vérifier si l'utilisateur a des données
       if (!response.data) {
         console.warn("⚠️ L'utilisateur n'a pas encore complété son profil.");
         return rejectWithValue("User profile is incomplete");
@@ -65,8 +65,6 @@ export const fetchUser = createAsyncThunk(
   }
 );
 
-
-
 // ✅ **Mettre à jour le profil utilisateur**
 export const updateUser = createAsyncThunk(
   "user/updateUser",
@@ -77,9 +75,18 @@ export const updateUser = createAsyncThunk(
 
       console.log("🔹 Sending update request for user:", userData);
 
-      const response = await axios.put(`http://localhost:8080/api/users/${userData.id}`, userData, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      // ✅ Vérifier que sex a une valeur valide
+      if (userData.sex && !["Man", "Woman", "Other", ""].includes(userData.sex)) {
+        return rejectWithValue("Sex field must be 'Man', 'Woman', 'Other' or empty.");
+      }
+
+      const response = await axios.put(
+        `${BASE_URL}/api/users/${userData.id}`,
+        userData,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
 
       console.log("✅ Update successful:", response.data);
       return response.data;
@@ -98,7 +105,7 @@ export const deleteUser = createAsyncThunk(
       const token = localStorage.getItem("token");
       if (!token) throw new Error("No token found");
 
-      await axios.delete(`http://localhost:8080/api/users/${userId}`, {
+      await axios.delete(`${BASE_URL}/api/users/${userId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -154,7 +161,7 @@ const userSlice = createSlice({
       .addCase(deleteUser.pending, (state) => {
         state.status = "loading";
       })
-      .addCase(deleteUser.fulfilled, (state, action) => {
+      .addCase(deleteUser.fulfilled, (state) => {
         state.status = "succeeded";
         state.user = null;
         localStorage.removeItem("token");

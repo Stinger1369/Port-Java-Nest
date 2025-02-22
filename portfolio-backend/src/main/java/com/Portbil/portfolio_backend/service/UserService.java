@@ -19,25 +19,27 @@ public class UserService {
     private final EmailService emailService;
 
     /**
-     * Récupérer tous les utilisateurs
+     * ✅ Récupérer tous les utilisateurs
      */
     public List<User> getAllUsers() {
         return userRepository.findAll();
     }
 
     /**
-     * Récupérer un utilisateur par ID
+     * ✅ Récupérer un utilisateur par ID
      */
     public Optional<User> getUserById(String id) {
         return userRepository.findById(id);
     }
 
     /**
-     * Mettre à jour les informations d'un utilisateur
+     * ✅ Mettre à jour les informations d'un utilisateur avec correction du format `firstName` et `lastName`
      */
     public Optional<User> updateUser(String id, UserDTO userDTO) {
         return userRepository.findById(id).map(user -> {
-            // Vérifier si l'email est déjà utilisé par un autre utilisateur
+
+            System.out.println("🔹 Mise à jour de l'utilisateur ID : " + id);
+
             if (userDTO.getEmail() != null && !userDTO.getEmail().equals(user.getEmail())) {
                 Optional<User> existingUser = userRepository.findByEmail(userDTO.getEmail());
                 if (existingUser.isPresent() && !existingUser.get().getId().equals(id)) {
@@ -46,50 +48,58 @@ public class UserService {
                 user.setEmail(userDTO.getEmail());
             }
 
-            // Vérifier si le mot de passe est fourni et l'encoder
             if (userDTO.getPassword() != null && !userDTO.getPassword().isEmpty()) {
                 user.setPassword(passwordEncoder.encode(userDTO.getPassword()));
             }
 
-            // Mettre à jour les autres champs facultatifs
-            if (userDTO.getFirstName() != null) user.setFirstName(userDTO.getFirstName());
-            if (userDTO.getLastName() != null) user.setLastName(userDTO.getLastName());
+            if (userDTO.getFirstName() != null) user.setFirstName(capitalizeFirstLetter(userDTO.getFirstName()));
+            if (userDTO.getLastName() != null) user.setLastName(capitalizeFirstLetter(userDTO.getLastName()));
             if (userDTO.getPhone() != null) user.setPhone(userDTO.getPhone());
             if (userDTO.getAddress() != null) user.setAddress(userDTO.getAddress());
             if (userDTO.getCity() != null) user.setCity(userDTO.getCity());
             if (userDTO.getCountry() != null) user.setCountry(userDTO.getCountry());
-            if (userDTO.getGender() != null) user.setGender(userDTO.getGender());
+
+            // ✅ Validation et mise à jour du sexe
+            if (userDTO.getSex() != null) {
+                if (!isValidSex(userDTO.getSex())) {
+                    throw new IllegalArgumentException("Sexe invalide. Les valeurs autorisées sont: 'Man', 'Woman', 'Other' ou vide.");
+                }
+                user.setSex(userDTO.getSex());
+            }
+
             if (userDTO.getBio() != null) user.setBio(userDTO.getBio());
 
+            System.out.println("✅ Mise à jour réussie pour l'utilisateur ID: " + id);
             return userRepository.save(user);
         });
     }
 
     /**
-     * Supprimer un utilisateur
+     * ✅ Valider si la valeur de `sex` est correcte
+     */
+    private boolean isValidSex(String sex) {
+        if (sex == null || sex.isEmpty()) return true; // Accepter vide ou null
+        return sex.equalsIgnoreCase("Man") ||
+                sex.equalsIgnoreCase("Woman") ||
+                sex.equalsIgnoreCase("Other");
+    }
+
+    /**
+     * ✅ Supprimer un utilisateur
      */
     public void deleteUser(String id) {
         userRepository.deleteById(id);
     }
 
     /**
-     * Récupérer un utilisateur par email
+     * ✅ Récupérer un utilisateur par email
      */
     public Optional<User> getUserByEmail(String email) {
-        System.out.println("🔍 Vérification UserRepository.findByEmail : " + email);
-        Optional<User> user = userRepository.findByEmail(email);
-
-        if (user.isEmpty()) {
-            System.out.println("❌ Aucun utilisateur trouvé en base avec cet email : " + email);
-        } else {
-            System.out.println("✅ Utilisateur trouvé en base : " + user.get().getEmail());
-        }
-
-        return user;
+        return userRepository.findByEmail(email);
     }
 
     /**
-     * Inscription avec génération d'un code de validation par email
+     * ✅ Inscription avec génération d'un code de validation par email
      */
     public User registerUser(String email, String password) {
         if (userRepository.findByEmail(email).isPresent()) {
@@ -116,7 +126,7 @@ public class UserService {
     }
 
     /**
-     * Vérification du compte utilisateur avec le code reçu par email
+     * ✅ Vérification du compte utilisateur avec le code reçu par email
      */
     public boolean verifyUser(String email, String code) {
         Optional<User> userOpt = userRepository.findByEmail(email);
@@ -137,14 +147,14 @@ public class UserService {
     }
 
     /**
-     * Vérification du mot de passe avec hashage
+     * ✅ Vérification du mot de passe avec hashage
      */
     public boolean checkPassword(User user, String rawPassword) {
         return passwordEncoder.matches(rawPassword, user.getPassword());
     }
 
     /**
-     * Demande de réinitialisation du mot de passe (génère un token et envoie un email)
+     * ✅ Demande de réinitialisation du mot de passe (génère un token et envoie un email)
      */
     public void forgotPassword(String email) {
         Optional<User> userOpt = userRepository.findByEmail(email);
@@ -167,7 +177,7 @@ public class UserService {
     }
 
     /**
-     * Réinitialisation du mot de passe avec expiration et vérification des anciens mots de passe
+     * ✅ Réinitialisation du mot de passe avec expiration et vérification des anciens mots de passe
      */
     public void resetPassword(String token, String newPassword) {
         Optional<User> userOpt = userRepository.findByResetToken(token);
@@ -206,9 +216,17 @@ public class UserService {
     }
 
     /**
-     * Génère un code de confirmation à 6 chiffres
+     * ✅ Générer un code de confirmation à 6 chiffres
      */
     private String generateConfirmationCode() {
         return String.valueOf(100000 + new Random().nextInt(900000));
+    }
+
+    /**
+     * ✅ Méthode pour capitaliser la première lettre d'un mot
+     */
+    private String capitalizeFirstLetter(String input) {
+        if (input == null || input.isEmpty()) return input;
+        return input.substring(0, 1).toUpperCase() + input.substring(1).toLowerCase();
     }
 }

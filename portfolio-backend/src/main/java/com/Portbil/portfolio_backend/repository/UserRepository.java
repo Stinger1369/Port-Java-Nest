@@ -6,5 +6,6 @@ import java.util.Optional;
 
 public interface UserRepository extends MongoRepository<User, String> {
     Optional<User> findByEmail(String email);
-    Optional<User> findByResetToken(String resetToken); // ✅ Trouver un utilisateur par son token de réinitialisation
+    Optional<User> findByResetToken(String resetToken);
+    Optional<User> findByFirstNameAndLastName(String firstName, String lastName); // ✅ Ajout
 }
