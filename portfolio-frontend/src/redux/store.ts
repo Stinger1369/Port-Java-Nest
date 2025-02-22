@@ -1,13 +1,31 @@
 import { configureStore } from "@reduxjs/toolkit";
 import authReducer from "./features/authSlice";
 import userReducer from "./features/userSlice";
-import educationReducer from "./features/educationSlice"; // ✅ Ajout
+import educationReducer from "./features/educationSlice";
+import skillReducer from "./features/skillSlice";
+import experienceReducer from "./features/experienceSlice";
+import projectReducer from "./features/projectSlice";
+import certificationReducer from "./features/certificationSlice";
+import socialLinkReducer from "./features/socialLinkSlice";
+import portfolioReducer from "./features/portfolioSlice";
+import languageReducer from "./features/languageSlice";
+import recommendationReducer from "./features/recommendationSlice";
+import interestReducer from "./features/interestSlice";
 
 export const store = configureStore({
   reducer: {
     auth: authReducer,
     user: userReducer,
-    education: educationReducer, // ✅ Intégration de l'éducation
+    education: educationReducer,
+    skill: skillReducer,
+    experience: experienceReducer,
+    project: projectReducer,
+    certification: certificationReducer,
+    socialLink: socialLinkReducer,
+    portfolio: portfolioReducer,
+    language: languageReducer,
+    recommendation: recommendationReducer,
+    interest: interestReducer,
   },
 });
 

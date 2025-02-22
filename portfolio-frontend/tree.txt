@@ -28,13 +28,57 @@ portfolio-frontend/
 │   │   │   ├── Home.css
 │   │   │   └── Home.tsx
 │   │   ├── Portfolio/
+│   │   │   ├── Certifications/
+│   │   │   │   ├── AddCertification.tsx
+│   │   │   │   ├── Certifications.css
+│   │   │   │   ├── Certifications.tsx
+│   │   │   │   └── UpdateCertification.tsx
 │   │   │   ├── Education/
 │   │   │   │   ├── AddEducation/
+│   │   │   │   │   ├── AddEducation.css
 │   │   │   │   │   └── AddEducation.tsx
 │   │   │   │   ├── Education.css
-│   │   │   │   └── Education.tsx
+│   │   │   │   ├── Education.tsx
+│   │   │   │   └── UpdateEducation/
+│   │   │   │       ├── UpdateEducation.css
+│   │   │   │       └── UpdateEducation.tsx
+│   │   │   ├── experience/
+│   │   │   │   ├── AddExperience.tsx
+│   │   │   │   ├── Experience.css
+│   │   │   │   ├── Experience.tsx
+│   │   │   │   └── UpdateExperience.tsx
+│   │   │   ├── Interests/
+│   │   │   │   ├── AddInterest.tsx
+│   │   │   │   ├── Interest.css
+│   │   │   │   ├── Interest.tsx
+│   │   │   │   └── UpdateInterest.tsx
+│   │   │   ├── Languages/
+│   │   │   │   ├── AddLanguage.tsx
+│   │   │   │   ├── Languages.css
+│   │   │   │   ├── Languages.tsx
+│   │   │   │   └── UpdateLanguage.tsx
 │   │   │   ├── Portfolio.css
-│   │   │   └── Portfolio.tsx
+│   │   │   ├── Portfolio.tsx
+│   │   │   ├── Projects/
+│   │   │   │   ├── AddProject.tsx
+│   │   │   │   ├── Projects.css
+│   │   │   │   ├── Projects.tsx
+│   │   │   │   └── UpdateProject.tsx
+│   │   │   ├── Recommendations/
+│   │   │   │   ├── AddRecommendation.tsx
+│   │   │   │   ├── Recommendations.css
+│   │   │   │   ├── Recommendations.tsx
+│   │   │   │   └── UpdateRecommendation.tsx
+│   │   │   ├── Skills/
+│   │   │   │   ├── AddSkill.tsx
+│   │   │   │   ├── Skills.css
+│   │   │   │   ├── Skills.tsx
+│   │   │   │   └── UpdateSkill.tsx
+│   │   │   └── Social/
+│   │   │       ├── AddSocialLink.tsx
+│   │   │       ├── Social.css
+│   │   │       ├── Social.tsx
+│   │   │       └── UpdateSocialLink.tsx
 │   │   └── Profile/
 │   │       ├── EditProfile/
 │   │       │   └── EditProfile.tsx
@@ -56,7 +100,16 @@ portfolio-frontend/
 │   ├── redux/
 │   │   ├── features/
 │   │   │   ├── authSlice.ts
+│   │   │   ├── certificationSlice.ts
 │   │   │   ├── educationSlice.ts
+│   │   │   ├── experienceSlice.ts
+│   │   │   ├── interestSlice.ts
+│   │   │   ├── languageSlice.ts
+│   │   │   ├── portfolioSlice.ts
+│   │   │   ├── projectSlice.ts
+│   │   │   ├── recommendationSlice.ts
+│   │   │   ├── skillSlice.ts
+│   │   │   ├── socialLinkSlice.ts
 │   │   │   └── userSlice.ts
 │   │   └── store.ts
 │   ├── styles.css

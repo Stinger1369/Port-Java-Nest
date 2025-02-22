@@ -1,0 +1,168 @@
+.recommendations-container {
+  max-width: 600px;
+  margin: 20px auto;
+  padding: 20px;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+h2 {
+  text-align: center;
+  color: #333;
+}
+
+.loading-text,
+.error-text,
+.no-recommendations-text {
+  text-align: center;
+  font-size: 14px;
+}
+
+.error-text {
+  color: red;
+}
+
+.recommendations-list {
+  list-style: none;
+  padding: 0;
+}
+
+.recommendation-item {
+  background: white;
+  padding: 15px;
+  margin-bottom: 10px;
+  border-radius: 5px;
+  border-left: 5px solid #007bff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.recommendation-info p {
+  margin: 5px 0;
+  color: #666;
+}
+
+.date-received {
+  font-size: 12px;
+  color: #777;
+}
+
+.add-button,
+.edit-button,
+.delete-button {
+  cursor: pointer;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 5px;
+  font-size: 16px;
+  transition: background-color 0.3s;
+}
+
+.add-button {
+  background-color: #007bff;
+  color: white;
+  display: block;
+  margin: 10px auto;
+  text-align: center;
+}
+
+.add-button:hover {
+  background-color: #0056b3;
+}
+
+.edit-button {
+  background-color: #ffcc00;
+  color: black;
+}
+
+.edit-button:hover {
+  background-color: #e6b800;
+}
+
+.delete-button {
+  background-color: #ff4d4d;
+  color: white;
+}
+
+.delete-button:hover {
+  background-color: #cc0000;
+}
+
+/* ✅ Modal Styles */
+.modal {
+  background: rgba(0, 0, 0, 0.5);
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  width: 400px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+}
+
+.modal-content h3 {
+  text-align: center;
+  margin-bottom: 10px;
+}
+
+.modal-content form {
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-content input,
+.modal-content textarea {
+  width: 100%;
+  margin-bottom: 10px;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+}
+
+.modal-content label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.modal-content button {
+  width: 100%;
+  padding: 10px;
+  margin-top: 10px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.modal-content button[type="submit"] {
+  background-color: #007bff;
+  color: white;
+}
+
+.modal-content button[type="submit"]:hover {
+  background-color: #0056b3;
+}
+
+.modal-content button[type="button"] {
+  background-color: #ccc;
+  color: black;
+}
+
+.modal-content button[type="button"]:hover {
+  background-color: #aaa;
+}

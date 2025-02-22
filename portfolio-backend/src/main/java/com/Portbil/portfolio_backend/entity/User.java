@@ -22,8 +22,8 @@ public class User implements UserDetails {
     private String id;
     private String email;
     private String password;
-    private String resetToken; // ✅ Token pour réinitialisation du mot de passe
-    private LocalDateTime resetTokenExpiration; // ✅ Expiration du token
+    private String resetToken;
+    private LocalDateTime resetTokenExpiration;
 
     // Champs optionnels
     private String firstName;
@@ -42,16 +42,49 @@ public class User implements UserDetails {
     @Builder.Default
     private Set<Role> roles = Collections.singleton(Role.USER);
 
-    // ✅ Liste des anciens mots de passe hachés (évite la réutilisation des anciens mots de passe)
     @Builder.Default
     private List<String> previousPasswords = new ArrayList<>();
 
     private boolean isVerified;
     private String confirmationCode;
 
-    // ✅ Ajout de la liste des formations de l'utilisateur
+    // ✅ Liste des IDs des éléments du portfolio
     @Builder.Default
     private List<String> educationIds = new ArrayList<>();
+    @Builder.Default
+    private List<String> skillIds = new ArrayList<>();
+    @Builder.Default
+    private List<String> experienceIds = new ArrayList<>();
+    @Builder.Default
+    private List<String> projectIds = new ArrayList<>();
+    @Builder.Default
+    private List<String> certificationIds = new ArrayList<>();
+    @Builder.Default
+    private List<String> socialLinkIds = new ArrayList<>();
+    @Builder.Default
+    private List<String> languageIds = new ArrayList<>();
+    @Builder.Default
+    private List<String> recommendationIds = new ArrayList<>();
+    @Builder.Default
+    private List<String> interestIds = new ArrayList<>();
+
+    // ✅ Référence vers le portfolio personnalisé de l'utilisateur
+    private String portfolioId;
+
+    // ✅ Méthode pour récupérer toutes les IDs des sections du portfolio
+    public List<String> getAllPortfolioIds() {
+        List<String> allIds = new ArrayList<>();
+        allIds.addAll(educationIds);
+        allIds.addAll(skillIds);
+        allIds.addAll(experienceIds);
+        allIds.addAll(projectIds);
+        allIds.addAll(certificationIds);
+        allIds.addAll(socialLinkIds);
+        allIds.addAll(languageIds);
+        allIds.addAll(recommendationIds);
+        allIds.addAll(interestIds);
+        return allIds;
+    }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

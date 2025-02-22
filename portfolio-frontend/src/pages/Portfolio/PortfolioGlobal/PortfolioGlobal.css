@@ -1,0 +1,44 @@
+.portfolio-global-container {
+  width: 80%;
+  margin: auto;
+  font-family: Arial, sans-serif;
+}
+
+.portfolio-title {
+  text-align: center;
+  font-size: 2rem;
+  margin-bottom: 20px;
+}
+
+.cv-section {
+  border-bottom: 1px solid #ddd;
+  padding: 15px 0;
+}
+
+.cv-section h2 {
+  font-size: 1.5rem;
+  color: #333;
+}
+
+ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+li {
+  margin: 5px 0;
+  font-size: 1rem;
+}
+
+.skills-list {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.skills-list li {
+  background: #007bff;
+  color: white;
+  padding: 5px 10px;
+  margin: 5px;
+  border-radius: 5px;
+}

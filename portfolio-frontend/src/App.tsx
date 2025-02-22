@@ -10,7 +10,16 @@ import ResetPassword from "./pages/Profile/ResetPassword/ResetPassword";
 import ProtectedRoute from "./components/ProtectedRoute";
 import EditProfile from "./pages/Profile/EditProfile/EditProfile";
 import Portfolio from "./pages/Portfolio/Portfolio";
+import PortfolioGlobal from "./pages/Portfolio/PortfolioGlobal/PortfolioGlobal"; // ✅ Import du Portfolio Global
 import Education from "./pages/Portfolio/Education/Education";
+import Experience from "./pages/Portfolio/Experience/Experience";
+import Skills from "./pages/Portfolio/Skills/Skills";
+import Projects from "./pages/Portfolio/Projects/Projects";
+import Certifications from "./pages/Portfolio/Certifications/Certifications";
+import Social from "./pages/Portfolio/Social/Social";
+import Languages from "./pages/Portfolio/Languages/Languages";
+import Recommendations from "./pages/Portfolio/Recommendations/Recommendations";
+import Interests from "./pages/Portfolio/Interests/Interests";
 
 const App = () => {
   return (
@@ -25,10 +34,19 @@ const App = () => {
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/edit-profile" element={<EditProfile />} />
 
-        {/* ✅ Correction ici : Balise `<Route>` fermée correctement */}
+        {/* ✅ Routes du Portfolio */}
         <Route path="/portfolio" element={<Portfolio />}>
+          <Route path="global" element={<PortfolioGlobal />} /> {/* ✅ Portfolio complet */}
           <Route path="education" element={<Education />} />
-        </Route> {/* ✅ Cette ligne était mal fermée ! */}
+          <Route path="experience" element={<Experience />} />
+          <Route path="skills" element={<Skills />} />
+          <Route path="projects" element={<Projects />} />
+          <Route path="certifications" element={<Certifications />} />
+          <Route path="social" element={<Social />} />
+          <Route path="languages" element={<Languages />} />
+          <Route path="recommendations" element={<Recommendations />} />
+          <Route path="interests" element={<Interests />} />
+        </Route>
 
         {/* ✅ Route protégée pour Profile */}
         <Route

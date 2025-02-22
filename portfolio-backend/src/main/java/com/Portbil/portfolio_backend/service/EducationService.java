@@ -15,7 +15,8 @@ import java.util.Optional;
 public class EducationService {
 
     private final EducationRepository educationRepository;
-    private final UserRepository userRepository; // ✅ Pour vérifier si l'utilisateur existe avant l'ajout
+    private final UserRepository userRepository;
+    private final PortfolioService portfolioService; // ✅ Ajout du PortfolioService
 
     public List<Education> getAllEducations() {
         return educationRepository.findAll();
@@ -30,13 +31,20 @@ public class EducationService {
     }
 
     public Optional<Education> createEducation(Education education) {
-        // ✅ Vérifier si l'utilisateur associé existe avant d'ajouter l'éducation
+        // ✅ Vérifier si l'utilisateur existe avant d'ajouter l'éducation
         Optional<User> user = userRepository.findById(education.getUserId());
         if (user.isEmpty()) {
-            return Optional.empty(); // ✅ Retourne vide si l'utilisateur n'existe pas
+            return Optional.empty();
         }
 
-        return Optional.of(educationRepository.save(education));
+        Education savedEducation = educationRepository.save(education);
+
+        // ✅ Ajouter l'ID de l'éducation à l'utilisateur et mettre à jour le portfolio
+        user.get().getEducationIds().add(savedEducation.getId());
+        userRepository.save(user.get());
+        portfolioService.updatePortfolioWithUserData(user.get().getId());
+
+        return Optional.of(savedEducation);
     }
 
     public Optional<Education> updateEducation(String id, Education updatedEducation) {
@@ -53,6 +61,15 @@ public class EducationService {
     }
 
     public void deleteEducation(String id) {
-        educationRepository.deleteById(id);
+        educationRepository.findById(id).ifPresent(education -> {
+            // ✅ Supprimer l'ID de l'éducation dans l'utilisateur
+            userRepository.findById(education.getUserId()).ifPresent(user -> {
+                user.getEducationIds().remove(id);
+                userRepository.save(user);
+                portfolioService.updatePortfolioWithUserData(user.getId());
+            });
+
+            educationRepository.deleteById(id);
+        });
     }
 }

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState, AppDispatch } from "../../../redux/store";
-import { fetchEducationsByUser } from "../../../redux/features/educationSlice";
+import { fetchEducationsByUser, deleteEducation } from "../../../redux/features/educationSlice";
 import AddEducation from "./AddEducation/AddEducation";
 import UpdateEducation from "./UpdateEducation/UpdateEducation";
 import "./Education.css"; // ✅ Import du CSS
@@ -27,6 +27,13 @@ const Education = () => {
     new Date(b.startDate).getTime() - new Date(a.startDate).getTime()
   );
 
+  // ✅ Fonction pour supprimer une formation
+  const handleDelete = (id: string) => {
+    if (window.confirm("Voulez-vous vraiment supprimer cette formation ?")) {
+      dispatch(deleteEducation(id));
+    }
+  };
+
   return (
     <div className="education-container">
       <h2>Éducation</h2>
@@ -42,8 +49,9 @@ const Education = () => {
                 <strong>{edu.schoolName}</strong> - {edu.degree} ({edu.fieldOfStudy})
                 <p>{edu.startDate} - {edu.endDate || "En cours"}</p>
                 <p>{edu.description}</p>
-                {/* ✅ Icône d'édition */}
+                {/* ✅ Boutons Modifier et Supprimer */}
                 <button className="edit-button" onClick={() => setSelectedEducation(edu)}>✏️</button>
+                <button className="delete-button" onClick={() => handleDelete(edu.id)}>🗑️</button>
               </div>
             </li>
           ))}
