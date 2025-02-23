@@ -1,81 +1,227 @@
+/* src/pages/Profile/Login.css */
 .login-container {
+  max-width: 400px;
+  margin: 4rem auto;
+  padding: 2rem;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
   text-align: center;
-  padding: 20px;
+  animation: fadeIn 0.5s ease-in-out;
 }
 
+/* Animation d'entrée */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Titre */
+.login-container h2 {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #1e2a44;
+  margin-bottom: 1.5rem;
+  position: relative;
+}
+
+.login-container h2::after {
+  content: "";
+  width: 40px;
+  height: 3px;
+  background: linear-gradient(90deg, #646cff, #535bf2);
+  position: absolute;
+  bottom: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+/* Formulaire */
 form {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 1.2rem;
 }
 
 input {
-  padding: 10px;
-  border: 1px solid #ccc;
-  border-radius: 5px;
+  padding: 0.9rem 1.2rem;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 1rem;
+  color: #333;
+  background: #f9f9f9;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
-button {
-  background-color: #646cff;
+input:focus {
+  outline: none;
+  border-color: #646cff;
+  box-shadow: 0 0 0 3px rgba(100, 108, 255, 0.2);
+}
+
+/* Bouton principal (Login) */
+button[type="submit"] {
+  padding: 0.9rem;
+  background: linear-gradient(135deg, #646cff 0%, #535bf2 100%);
   color: white;
-  padding: 10px;
   border: none;
-  border-radius: 5px;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  font-weight: 500;
   cursor: pointer;
+  transition: background 0.3s ease, transform 0.2s ease;
 }
 
-button:hover {
-  background-color: #535bf2;
+button[type="submit"]:hover {
+  background: linear-gradient(135deg, #535bf2 0%, #646cff 100%);
+  transform: translateY(-2px);
 }
 
+button[type="submit"]:active {
+  transform: translateY(0);
+}
+
+/* Messages d'erreur */
+.error-message {
+  font-size: 0.9rem;
+  color: #e63946;
+  background: #ffe6e6;
+  padding: 0.8rem;
+  border-radius: 5px;
+  margin-bottom: 1rem;
+  animation: slideIn 0.3s ease-in-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Options de vérification */
 .verify-options {
-  margin-top: 15px;
+  margin-top: 1.5rem;
+  padding: 1rem;
+  background: #f9f9f9;
+  border-radius: 8px;
+}
+
+.verify-options p {
+  font-size: 0.9rem;
+  color: #666;
+  margin-bottom: 0.8rem;
 }
 
 .verify-btn,
-.resend-btn {
-  margin-top: 10px;
-  padding: 10px;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  display: block;
+.resend-btn,
+.register-btn {
   width: 100%;
+  padding: 0.8rem;
+  border: none;
+  border-radius: 6px;
+  font-size: 1rem;
+  color: white;
+  cursor: pointer;
+  transition: background 0.3s ease, transform 0.2s ease;
+  margin-top: 0.5rem;
 }
 
 .verify-btn {
-  background-color: #ff6b6b;
-  color: white;
+  background: linear-gradient(135deg, #ff6b6b 0%, #e63946 100%);
 }
 
 .verify-btn:hover {
-  background-color: #ff4c4c;
+  background: linear-gradient(135deg, #e63946 0%, #ff6b6b 100%);
+  transform: translateY(-2px);
 }
 
 .resend-btn {
-  background-color: #ffa502;
-  color: white;
+  background: linear-gradient(135deg, #ffa502 0%, #ff8c00 100%);
 }
 
 .resend-btn:hover {
-  background-color: #ff8c00;
+  background: linear-gradient(135deg, #ff8c00 0%, #ffa502 100%);
+  transform: translateY(-2px);
 }
+
+.resend-btn:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Option d'inscription */
 .register-option {
-  margin-top: 15px;
+  margin-top: 1.5rem;
 }
 
 .register-btn {
-  margin-top: 10px;
-  padding: 10px;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  display: block;
-  width: 100%;
-  background-color: #28a745;
-  color: white;
+  background: linear-gradient(135deg, #28a745 0%, #218838 100%);
 }
 
 .register-btn:hover {
-  background-color: #218838;
+  background: linear-gradient(135deg, #218838 0%, #28a745 100%);
+  transform: translateY(-2px);
+}
+
+/* Lien Mot de passe oublié */
+.login-container p {
+  margin-top: 1.5rem;
+  font-size: 0.9rem;
+}
+
+.login-container a {
+  color: #646cff;
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+.login-container a:hover {
+  color: #535bf2;
+  text-decoration: underline;
+}
+
+/* Responsivité */
+@media (max-width: 480px) {
+  .login-container {
+    margin: 2rem auto;
+    padding: 1.5rem;
+  }
+
+  .login-container h2 {
+    font-size: 1.8rem;
+  }
+
+  input {
+    padding: 0.8rem 1rem;
+    font-size: 0.9rem;
+  }
+
+  button[type="submit"],
+  .verify-btn,
+  .resend-btn,
+  .register-btn {
+    padding: 0.7rem;
+    font-size: 0.9rem;
+  }
+
+  .error-message {
+    font-size: 0.8rem;
+    padding: 0.6rem;
+  }
+
+  .verify-options p {
+    font-size: 0.8rem;
+  }
 }

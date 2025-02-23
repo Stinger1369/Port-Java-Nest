@@ -1,5 +1,4 @@
-// portfolio-frontend/src/App.tsx
-import { Suspense } from "react"; // ✅ Pour gérer le chargement des traductions
+import { Suspense } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Navbar from "./components/Navbar/Navbar";
 import Home from "./pages/Home/Home";
@@ -22,17 +21,17 @@ import Social from "./pages/Portfolio/Social/Social";
 import Languages from "./pages/Portfolio/Languages/Languages";
 import Recommendations from "./pages/Portfolio/Recommendations/Recommendations";
 import Interests from "./pages/Portfolio/Interests/Interests";
-import "./App.css"; // Styles spécifiques à App
+import "./App.css";
 
 const App = () => {
   return (
     <Router>
       <div className="app-container">
-        <Suspense fallback={<div>Loading translations...</div>}> {/* ✅ Suspense optionnel */}
+        <Suspense fallback={<div>Loading translations...</div>}>
           <Navbar />
           <main className="main-content">
             <Routes>
-              <Route path="/" element={<Home />} />
+              <Route path="/" element={<Home />} /> {/* ✅ Route pour la page d'accueil */}
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
               <Route path="/verify-account" element={<VerifyAccount />} />

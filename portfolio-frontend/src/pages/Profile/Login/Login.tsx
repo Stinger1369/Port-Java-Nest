@@ -6,7 +6,7 @@ import { useTranslation } from "react-i18next";
 import "./Login.css";
 
 const Login = () => {
-  const { t, ready } = useTranslation(); // ✅ 'ready' indique si les traductions sont chargées
+  const { t, ready } = useTranslation();
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
@@ -26,7 +26,7 @@ const Login = () => {
 
     try {
       const result = await dispatch(login({ email, password })).unwrap();
-      navigate("/profile");
+      navigate("/"); // ✅ Redirection vers la page d'accueil au lieu de /profile
     } catch (err) {
       console.error("❌ Échec de connexion :", err);
       if (err === "Account not verified. Check your email.") {
@@ -53,7 +53,6 @@ const Login = () => {
     }
   };
 
-  // Si les traductions ne sont pas encore prêtes, afficher un fallback
   if (!ready) {
     return <div>Loading translations...</div>;
   }
@@ -81,7 +80,6 @@ const Login = () => {
         <button type="submit">{t("login.submit")}</button>
       </form>
 
-      {/* Boutons pour compte non vérifié */}
       {unverified && (
         <div className="verify-options">
           <p>{t("login.verifyPrompt")}</p>
@@ -101,7 +99,6 @@ const Login = () => {
         </div>
       )}
 
-      {/* Bouton pour créer un compte si l'utilisateur n'existe pas */}
       {userNotFound && (
         <div className="register-option">
           <button
@@ -120,7 +117,6 @@ const Login = () => {
   );
 };
 
-// Envelopper dans Suspense pour gérer le chargement des traductions
 const LoginWithSuspense = () => (
   <Suspense fallback={<div>Loading translations...</div>}>
     <Login />
