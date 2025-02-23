@@ -1,0 +1,81 @@
+.phone-input-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.phone-input-container label {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #1e2a44;
+}
+
+.phone-input-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.phone-input-prefix {
+  width: 100px; /* Largeur fixe pour l’indicatif */
+}
+
+.phone-input-hidden {
+  display: none; /* Cache le champ d’entrée par défaut de PhoneInput */
+}
+
+/* Style du dropdown de recherche */}
+.phone-input-prefix .react-tel-input .flag-dropdown {
+  border-radius: 8px 0 0 8px;
+  border: 1px solid #ddd;
+  background: #f9f9f9;
+}
+
+/* Style du champ de recherche dans le dropdown */
+.phone-input-prefix .react-tel-input .search {
+  padding: 0.5rem;
+}
+
+/* Style de l’input pour le numéro utilisateur */
+.phone-number-input {
+  flex: 1;
+  padding: 0.8rem 1rem;
+  font-size: 1rem;
+  border: 1px solid #ddd;
+  border-radius: 0 8px 8px 0;
+  background: #f9f9f9;
+  color: #333;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.phone-number-input:focus {
+  outline: none;
+  border-color: #61dafb;
+  box-shadow: 0 0 5px rgba(97, 218, 251, 0.5);
+}
+
+.phone-error {
+  color: #e63946;
+  font-size: 0.9rem;
+  margin-top: 0.25rem;
+}
+
+/* Responsivité */
+@media (max-width: 480px) {
+  .phone-input-container label {
+    font-size: 1rem;
+  }
+
+  .phone-input-prefix {
+    width: 80px;
+  }
+
+  .phone-number-input {
+    font-size: 0.9rem;
+    padding: 0.7rem;
+  }
+
+  .phone-error {
+    font-size: 0.8rem;
+  }
+}

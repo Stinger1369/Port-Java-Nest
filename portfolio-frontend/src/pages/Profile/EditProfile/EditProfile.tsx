@@ -4,7 +4,9 @@ import { RootState, AppDispatch } from "../../../redux/store";
 import { useNavigate } from "react-router-dom";
 import { fetchUser, updateUser } from "../../../redux/features/userSlice";
 import { useTranslation } from "react-i18next";
+import PhoneInputComponent from "../../../components/PhoneInput/PhoneInputComponent";
 import "./EditProfile.css";
+
 const EditProfile = () => {
   const { t, ready } = useTranslation();
   const dispatch = useDispatch<AppDispatch>();
@@ -34,16 +36,19 @@ const EditProfile = () => {
     } else if (!user && userId) {
       dispatch(fetchUser());
     } else if (user) {
+      const normalizedPhone = user.phone && !user.phone.startsWith("+") ? `+${user.phone}` : user.phone || "";
       setFormData({
         firstName: user.firstName || "",
         lastName: user.lastName || "",
-        phone: user.phone || "",
+        phone: normalizedPhone,
         address: user.address || "",
         city: user.city || "",
         country: user.country || "",
         sex: user.sex || "",
         bio: user.bio || "",
       });
+      console.log("Initial phone from user:", user.phone);
+      console.log("Normalized phone in formData:", normalizedPhone);
     }
   }, [token, user, userId, dispatch, navigate]);
 
@@ -51,8 +56,13 @@ const EditProfile = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  const handlePhoneChange = (phone: string) => {
+    setFormData({ ...formData, phone });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log("Submitted phone:", formData.phone);
     if (user) {
       dispatch(updateUser({ id: user.id, ...formData }));
     }
@@ -68,7 +78,7 @@ const EditProfile = () => {
 
       {status === "loading" && <p>{t("editProfile.loading", "Loading...")}</p>}
       {error && <p className="error">{t("editProfile.error", { message: error })}</p>}
-      {message && <p className="success">{t("editProfile.success", message)}</p>}
+      {message && <p className="success">{t("editProfile.success", "Profile updated successfully")}</p>}
 
       <form onSubmit={handleSubmit}>
         <label>{t("editProfile.firstName", "First Name")} :</label>
@@ -77,8 +87,11 @@ const EditProfile = () => {
         <label>{t("editProfile.lastName", "Last Name")} :</label>
         <input type="text" name="lastName" value={formData.lastName} onChange={handleChange} />
 
-        <label>{t("editProfile.phone", "Phone")} :</label>
-        <input type="text" name="phone" value={formData.phone} onChange={handleChange} />
+        <PhoneInputComponent
+          value={formData.phone}
+          onChange={handlePhoneChange}
+          label={t("editProfile.phone", "Phone")}
+        />
 
         <label>{t("editProfile.address", "Address")} :</label>
         <input type="text" name="address" value={formData.address} onChange={handleChange} />

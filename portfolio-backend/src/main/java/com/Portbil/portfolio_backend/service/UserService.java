@@ -37,8 +37,8 @@ public class UserService {
      */
     public Optional<User> updateUser(String id, UserDTO userDTO) {
         return userRepository.findById(id).map(user -> {
-
             System.out.println("🔹 Mise à jour de l'utilisateur ID : " + id);
+            System.out.println("Phone reçu du DTO : " + userDTO.getPhone()); // Log avant mise à jour
 
             if (userDTO.getEmail() != null && !userDTO.getEmail().equals(user.getEmail())) {
                 Optional<User> existingUser = userRepository.findByEmail(userDTO.getEmail());
@@ -54,7 +54,7 @@ public class UserService {
 
             if (userDTO.getFirstName() != null) user.setFirstName(capitalizeFirstLetter(userDTO.getFirstName()));
             if (userDTO.getLastName() != null) user.setLastName(capitalizeFirstLetter(userDTO.getLastName()));
-            if (userDTO.getPhone() != null) user.setPhone(userDTO.getPhone());
+            if (userDTO.getPhone() != null) user.setPhone(userDTO.getPhone()); // Pas de transformation
             if (userDTO.getAddress() != null) user.setAddress(userDTO.getAddress());
             if (userDTO.getCity() != null) user.setCity(userDTO.getCity());
             if (userDTO.getCountry() != null) user.setCountry(userDTO.getCountry());
@@ -69,8 +69,10 @@ public class UserService {
 
             if (userDTO.getBio() != null) user.setBio(userDTO.getBio());
 
+            User savedUser = userRepository.save(user);
             System.out.println("✅ Mise à jour réussie pour l'utilisateur ID: " + id);
-            return userRepository.save(user);
+            System.out.println("Phone enregistré dans MongoDB : " + savedUser.getPhone()); // Log après enregistrement
+            return savedUser;
         });
     }
 

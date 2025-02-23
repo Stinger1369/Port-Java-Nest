@@ -5,13 +5,22 @@
   padding: 0 1rem;
 }
 
+.profile-container.rtl {
+  direction: rtl; /* Inverse la direction du texte pour RTL */
+}
+
+/* Titre */
 .profile-title {
   font-size: 2.5rem;
   font-weight: 700;
-  color: #c8cacf;
-  text-align: center;
+  color: #1e2a44;
+  text-align: left;
   margin-bottom: 2rem;
   position: relative;
+}
+
+.profile-container.rtl .profile-title {
+  text-align: right; /* Aligné à droite pour RTL */
 }
 
 .profile-title::after {
@@ -21,10 +30,16 @@
   background-color: #61dafb;
   position: absolute;
   bottom: -10px;
-  left: 50%;
-  transform: translateX(-50%);
+  left: 0;
+  transform: none;
 }
 
+.profile-container.rtl .profile-title::after {
+  left: auto;
+  right: 0; /* Aligné à droite pour RTL */
+}
+
+/* Carte */
 .profile-card {
   background: #ffffff;
   border-radius: 12px;
@@ -34,46 +49,74 @@
 }
 
 .profile-card:hover {
-  transform: translateY(-5px); /* Effet de lévitation au survol */
+  transform: translateY(-5px);
 }
 
+/* Liste des détails */
 .profile-details {
   list-style: none;
   padding: 0;
+  display: grid;
+  gap: 1.5rem;
 }
 
 .profile-details li {
   display: flex;
   align-items: center;
-  margin-bottom: 1.5rem;
-  font-size: 1.1rem;
-  color: #333;
+  padding: 1rem;
+  background: #f9f9f9;
+  border-radius: 8px;
+  transition: background 0.3s ease;
+}
+
+.profile-details li:hover {
+  background: #f0f0f0;
 }
 
 .profile-details i {
-  margin-right: 1rem;
+  margin-right: 1.5rem;
   color: #61dafb;
-  font-size: 1.3rem;
-  width: 20px;
+  font-size: 1.4rem;
+  width: 24px;
   text-align: center;
+  display: inline-block;
+}
+
+.profile-container.rtl .profile-details i {
+  margin-right: 0;
+  margin-left: 1.5rem; /* Inverse l’espacement pour RTL */
 }
 
 .profile-details span {
-  flex: 1;
+  font-size: 1.1rem;
+  color: #333;
+  text-align: left;
+  display: inline;
 }
 
-.profile-details strong {
+.profile-container.rtl .profile-details span {
+  text-align: right; /* Aligné à droite pour RTL */
+}
+
+.profile-details .label {
   color: #1e2a44;
   font-weight: 600;
+  margin-right: 0.5rem;
 }
 
+.profile-container.rtl .profile-details .label {
+  margin-right: 0;
+  margin-left: 0.5rem; /* Inverse l’espacement pour RTL */
+}
+
+/* Bouton d’édition */
 .profile-edit-btn {
   display: flex;
   align-items: center;
   justify-content: center;
   width: 100%;
   max-width: 250px;
-  margin: 2rem auto 0;
+  margin: 2rem 0 0 0;
   padding: 0.8rem 1.5rem;
   background: linear-gradient(135deg, #61dafb 0%, #1e90ff 100%);
   color: white;
@@ -85,8 +128,17 @@
   transition: background 0.3s ease, transform 0.3s ease;
 }
 
+.profile-container.rtl .profile-edit-btn {
+  margin: 2rem 0 0 auto; /* Aligné à droite pour RTL */
+}
+
 .profile-edit-btn i {
   margin-right: 0.5rem;
+}
+
+.profile-container.rtl .profile-edit-btn i {
+  margin-right: 0;
+  margin-left: 0.5rem; /* Inverse l’espacement pour RTL */
 }
 
 .profile-edit-btn:hover {
@@ -94,27 +146,40 @@
   transform: scale(1.05);
 }
 
+/* Messages */
 .profile-loading {
-  text-align: center;
   font-size: 1.2rem;
   color: #666;
   padding: 2rem;
+  text-align: left;
+}
+
+.profile-container.rtl .profile-loading {
+  text-align: right; /* Aligné à droite pour RTL */
 }
 
 .profile-error {
-  text-align: center;
   font-size: 1.2rem;
   color: #e63946;
   padding: 2rem;
   background: #ffe6e6;
   border-radius: 8px;
+  text-align: left;
+}
+
+.profile-container.rtl .profile-error {
+  text-align: right; /* Aligné à droite pour RTL */
 }
 
 .profile-empty {
-  text-align: center;
   font-size: 1.2rem;
   color: #666;
   padding: 2rem;
+  text-align: left;
+}
+
+.profile-container.rtl .profile-empty {
+  text-align: right; /* Aligné à droite pour RTL */
 }
 
 /* Responsivité */
@@ -127,13 +192,26 @@
     padding: 1.5rem;
   }
 
+  .profile-details {
+    gap: 1rem;
+  }
+
   .profile-details li {
-    font-size: 1rem;
-    margin-bottom: 1.2rem;
+    padding: 0.8rem;
   }
 
   .profile-details i {
     font-size: 1.2rem;
+    margin-right: 1rem;
+  }
+
+  .profile-container.rtl .profile-details i {
+    margin-right: 0;
+    margin-left: 1rem;
+  }
+
+  .profile-details span {
+    font-size: 1rem;
   }
 
   .profile-edit-btn {
@@ -159,12 +237,20 @@
   .profile-details li {
     flex-direction: column;
     align-items: flex-start;
-    font-size: 0.9rem;
+    padding: 0.8rem;
+  }
+
+  .profile-container.rtl .profile-details li {
+    align-items: flex-end; /* Aligné à droite pour RTL sur mobile */
   }
 
   .profile-details i {
     margin-bottom: 0.5rem;
     margin-right: 0;
+  }
+
+  .profile-container.rtl .profile-details i {
+    margin-left: 0;
   }
 
   .profile-edit-btn {

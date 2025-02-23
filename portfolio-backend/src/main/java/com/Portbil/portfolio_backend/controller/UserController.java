@@ -47,6 +47,7 @@ public class UserController {
         }
 
         System.out.println("✅ Utilisateur trouvé : " + user.get().getEmail());
+        System.out.println("Phone renvoyé au frontend : " + user.get().getPhone()); // Log pour vérifier
         return ResponseEntity.ok(user.get());
     }
 
@@ -60,6 +61,7 @@ public class UserController {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
         System.out.println("🔹 Tentative de mise à jour de l'utilisateur ID: " + id);
+        System.out.println("Received phone from frontend: " + userDTO.getPhone()); // Log avant traitement
 
         if (authentication == null || authentication.getPrincipal() == null) {
             System.out.println("❌ Utilisateur non authentifié !");
@@ -83,6 +85,7 @@ public class UserController {
             }
 
             System.out.println("✅ Mise à jour réussie pour l'utilisateur ID: " + id);
+            System.out.println("Saved phone in DB: " + updatedUser.get().getPhone()); // Log après mise à jour
             return ResponseEntity.ok(updatedUser.get());
 
         } catch (IllegalArgumentException e) {

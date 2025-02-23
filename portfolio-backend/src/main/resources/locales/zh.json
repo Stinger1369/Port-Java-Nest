@@ -87,6 +87,8 @@
     "firstName": "名",
     "lastName": "姓",
     "phone": "电话",
+    "phoneNumberPlaceholder": "输入电话号码（例如：659165303）",
+    "searchCountry": "搜索国家",
     "address": "地址",
     "city": "城市",
     "country": "国家",
@@ -95,7 +97,7 @@
     "submit": "保存",
     "backToProfile": "返回个人资料",
     "loading": "加载中...",
-    "error": "错误: {{message}}",
+    "error": "错误：{{message}}",
     "success": "个人资料更新成功",
     "sexOptions": {
       "man": "男",
@@ -103,5 +105,45 @@
       "other": "其他",
       "unspecified": "未指定"
     }
+  },
+  "profile": {
+    "title": "我的个人资料",
+    "name": "姓名",
+    "email": "电子邮件",
+    "phone": "电话",
+    "address": "地址",
+    "city": "城市",
+    "country": "国家",
+    "sex": "性别",
+    "bio": "简介",
+    "edit": "编辑我的个人资料",
+    "loading": "正在加载数据...",
+    "error": "错误: {{message}}",
+    "notFound": "未找到用户。",
+    "unspecified": "未提供",
+    "noBio": "暂无简介",
+    "sexOptions": {
+      "man": "男",
+      "woman": "女",
+      "other": "其他",
+      "unspecified": "未指定"
+    }
+  },
+  "home": {
+    "heroTitle": "用PortfolioCraft免费创建您的作品集",
+    "heroSubtitle": "用独特、简单且专业的作品集为您的项目和技能注入活力。",
+    "startNow": "立即开始",
+    "explore": "探索示例",
+    "featuresTitle": "为什么选择PortfolioCraft？",
+    "feature1Title": "轻松个性化",
+    "feature1Desc": "只需几次点击即可使用现代模板自定义您的作品集。",
+    "feature2Title": "免费托管",
+    "feature2Desc": "无需额外费用即可在线发布您的作品集。",
+    "feature3Title": "响应式设计",
+    "feature3Desc": "您的作品集在所有设备上都完美呈现。",
+    "ctaTitle": "准备好向世界展示您的才华了吗？",
+    "ctaText": "加入数千名创作者，今天就启动吧。",
+    "ctaButton": "创建我的作品集",
+    "footer": "保留所有权利。"
   }
 }

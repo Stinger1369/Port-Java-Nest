@@ -88,6 +88,8 @@
     "firstName": "Nombre",
     "lastName": "Apellido",
     "phone": "Teléfono",
+    "phoneNumberPlaceholder": "Ingresa el número de teléfono (ej.: 659165303)",
+    "searchCountry": "Buscar país",
     "address": "Dirección",
     "city": "Ciudad",
     "country": "País",
@@ -104,5 +106,45 @@
       "other": "Otro",
       "unspecified": "No especificado"
     }
+  },
+  "profile": {
+    "title": "Mi Perfil",
+    "name": "Nombre",
+    "email": "Correo electrónico",
+    "phone": "Teléfono",
+    "address": "Dirección",
+    "city": "Ciudad",
+    "country": "País",
+    "sex": "Sexo",
+    "bio": "Biografía",
+    "edit": "Editar mi perfil",
+    "loading": "Cargando datos...",
+    "error": "Error: {{message}}",
+    "notFound": "Usuario no encontrado.",
+    "unspecified": "No proporcionado",
+    "noBio": "Sin biografía",
+    "sexOptions": {
+      "man": "Hombre",
+      "woman": "Mujer",
+      "other": "Otro",
+      "unspecified": "No especificado"
+    }
+  },
+  "home": {
+    "heroTitle": "Crea Tu Portafolio Gratis con PortfolioCraft",
+    "heroSubtitle": "Da vida a tus proyectos y habilidades con un portafolio único, simple y profesional.",
+    "startNow": "Comenzar Ahora",
+    "explore": "Descubrir Ejemplos",
+    "featuresTitle": "¿Por Qué Elegir PortfolioCraft?",
+    "feature1Title": "Personalización Fácil",
+    "feature1Desc": "Personaliza tu portafolio con plantillas modernas en pocos clics.",
+    "feature2Title": "Alojamiento Gratis",
+    "feature2Desc": "Publica tu portafolio en línea sin costos adicionales.",
+    "feature3Title": "Diseño Responsivo",
+    "feature3Desc": "Tu portafolio se ve perfecto en todos los dispositivos.",
+    "ctaTitle": "¿Listo para Mostrar Tu Talento al Mundo?",
+    "ctaText": "Únete a miles de creadores y comienza hoy mismo.",
+    "ctaButton": "Crear Mi Portafolio",
+    "footer": "Todos los derechos reservados."
   }
 }

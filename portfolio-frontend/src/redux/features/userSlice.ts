@@ -1,7 +1,7 @@
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import axios from "axios";
-import { RootState } from "../../redux/store"; // Assure-toi que le chemin est correct
-import { BASE_URL } from "../../config/hostname"; // ✅ Import de l'URL du backend
+import { RootState } from "../../redux/store";
+import { BASE_URL } from "../../config/hostname";
 
 // ✅ Interface utilisateur mise à jour
 interface User {
@@ -13,7 +13,7 @@ interface User {
   address?: string;
   city?: string;
   country?: string;
-  sex?: "Man" | "Woman" | "Other" | ""; // ✅ Ajout du champ sex
+  sex?: "Man" | "Woman" | "Other" | "";
   bio?: string;
 }
 
@@ -57,6 +57,7 @@ export const fetchUser = createAsyncThunk(
       }
 
       console.log("✅ Utilisateur récupéré :", response.data);
+      console.log("Phone reçu du backend:", response.data.phone); // Log pour vérifier
       return response.data;
     } catch (error: any) {
       console.error("❌ Fetch user failed:", error.response?.data);
@@ -73,22 +74,25 @@ export const updateUser = createAsyncThunk(
       const token = localStorage.getItem("token");
       if (!token) throw new Error("No token found");
 
-      console.log("🔹 Sending update request for user:", userData);
+      // Forcer phone comme une chaîne brute
+      const payload = {
+        ...userData,
+        phone: userData.phone ? String(userData.phone) : undefined, // Garantit que phone reste une String
+      };
 
-      // ✅ Vérifier que sex a une valeur valide
-      if (userData.sex && !["Man", "Woman", "Other", ""].includes(userData.sex)) {
-        return rejectWithValue("Sex field must be 'Man', 'Woman', 'Other' or empty.");
-      }
+      console.log("🔹 Sending update request for user:", payload);
+      console.log("Données envoyées au backend:", JSON.stringify(payload)); // Log des données brutes
 
       const response = await axios.put(
         `${BASE_URL}/api/users/${userData.id}`,
-        userData,
+        payload,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
 
       console.log("✅ Update successful:", response.data);
+      console.log("Phone reçu du backend après update:", response.data.phone); // Log pour vérifier après mise à jour
       return response.data;
     } catch (error: any) {
       console.error("❌ Update failed:", error.response?.data);

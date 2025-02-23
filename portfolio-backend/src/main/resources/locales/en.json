@@ -87,6 +87,8 @@
     "firstName": "First Name",
     "lastName": "Last Name",
     "phone": "Phone",
+    "phoneNumberPlaceholder": "Enter phone number (e.g., 659165303)",
+    "searchCountry": "Search country",
     "address": "Address",
     "city": "City",
     "country": "Country",
@@ -103,6 +105,46 @@
       "other": "Other",
       "unspecified": "Not specified"
     }
+  },
+  "profile": {
+    "title": "My Profile",
+    "name": "Name",
+    "email": "Email",
+    "phone": "Phone",
+    "address": "Address",
+    "city": "City",
+    "country": "Country",
+    "sex": "Sex",
+    "bio": "Biography",
+    "edit": "Edit my profile",
+    "loading": "Loading data...",
+    "error": "Error: {{message}}",
+    "notFound": "User not found.",
+    "unspecified": "Not provided",
+    "noBio": "No biography",
+    "sexOptions": {
+      "man": "Man",
+      "woman": "Woman",
+      "other": "Other",
+      "unspecified": "Not specified"
+    }
+  },
+  "home": {
+    "heroTitle": "Create Your Free Portfolio with PortfolioCraft",
+    "heroSubtitle": "Bring your projects and skills to life with a unique, simple, and professional portfolio.",
+    "startNow": "Start Now",
+    "explore": "Explore Examples",
+    "featuresTitle": "Why Choose PortfolioCraft?",
+    "feature1Title": "Easy Customization",
+    "feature1Desc": "Customize your portfolio with modern templates in just a few clicks.",
+    "feature2Title": "Free Hosting",
+    "feature2Desc": "Publish your portfolio online at no extra cost.",
+    "feature3Title": "Responsive Design",
+    "feature3Desc": "Your portfolio looks perfect on all devices.",
+    "ctaTitle": "Ready to Showcase Your Talent to the World?",
+    "ctaText": "Join thousands of creators and get started today.",
+    "ctaButton": "Create My Portfolio",
+    "footer": "All rights reserved."
   }
 
 }

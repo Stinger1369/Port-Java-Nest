@@ -1,11 +1,13 @@
-import { useEffect } from "react";
+import { useEffect, Suspense } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState, AppDispatch } from "../../redux/store";
 import { useNavigate } from "react-router-dom";
 import { fetchUser } from "../../redux/features/userSlice";
-import "./Profile.css"; // ✅ Import du CSS spécifique
+import { useTranslation } from "react-i18next";
+import "./Profile.css";
 
 const Profile = () => {
+  const { t, i18n, ready } = useTranslation();
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
 
@@ -22,70 +24,96 @@ const Profile = () => {
     }
   }, [token, user, status, navigate, dispatch]);
 
-  if (status === "loading") return <div className="profile-loading">Chargement des données...</div>;
-  if (status === "failed") return <div className="profile-error">Erreur : {error}</div>;
-
   const getSexLabel = (sex: string | undefined) => {
     switch (sex) {
       case "Man":
-        return "Homme";
+        return t("profile.sexOptions.man", "Man");
       case "Woman":
-        return "Femme";
+        return t("profile.sexOptions.woman", "Woman");
       case "Other":
-        return "Autre";
+        return t("profile.sexOptions.other", "Other");
       default:
-        return "Non spécifié";
+        return t("profile.sexOptions.unspecified", "Not specified");
     }
   };
 
+  if (!ready) {
+    return <div>{t("loading", "Loading translations...")}</div>;
+  }
+
+  if (status === "loading") return <div className="profile-loading">{t("profile.loading", "Loading data...")}</div>;
+  if (status === "failed") return <div className="profile-error">{t("profile.error", { message: error })}</div>;
+
   return (
-    <div className="profile-container">
-      <h2 className="profile-title">Mon Profil</h2>
+    <div className={`profile-container ${i18n.language === "ar" ? "rtl" : ""}`}>
+      <h2 className="profile-title">{t("profile.title", "My Profile")}</h2>
       {user ? (
         <div className="profile-card">
           <ul className="profile-details">
             <li>
               <i className="fas fa-user"></i>
-              <span><strong>Nom :</strong> {user.firstName} {user.lastName}</span>
+              <span>
+                <span className="label">{t("profile.name", "Name")} :</span> {user.firstName} {user.lastName}
+              </span>
             </li>
             <li>
               <i className="fas fa-envelope"></i>
-              <span><strong>Email :</strong> {user.email}</span>
+              <span>
+                <span className="label">{t("profile.email", "Email")} :</span> {user.email}
+              </span>
             </li>
             <li>
               <i className="fas fa-phone"></i>
-              <span><strong>Téléphone :</strong> {user.phone || "Non renseigné"}</span>
+              <span>
+                <span className="label">{t("profile.phone", "Phone")} :</span> {user.phone || t("profile.unspecified", "Not provided")}
+              </span>
             </li>
             <li>
               <i className="fas fa-map-marker-alt"></i>
-              <span><strong>Adresse :</strong> {user.address || "Non renseignée"}</span>
+              <span>
+                <span className="label">{t("profile.address", "Address")} :</span> {user.address || t("profile.unspecified", "Not provided")}
+              </span>
             </li>
             <li>
               <i className="fas fa-city"></i>
-              <span><strong>Ville :</strong> {user.city || "Non renseignée"}</span>
+              <span>
+                <span className="label">{t("profile.city", "City")} :</span> {user.city || t("profile.unspecified", "Not provided")}
+              </span>
             </li>
             <li>
               <i className="fas fa-globe"></i>
-              <span><strong>Pays :</strong> {user.country || "Non renseigné"}</span>
+              <span>
+                <span className="label">{t("profile.country", "Country")} :</span> {user.country || t("profile.unspecified", "Not provided")}
+              </span>
             </li>
             <li>
               <i className="fas fa-venus-mars"></i>
-              <span><strong>Sexe :</strong> {getSexLabel(user.sex)}</span>
+              <span>
+                <span className="label">{t("profile.sex", "Sex")} :</span> {getSexLabel(user.sex)}
+              </span>
             </li>
             <li>
               <i className="fas fa-book"></i>
-              <span><strong>Biographie :</strong> {user.bio || "Pas de biographie"}</span>
+              <span>
+                <span className="label">{t("profile.bio", "Biography")} :</span> {user.bio || t("profile.noBio", "No biography")}
+              </span>
             </li>
           </ul>
           <button className="profile-edit-btn" onClick={() => navigate("/edit-profile")}>
-            <i className="fas fa-edit"></i> Modifier mon profil
+            <i className="fas fa-edit"></i> {t("profile.edit", "Edit my profile")}
           </button>
         </div>
       ) : (
-        <p className="profile-empty">Utilisateur non trouvé.</p>
+        <p className="profile-empty">{t("profile.notFound", "User not found.")}</p>
       )}
     </div>
   );
 };
 
-export default Profile;
+const ProfileWithSuspense = () => (
+  <Suspense fallback={<div>Loading translations...</div>}>
+    <Profile />
+  </Suspense>
+);
+
+export default ProfileWithSuspense;
