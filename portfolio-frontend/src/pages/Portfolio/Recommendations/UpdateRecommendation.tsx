@@ -3,14 +3,17 @@ import { useDispatch } from "react-redux";
 import { AppDispatch } from "../../../redux/store";
 import { updateRecommendation } from "../../../redux/features/recommendationSlice";
 
+// ✅ **Alignement avec le backend (RecommendationDTO)**
+interface Recommendation {
+  id: string;
+  userId: string;
+  recommenderId: string;
+  content: string;
+  createdAt: string;
+}
+
 interface Props {
-  recommendation: {
-    id: string;
-    recommenderName?: string;
-    recommenderPosition?: string;
-    recommendationText?: string;
-    dateReceived?: string;
-  };
+  recommendation?: Recommendation; // ✅ Peut être undefined au début
   onClose: () => void;
 }
 
@@ -18,25 +21,25 @@ const UpdateRecommendation = ({ recommendation, onClose }: Props) => {
   const dispatch = useDispatch<AppDispatch>();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const [updatedRecommendation, setUpdatedRecommendation] = useState({
-    id: recommendation.id,
-    recommenderName: recommendation.recommenderName || "",
-    recommenderPosition: recommendation.recommenderPosition || "",
-    recommendationText: recommendation.recommendationText || "",
-    dateReceived: recommendation.dateReceived
-      ? recommendation.dateReceived.split("T")[0] // ✅ Correction du format date
-      : new Date().toISOString().split("T")[0], // Par défaut, date du jour
+  const [updatedRecommendation, setUpdatedRecommendation] = useState<Recommendation>({
+    id: recommendation?.id || "",
+    userId: recommendation?.userId || "",
+    recommenderId: recommendation?.recommenderId || "",
+    content: recommendation?.content || "",
+    createdAt: recommendation?.createdAt
+      ? recommendation.createdAt.split("T")[0]
+      : new Date().toISOString().split("T")[0], // ✅ Format YYYY-MM-DD
   });
 
   useEffect(() => {
     if (recommendation) {
       setUpdatedRecommendation({
         id: recommendation.id,
-        recommenderName: recommendation.recommenderName || "",
-        recommenderPosition: recommendation.recommenderPosition || "",
-        recommendationText: recommendation.recommendationText || "",
-        dateReceived: recommendation.dateReceived
-          ? recommendation.dateReceived.split("T")[0]
+        userId: recommendation.userId,
+        recommenderId: recommendation.recommenderId,
+        content: recommendation.content,
+        createdAt: recommendation.createdAt
+          ? recommendation.createdAt.split("T")[0]
           : new Date().toISOString().split("T")[0],
       });
     }
@@ -53,9 +56,8 @@ const UpdateRecommendation = ({ recommendation, onClose }: Props) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // ✅ Vérification des champs obligatoires avant l'envoi
-    if (!updatedRecommendation.recommenderName.trim() || !updatedRecommendation.recommendationText.trim()) {
-      console.error("❌ Erreur : Les champs 'Nom du recommendeur' et 'Texte de recommandation' sont obligatoires.");
+    if (!updatedRecommendation.recommenderId.trim() || !updatedRecommendation.content.trim()) {
+      console.error("❌ Erreur : Les champs 'ID du recommendeur' et 'Texte de recommandation' sont obligatoires.");
       return;
     }
 
@@ -72,41 +74,46 @@ const UpdateRecommendation = ({ recommendation, onClose }: Props) => {
     }
   };
 
+  if (!recommendation) {
+    return <p>⏳ Chargement des informations...</p>;
+  }
+
   return (
     <div className="modal">
       <div className="modal-content">
         <h3>Modifier la Recommandation</h3>
         <form onSubmit={handleSubmit}>
-          <label>Nom du recommendeur *</label>
+          <label>ID de l'utilisateur *</label>
           <input
             type="text"
-            name="recommenderName"
-            value={updatedRecommendation.recommenderName}
+            name="userId"
+            value={updatedRecommendation.userId}
             onChange={handleChange}
             required
           />
 
-          <label>Poste du recommendeur</label>
+          <label>ID du recommendeur *</label>
           <input
             type="text"
-            name="recommenderPosition"
-            value={updatedRecommendation.recommenderPosition}
+            name="recommenderId"
+            value={updatedRecommendation.recommenderId}
             onChange={handleChange}
+            required
           />
 
           <label>Texte de recommandation *</label>
           <textarea
-            name="recommendationText"
-            value={updatedRecommendation.recommendationText}
+            name="content"
+            value={updatedRecommendation.content}
             onChange={handleChange}
             required
           />
 
-          <label>Date de réception *</label>
+          <label>Date de création *</label>
           <input
             type="date"
-            name="dateReceived"
-            value={updatedRecommendation.dateReceived}
+            name="createdAt"
+            value={updatedRecommendation.createdAt}
             onChange={handleChange}
             required
           />

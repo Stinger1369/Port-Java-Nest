@@ -1,0 +1,170 @@
+/* EditProfile.css */
+.edit-profile-container {
+  max-width: 800px;
+  margin: 2rem auto;
+  padding: 2rem;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease;
+}
+
+.edit-profile-container:hover {
+  transform: translateY(-5px); /* Effet de lévitation au survol */
+}
+
+.edit-profile-container h2 {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #1e2a44;
+  text-align: center;
+  margin-bottom: 2rem;
+  position: relative;
+}
+
+.edit-profile-container h2::after {
+  content: "";
+  width: 50px;
+  height: 3px;
+  background-color: #61dafb;
+  position: absolute;
+  bottom: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.edit-profile-container form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.edit-profile-container label {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #1e2a44;
+  margin-bottom: 0.5rem;
+}
+
+.edit-profile-container input,
+.edit-profile-container select,
+.edit-profile-container textarea {
+  width: 100%;
+  padding: 0.8rem 1rem;
+  font-size: 1rem;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background: #f9f9f9;
+  color: #333; /* Texte en gris foncé pour une bonne visibilité */
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.edit-profile-container input:focus,
+.edit-profile-container select:focus,
+.edit-profile-container textarea:focus {
+  outline: none;
+  border-color: #61dafb;
+  box-shadow: 0 0 5px rgba(97, 218, 251, 0.5);
+  color: #333; /* Assure que le texte reste visible au focus */
+}
+
+.edit-profile-container textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+.edit-profile-container button[type="submit"],
+.edit-profile-container button {
+  padding: 0.8rem 1.5rem;
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: white;
+  background: linear-gradient(135deg, #61dafb 0%, #1e90ff 100%);
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.3s ease, transform 0.3s ease;
+  margin-top: 1rem;
+}
+
+.edit-profile-container button[type="submit"]:hover,
+.edit-profile-container button:hover {
+  background: linear-gradient(135deg, #1e90ff 0%, #61dafb 100%);
+  transform: scale(1.05);
+}
+
+.edit-profile-container .error {
+  color: #e63946;
+  font-size: 1rem;
+  text-align: center;
+  margin: 1rem 0;
+  padding: 0.5rem;
+  background: #ffe6e6;
+  border-radius: 8px;
+}
+
+.edit-profile-container .success {
+  color: #2a9d8f;
+  font-size: 1rem;
+  text-align: center;
+  margin: 1rem 0;
+  padding: 0.5rem;
+  background: #e6fff9;
+  border-radius: 8px;
+}
+
+.edit-profile-container p {
+  font-size: 1rem;
+  color: #666;
+  text-align: center;
+  margin: 1rem 0;
+}
+
+/* Responsivité */
+@media (max-width: 768px) {
+  .edit-profile-container {
+    padding: 1.5rem;
+    margin: 1rem;
+  }
+
+  .edit-profile-container h2 {
+    font-size: 1.8rem;
+  }
+
+  .edit-profile-container label {
+    font-size: 1rem;
+  }
+
+  .edit-profile-container input,
+  .edit-profile-container select,
+  .edit-profile-container textarea {
+    font-size: 0.9rem;
+    padding: 0.7rem;
+  }
+
+  .edit-profile-container button[type="submit"],
+  .edit-profile-container button {
+    font-size: 1rem;
+    padding: 0.7rem 1.2rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .edit-profile-container {
+    padding: 1rem;
+    margin: 0.5rem;
+  }
+
+  .edit-profile-container h2 {
+    font-size: 1.5rem;
+  }
+
+  .edit-profile-container form {
+    gap: 1rem;
+  }
+
+  .edit-profile-container button[type="submit"],
+  .edit-profile-container button {
+    width: 100%;
+  }
+}

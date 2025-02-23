@@ -1,0 +1,108 @@
+{
+  "navbar": {
+    "logo": "MyApp",
+    "profile": "Profile",
+    "portfolio": "Portfolio",
+    "logout": "Logout",
+    "login": "Login",
+    "register": "Register"
+  },
+  "profile": {
+    "title": "My Profile",
+    "name": "Name",
+    "email": "Email",
+    "phone": "Phone",
+    "address": "Address",
+    "city": "City",
+    "country": "Country",
+    "sex": "Sex",
+    "bio": "Biography",
+    "edit": "Edit my profile",
+    "loading": "Loading data...",
+    "error": "Error: {{message}}",
+    "notFound": "User not found.",
+    "sexOptions": {
+      "man": "Man",
+      "woman": "Woman",
+      "other": "Other",
+      "unspecified": "Not specified"
+    }
+  },
+  "login": {
+    "title": "Login",
+    "emailPlaceholder": "Email",
+    "passwordPlaceholder": "Password",
+    "submit": "Log in",
+    "error": {
+      "unverified": "Your account is not yet verified. Check your email.",
+      "userNotFound": "User not found. Would you like to create an account?",
+      "generic": "Login failed, please check your credentials."
+    },
+    "verifyPrompt": "Your account is not yet verified.",
+    "verifyButton": "Verify my account",
+    "resendButton": "Resend code",
+    "resendLoading": "Sending...",
+    "resendSuccess": "A new verification code has been sent to your email.",
+    "resendError": "Error sending the code.",
+    "registerButton": "Create an account",
+    "forgotPassword": "Forgot password?"
+  },
+  "register": {
+    "title": "Create an account",
+    "emailPlaceholder": "Email",
+    "passwordPlaceholder": "Password",
+    "confirmPasswordPlaceholder": "Confirm password",
+    "submit": "Sign up",
+    "success": "Registration successful! A verification code has been sent to your email. It is valid for 15 minutes.",
+    "error": {
+      "passwordMismatch": "Passwords do not match.",
+      "generic": "Registration failed, please try again."
+    }
+  },
+  "resetPassword": {
+    "title": "Reset your password",
+    "newPasswordPlaceholder": "New password",
+    "confirmPasswordPlaceholder": "Confirm new password",
+    "submit": "Reset password",
+    "success": "Your password has been successfully reset. Redirecting to login...",
+    "error": {
+      "invalidToken": "Invalid or expired token.",
+      "passwordMismatch": "Passwords do not match.",
+      "generic": "An error occurred while resetting your password. Please try again."
+    }
+  },
+  "forgotPassword": {
+    "title": "Forgot Password",
+    "emailPlaceholder": "Enter your email",
+    "submit": "Send",
+    "success": "A reset email has been sent to your address.",
+    "successInstructions": "Please check your email and follow the link to reset your password.",
+    "backToLogin": "Back to login",
+    "error": {
+      "generic": "An error occurred while sending the reset email."
+    }
+  },
+  "editProfile": {
+    "title": "Edit Profile",
+    "firstName": "First Name",
+    "lastName": "Last Name",
+    "phone": "Phone",
+    "address": "Address",
+    "city": "City",
+    "country": "Country",
+    "sex": "Sex",
+    "bio": "Bio",
+    "submit": "Save",
+    "backToProfile": "Back to profile",
+    "loading": "Loading...",
+    "error": "Error: {{message}}",
+    "success": "Profile updated successfully",
+    "sexOptions": {
+      "man": "Man",
+      "woman": "Woman",
+      "other": "Other",
+      "unspecified": "Not specified"
+    }
+  }
+
+}

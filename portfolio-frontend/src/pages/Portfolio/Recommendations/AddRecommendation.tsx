@@ -12,10 +12,10 @@ const AddRecommendation = ({ onClose }: Props) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [recommendation, setRecommendation] = useState({
-    recommenderName: "",
-    recommenderPosition: "",
-    recommendationText: "",
-    dateReceived: new Date().toISOString().split("T")[0],
+    userId: localStorage.getItem("userId") || "", // ✅ Récupération automatique de l'userId
+    recommenderId: "",
+    content: "",
+    createdAt: new Date().toISOString().split("T")[0], // ✅ Format YYYY-MM-DD
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -29,21 +29,20 @@ const AddRecommendation = ({ onClose }: Props) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const userId = localStorage.getItem("userId");
-    if (!userId) {
+    if (!recommendation.userId.trim()) {
       console.error("❌ Erreur : ID utilisateur manquant.");
       return;
     }
 
-    if (!recommendation.recommenderName.trim() || !recommendation.recommendationText.trim()) {
-      console.error("❌ Erreur : Les champs 'Nom du recommendeur' et 'Texte de recommandation' sont obligatoires.");
+    if (!recommendation.recommenderId.trim() || !recommendation.content.trim()) {
+      console.error("❌ Erreur : 'ID du recommendeur' et 'Texte de recommandation' sont obligatoires.");
       return;
     }
 
     setIsSubmitting(true);
 
     try {
-      await dispatch(addRecommendation({ ...recommendation, userId })).unwrap();
+      await dispatch(addRecommendation(recommendation)).unwrap();
       console.log("✅ Recommandation ajoutée avec succès !");
       onClose();
     } catch (error) {
@@ -58,29 +57,17 @@ const AddRecommendation = ({ onClose }: Props) => {
       <div className="modal-content">
         <h3>Ajouter une Recommandation</h3>
         <form onSubmit={handleSubmit}>
-          <input
-            type="text"
-            name="recommenderName"
-            value={recommendation.recommenderName}
-            onChange={handleChange}
-            placeholder="Nom du recommendeur"
-            required
-          />
-          <input
-            type="text"
-            name="recommenderPosition"
-            value={recommendation.recommenderPosition}
-            onChange={handleChange}
-            placeholder="Poste du recommendeur"
-          />
-          <textarea
-            name="recommendationText"
-            value={recommendation.recommendationText}
-            onChange={handleChange}
-            placeholder="Texte de recommandation"
-            required
-          />
-          <input type="date" name="dateReceived" value={recommendation.dateReceived} onChange={handleChange} required />
+          <label>ID de l'utilisateur *</label>
+          <input type="text" name="userId" value={recommendation.userId} onChange={handleChange} required readOnly />
+
+          <label>ID du recommendeur *</label>
+          <input type="text" name="recommenderId" value={recommendation.recommenderId} onChange={handleChange} required />
+
+          <label>Texte de recommandation *</label>
+          <textarea name="content" value={recommendation.content} onChange={handleChange} required />
+
+          <label>Date de création *</label>
+          <input type="date" name="createdAt" value={recommendation.createdAt} onChange={handleChange} required />
 
           <button type="submit" disabled={isSubmitting}>
             {isSubmitting ? "Ajout en cours..." : "Ajouter"}

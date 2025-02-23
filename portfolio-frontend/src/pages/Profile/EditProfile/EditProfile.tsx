@@ -1,10 +1,12 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState, AppDispatch } from "../../../redux/store";
 import { useNavigate } from "react-router-dom";
 import { fetchUser, updateUser } from "../../../redux/features/userSlice";
-
+import { useTranslation } from "react-i18next";
+import "./EditProfile.css";
 const EditProfile = () => {
+  const { t, ready } = useTranslation();
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
   const token = useSelector((state: RootState) => state.auth.token);
@@ -13,7 +15,6 @@ const EditProfile = () => {
   const error = useSelector((state: RootState) => state.user.error);
   const message = useSelector((state: RootState) => state.user.message);
 
-  // ✅ Récupérer l'ID utilisateur depuis localStorage
   const userId = localStorage.getItem("userId");
 
   const [formData, setFormData] = useState({
@@ -23,7 +24,7 @@ const EditProfile = () => {
     address: "",
     city: "",
     country: "",
-    sex: "", // ✅ Ajout du champ sex
+    sex: "",
     bio: "",
   });
 
@@ -31,7 +32,7 @@ const EditProfile = () => {
     if (!token) {
       navigate("/login");
     } else if (!user && userId) {
-      dispatch(fetchUser()); // ✅ Récupération correcte de l'utilisateur
+      dispatch(fetchUser());
     } else if (user) {
       setFormData({
         firstName: user.firstName || "",
@@ -40,7 +41,7 @@ const EditProfile = () => {
         address: user.address || "",
         city: user.city || "",
         country: user.country || "",
-        sex: user.sex || "", // ✅ Ajout de la récupération de sex
+        sex: user.sex || "",
         bio: user.bio || "",
       });
     }
@@ -57,50 +58,62 @@ const EditProfile = () => {
     }
   };
 
+  if (!ready) {
+    return <div>{t("loading", "Loading translations...")}</div>;
+  }
+
   return (
     <div className="edit-profile-container">
-      <h2>Modifier le Profil</h2>
+      <h2>{t("editProfile.title", "Edit Profile")}</h2>
 
-      {status === "loading" && <p>Chargement...</p>}
-      {error && <p className="error">{error}</p>}
-      {message && <p className="success">{message}</p>}
+      {status === "loading" && <p>{t("editProfile.loading", "Loading...")}</p>}
+      {error && <p className="error">{t("editProfile.error", { message: error })}</p>}
+      {message && <p className="success">{t("editProfile.success", message)}</p>}
 
       <form onSubmit={handleSubmit}>
-        <label>Prénom :</label>
+        <label>{t("editProfile.firstName", "First Name")} :</label>
         <input type="text" name="firstName" value={formData.firstName} onChange={handleChange} />
 
-        <label>Nom :</label>
+        <label>{t("editProfile.lastName", "Last Name")} :</label>
         <input type="text" name="lastName" value={formData.lastName} onChange={handleChange} />
 
-        <label>Téléphone :</label>
+        <label>{t("editProfile.phone", "Phone")} :</label>
         <input type="text" name="phone" value={formData.phone} onChange={handleChange} />
 
-        <label>Adresse :</label>
+        <label>{t("editProfile.address", "Address")} :</label>
         <input type="text" name="address" value={formData.address} onChange={handleChange} />
 
-        <label>Ville :</label>
+        <label>{t("editProfile.city", "City")} :</label>
         <input type="text" name="city" value={formData.city} onChange={handleChange} />
 
-        <label>Pays :</label>
+        <label>{t("editProfile.country", "Country")} :</label>
         <input type="text" name="country" value={formData.country} onChange={handleChange} />
 
-        <label>Sexe :</label>
+        <label>{t("editProfile.sex", "Sex")} :</label>
         <select name="sex" value={formData.sex} onChange={handleChange}>
-          <option value="">Ne pas préciser</option>
-          <option value="Man">Homme</option>
-          <option value="Woman">Femme</option>
-          <option value="Other">Autre</option>
+          <option value="">{t("editProfile.sexOptions.unspecified", "Not specified")}</option>
+          <option value="Man">{t("editProfile.sexOptions.man", "Man")}</option>
+          <option value="Woman">{t("editProfile.sexOptions.woman", "Woman")}</option>
+          <option value="Other">{t("editProfile.sexOptions.other", "Other")}</option>
         </select>
 
-        <label>Bio :</label>
+        <label>{t("editProfile.bio", "Bio")} :</label>
         <textarea name="bio" value={formData.bio} onChange={handleChange} />
 
-        <button type="submit">Enregistrer</button>
+        <button type="submit">{t("editProfile.submit", "Save")}</button>
       </form>
 
-      <button onClick={() => navigate("/profile")}>Retour au profil</button>
+      <button onClick={() => navigate("/profile")}>
+        {t("editProfile.backToProfile", "Back to profile")}
+      </button>
     </div>
   );
 };
 
-export default EditProfile;
+const EditProfileWithSuspense = () => (
+  <Suspense fallback={<div>Loading translations...</div>}>
+    <EditProfile />
+  </Suspense>
+);
+
+export default EditProfileWithSuspense;

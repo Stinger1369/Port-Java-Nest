@@ -6,6 +6,15 @@ import AddRecommendation from "./AddRecommendation";
 import UpdateRecommendation from "./UpdateRecommendation";
 import "./Recommendations.css";
 
+// ✅ **Alignement avec le backend (RecommendationDTO)**
+interface Recommendation {
+  id: string;
+  userId: string;
+  recommenderId: string;
+  content: string;
+  createdAt: string; // Format YYYY-MM-DD
+}
+
 const Recommendations = () => {
   const dispatch = useDispatch<AppDispatch>();
   const recommendations = useSelector((state: RootState) => state.recommendation.recommendations) || [];
@@ -14,7 +23,8 @@ const Recommendations = () => {
   const userId = localStorage.getItem("userId");
 
   const [showAddForm, setShowAddForm] = useState(false);
-  const [selectedRecommendation, setSelectedRecommendation] = useState<any>(null);
+  const [selectedRecommendation, setSelectedRecommendation] = useState<Recommendation | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     if (userId) {
@@ -22,35 +32,54 @@ const Recommendations = () => {
     }
   }, [dispatch, userId]);
 
+  const handleDelete = async (id: string) => {
+    setIsDeleting(true);
+    try {
+      await dispatch(deleteRecommendation(id)).unwrap();
+      console.log(`✅ Recommandation supprimée : ID ${id}`);
+    } catch (error) {
+      console.error("❌ Erreur lors de la suppression :", error);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   return (
     <div className="recommendations-container">
       <h2>Recommandations</h2>
 
-      {status === "loading" && <p className="loading-text">Chargement des recommandations...</p>}
-      {status === "failed" && <p className="error-text">Erreur : {error}</p>}
+      {status === "loading" && <p className="loading-text">⏳ Chargement des recommandations...</p>}
+      {status === "failed" && <p className="error-text">❌ Erreur : {error}</p>}
 
       {recommendations.length > 0 ? (
         <ul className="recommendations-list">
           {recommendations.map((rec) => (
             <li key={rec.id} className="recommendation-item">
               <div className="recommendation-info">
-                <strong>{rec.recommenderName}</strong> - {rec.recommenderPosition}
-                <p>"{rec.recommendationText}"</p>
-                <p className="date-received">{rec.dateReceived}</p>
-                <button className="edit-button" onClick={() => setSelectedRecommendation(rec)}>✏️</button>
-                <button className="delete-button" onClick={() => dispatch(deleteRecommendation(rec.id))}>🗑️</button>
+                <strong>Recommendeur ID : {rec.recommenderId}</strong>
+                <p>"{rec.content}"</p>
+                <p className="date-received">📅 {rec.createdAt}</p>
+                <button className="edit-button" onClick={() => setSelectedRecommendation(rec)} disabled={isDeleting}>✏️</button>
+                <button className="delete-button" onClick={() => handleDelete(rec.id)} disabled={isDeleting}>
+                  {isDeleting ? "Suppression..." : "🗑️"}
+                </button>
               </div>
             </li>
           ))}
         </ul>
       ) : (
-        <p className="no-recommendations-text">Aucune recommandation enregistrée.</p>
+        status !== "loading" && <p className="no-recommendations-text">📭 Aucune recommandation enregistrée.</p>
       )}
 
       <button className="add-button" onClick={() => setShowAddForm(true)}>➕ Ajouter</button>
 
       {showAddForm && <AddRecommendation onClose={() => setShowAddForm(false)} />}
-      {selectedRecommendation && <UpdateRecommendation recommendation={selectedRecommendation} onClose={() => setSelectedRecommendation(null)} />}
+      {selectedRecommendation && (
+        <UpdateRecommendation
+          recommendation={selectedRecommendation}
+          onClose={() => setSelectedRecommendation(null)}
+        />
+      )}
     </div>
   );
 };

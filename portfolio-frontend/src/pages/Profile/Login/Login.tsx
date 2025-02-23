@@ -1,24 +1,26 @@
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { useDispatch } from "react-redux";
 import { login, forgotPassword } from "../../../redux/features/authSlice";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import "./Login.css";
 
 const Login = () => {
+  const { t, ready } = useTranslation(); // ✅ 'ready' indique si les traductions sont chargées
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState(null);
   const [unverified, setUnverified] = useState(false);
-  const [userNotFound, setUserNotFound] = useState(false); // Nouvel état
+  const [userNotFound, setUserNotFound] = useState(false);
   const [resendLoading, setResendLoading] = useState(false);
 
   const handleLogin = async (e) => {
     e.preventDefault();
     setError(null);
     setUnverified(false);
-    setUserNotFound(false); // Réinitialiser cet état
+    setUserNotFound(false);
 
     console.log("📤 Données envoyées :", { email, password });
 
@@ -28,13 +30,13 @@ const Login = () => {
     } catch (err) {
       console.error("❌ Échec de connexion :", err);
       if (err === "Account not verified. Check your email.") {
-        setError("Votre compte n'est pas encore vérifié. Vérifiez votre email.");
+        setError(t("login.error.unverified", "Your account is not yet verified. Check your email."));
         setUnverified(true);
       } else if (err === "User not found.") {
-        setError("Utilisateur non trouvé. Voulez-vous créer un compte ?");
-        setUserNotFound(true); // Activer cet état pour afficher le bouton
+        setError(t("login.error.userNotFound", "User not found. Would you like to create an account?"));
+        setUserNotFound(true);
       } else {
-        setError("Échec de la connexion, vérifiez vos identifiants.");
+        setError(t("login.error.generic", "Login failed, please check your credentials."));
       }
     }
   };
@@ -43,53 +45,58 @@ const Login = () => {
     setResendLoading(true);
     try {
       await dispatch(forgotPassword({ email })).unwrap();
-      alert("✅ Un nouveau code de vérification a été envoyé à votre email.");
+      alert(t("login.resendSuccess", "A new verification code has been sent to your email."));
     } catch (err) {
-      alert("❌ Erreur lors de l'envoi du code.");
+      alert(t("login.resendError", "Error sending the code."));
     } finally {
       setResendLoading(false);
     }
   };
 
+  // Si les traductions ne sont pas encore prêtes, afficher un fallback
+  if (!ready) {
+    return <div>Loading translations...</div>;
+  }
+
   return (
     <div className="login-container">
-      <h2>Connexion</h2>
+      <h2>{t("login.title")}</h2>
       {error && <p className="error-message">{error}</p>}
 
       <form onSubmit={handleLogin}>
         <input
           type="email"
-          placeholder="Email"
+          placeholder={t("login.emailPlaceholder")}
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
         />
         <input
           type="password"
-          placeholder="Mot de passe"
+          placeholder={t("login.passwordPlaceholder")}
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
         />
-        <button type="submit">Se connecter</button>
+        <button type="submit">{t("login.submit")}</button>
       </form>
 
       {/* Boutons pour compte non vérifié */}
       {unverified && (
         <div className="verify-options">
-          <p>Votre compte n'est pas encore vérifié.</p>
+          <p>{t("login.verifyPrompt")}</p>
           <button
             onClick={() => navigate(`/verify-account?email=${email}`)}
             className="verify-btn"
           >
-            🔍 Vérifier mon compte
+            {t("login.verifyButton")}
           </button>
           <button
             onClick={handleResendCode}
             disabled={resendLoading}
             className="resend-btn"
           >
-            {resendLoading ? "📩 Envoi en cours..." : "🔄 Renvoyer le code"}
+            {resendLoading ? t("login.resendLoading") : t("login.resendButton")}
           </button>
         </div>
       )}
@@ -101,16 +108,23 @@ const Login = () => {
             onClick={() => navigate("/register")}
             className="register-btn"
           >
-            ✍️ Créer un compte
+            {t("login.registerButton")}
           </button>
         </div>
       )}
 
       <p>
-        <a href="/forgot-password">Mot de passe oublié ?</a>
+        <Link to="/forgot-password">{t("login.forgotPassword")}</Link>
       </p>
     </div>
   );
 };
 
-export default Login;
+// Envelopper dans Suspense pour gérer le chargement des traductions
+const LoginWithSuspense = () => (
+  <Suspense fallback={<div>Loading translations...</div>}>
+    <Login />
+  </Suspense>
+);
+
+export default LoginWithSuspense;

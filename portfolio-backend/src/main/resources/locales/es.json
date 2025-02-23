@@ -1,0 +1,108 @@
+{
+  "navbar": {
+    "logo": "MiApp",
+    "profile": "Perfil",
+    "portfolio": "Portafolio",
+    "logout": "Cerrar sesión",
+    "login": "Iniciar sesión",
+    "register": "Registrarse"
+  },
+  "profile": {
+    "title": "Mi Perfil",
+    "name": "Nombre",
+    "email": "Correo electrónico",
+    "phone": "Teléfono",
+    "address": "Dirección",
+    "city": "Ciudad",
+    "country": "País",
+    "sex": "Sexo",
+    "bio": "Biografía",
+    "edit": "Editar mi perfil",
+    "loading": "Cargando datos...",
+    "error": "Error: {{message}}",
+    "notFound": "Usuario no encontrado.",
+    "sexOptions": {
+      "man": "Hombre",
+      "woman": "Mujer",
+      "other": "Otro",
+      "unspecified": "No especificado"
+    }
+  },
+  "login": {
+    "title": "Iniciar sesión",
+    "emailPlaceholder": "Correo electrónico",
+    "passwordPlaceholder": "Contraseña",
+    "submit": "Iniciar sesión",
+    "error": {
+      "unverified": "Tu cuenta aún no está verificada. Revisa tu correo electrónico.",
+      "userNotFound": "Usuario no encontrado. ¿Quieres crear una cuenta?",
+      "generic": "Error en el inicio de sesión, verifica tus credenciales."
+    },
+    "verifyPrompt": "Tu cuenta aún no está verificada.",
+    "verifyButton": "Verificar mi cuenta",
+    "resendButton": "Reenviar código",
+    "resendLoading": "Enviando...",
+    "resendSuccess": "Se ha enviado un nuevo código de verificación a tu correo electrónico.",
+    "resendError": "Error al enviar el código.",
+    "registerButton": "Crear una cuenta",
+    "forgotPassword": "¿Olvidaste tu contraseña?"
+  },
+
+  "register": {
+    "title": "Crear una cuenta",
+    "emailPlaceholder": "Correo electrónico",
+    "passwordPlaceholder": "Contraseña",
+    "confirmPasswordPlaceholder": "Confirmar contraseña",
+    "submit": "Registrarse",
+    "success": "¡Registro exitoso! Se ha enviado un código de verificación a tu correo electrónico. Es válido por 15 minutos.",
+    "error": {
+      "passwordMismatch": "Las contraseñas no coinciden.",
+      "generic": "Error en el registro, por favor inténtalo de nuevo."
+    }
+  },
+  "resetPassword": {
+    "title": "Restablecer tu contraseña",
+    "newPasswordPlaceholder": "Nueva contraseña",
+    "confirmPasswordPlaceholder": "Confirmar nueva contraseña",
+    "submit": "Restablecer contraseña",
+    "success": "Tu contraseña ha sido restablecida con éxito. Redirigiendo al inicio de sesión...",
+    "error": {
+      "invalidToken": "Token inválido o expirado.",
+      "passwordMismatch": "Las contraseñas no coinciden.",
+      "generic": "Ocurrió un error al restablecer tu contraseña. Por favor, inténtalo de nuevo."
+    }
+  },
+  "forgotPassword": {
+    "title": "¿Olvidaste tu contraseña?",
+    "emailPlaceholder": "Ingresa tu correo electrónico",
+    "submit": "Enviar",
+    "success": "Se ha enviado un correo de restablecimiento a tu dirección.",
+    "successInstructions": "Por favor, revisa tu correo y sigue el enlace para restablecer tu contraseña.",
+    "backToLogin": "Volver al inicio de sesión",
+    "error": {
+      "generic": "Ocurrió un error al enviar el correo de restablecimiento."
+    }
+  },
+  "editProfile": {
+    "title": "Editar Perfil",
+    "firstName": "Nombre",
+    "lastName": "Apellido",
+    "phone": "Teléfono",
+    "address": "Dirección",
+    "city": "Ciudad",
+    "country": "País",
+    "sex": "Sexo",
+    "bio": "Biografía",
+    "submit": "Guardar",
+    "backToProfile": "Volver al perfil",
+    "loading": "Cargando...",
+    "error": "Error: {{message}}",
+    "success": "Perfil actualizado con éxito",
+    "sexOptions": {
+      "man": "Hombre",
+      "woman": "Mujer",
+      "other": "Otro",
+      "unspecified": "No especificado"
+    }
+  }
+}

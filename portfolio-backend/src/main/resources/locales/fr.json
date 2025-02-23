@@ -1,0 +1,107 @@
+{
+  "navbar": {
+    "logo": "MonApp",
+    "profile": "Profil",
+    "portfolio": "Portfolio",
+    "logout": "Déconnexion",
+    "login": "Connexion",
+    "register": "Inscription"
+  },
+  "profile": {
+    "title": "Mon Profil",
+    "name": "Nom",
+    "email": "Email",
+    "phone": "Téléphone",
+    "address": "Adresse",
+    "city": "Ville",
+    "country": "Pays",
+    "sex": "Sexe",
+    "bio": "Biographie",
+    "edit": "Modifier mon profil",
+    "loading": "Chargement des données...",
+    "error": "Erreur : {{message}}",
+    "notFound": "Utilisateur non trouvé.",
+    "sexOptions": {
+      "man": "Homme",
+      "woman": "Femme",
+      "other": "Autre",
+      "unspecified": "Non spécifié"
+    }
+  },
+  "login": {
+    "title": "Connexion",
+    "emailPlaceholder": "Email",
+    "passwordPlaceholder": "Mot de passe",
+    "submit": "Se connecter",
+    "error": {
+      "unverified": "Votre compte n'est pas encore vérifié. Vérifiez votre email.",
+      "userNotFound": "Utilisateur non trouvé. Voulez-vous créer un compte ?",
+      "generic": "Échec de la connexion, vérifiez vos identifiants."
+    },
+    "verifyPrompt": "Votre compte n'est pas encore vérifié.",
+    "verifyButton": "Vérifier mon compte",
+    "resendButton": "Renvoyer le code",
+    "resendLoading": "Envoi en cours...",
+    "resendSuccess": "Un nouveau code de vérification a été envoyé à votre email.",
+    "resendError": "Erreur lors de l'envoi du code.",
+    "registerButton": "Créer un compte",
+    "forgotPassword": "Mot de passe oublié ?"
+  },
+  "register": {
+    "title": "Créer un compte",
+    "emailPlaceholder": "Email",
+    "passwordPlaceholder": "Mot de passe",
+    "confirmPasswordPlaceholder": "Confirmer le mot de passe",
+    "submit": "S'inscrire",
+    "success": "Inscription réussie ! Un code de vérification a été envoyé à votre email. Il est valide pendant 15 minutes.",
+    "error": {
+      "passwordMismatch": "Les mots de passe ne correspondent pas.",
+      "generic": "Échec de l'inscription, veuillez réessayer."
+    }
+  },
+  "resetPassword": {
+    "title": "Réinitialisez votre mot de passe",
+    "newPasswordPlaceholder": "Nouveau mot de passe",
+    "confirmPasswordPlaceholder": "Confirmer le nouveau mot de passe",
+    "submit": "Réinitialiser le mot de passe",
+    "success": "Votre mot de passe a été réinitialisé avec succès. Redirection vers la connexion...",
+    "error": {
+      "invalidToken": "Jeton invalide ou expiré.",
+      "passwordMismatch": "Les mots de passe ne correspondent pas.",
+      "generic": "Une erreur est survenue lors de la réinitialisation de votre mot de passe. Veuillez réessayer."
+    }
+  },
+  "forgotPassword": {
+    "title": "Mot de passe oublié",
+    "emailPlaceholder": "Entrez votre email",
+    "submit": "Envoyer",
+    "success": "Un email de réinitialisation a été envoyé à votre adresse.",
+    "successInstructions": "Veuillez vérifier votre boîte email et suivre le lien pour réinitialiser votre mot de passe.",
+    "backToLogin": "Retour à la connexion",
+    "error": {
+      "generic": "Une erreur s'est produite lors de l'envoi de l'email de réinitialisation."
+    }
+  },
+  "editProfile": {
+    "title": "Modifier le Profil",
+    "firstName": "Prénom",
+    "lastName": "Nom",
+    "phone": "Téléphone",
+    "address": "Adresse",
+    "city": "Ville",
+    "country": "Pays",
+    "sex": "Sexe",
+    "bio": "Bio",
+    "submit": "Enregistrer",
+    "backToProfile": "Retour au profil",
+    "loading": "Chargement...",
+    "error": "Erreur : {{message}}",
+    "success": "Profil mis à jour avec succès",
+    "sexOptions": {
+      "man": "Homme",
+      "woman": "Femme",
+      "other": "Autre",
+      "unspecified": "Ne pas préciser"
+    }
+  }
+}

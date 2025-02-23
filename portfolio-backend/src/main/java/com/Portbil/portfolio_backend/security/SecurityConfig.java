@@ -36,13 +36,11 @@ public class SecurityConfig {
                                 "/api/auth/register",
                                 "/api/auth/verify",
                                 "/api/auth/forgot-password",
-                                "/api/auth/reset-password"
+                                "/api/auth/reset-password",
+                                "/api/translations/**" // ✅ Ajout pour autoriser l'accès public aux traductions
                         ).permitAll() // ✅ Routes publiques
-
                         .requestMatchers("/api/portfolio/public/**").permitAll() // ✅ Rendre les portfolios accessibles publiquement
-
                         .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll() // ✅ Autoriser toutes les requêtes OPTIONS
-
                         .requestMatchers("/api/users/**").authenticated() // 🔒 Protection des utilisateurs
                         .anyRequest().authenticated() // 🔒 Tout le reste nécessite une authentification
                 )
@@ -71,7 +69,7 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         System.out.println("Applying CORS configuration"); // ✅ Log pour confirmer que cette méthode est appelée
         CorsConfiguration corsConfig = new CorsConfiguration();
-        corsConfig.setAllowedOrigins(List.of("http://localhost:5173")); // ✅ Autoriser le frontend
+        corsConfig.setAllowedOrigins(List.of("http://localhost:5173")); // ✅ Autoriser le frontend (ajustez si nécessaire)
         corsConfig.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS")); // ✅ Méthodes autorisées
         corsConfig.setAllowedHeaders(List.of("Authorization", "Content-Type", "Accept")); // ✅ En-têtes autorisés
         corsConfig.setExposedHeaders(List.of("Authorization")); // ✅ Exposer Authorization pour le frontend

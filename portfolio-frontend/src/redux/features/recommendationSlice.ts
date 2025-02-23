@@ -2,13 +2,13 @@ import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import axios from "axios";
 import { BASE_URL } from "../../config/hostname"; // ✅ Utilisation de hostname.ts
 
+// ✅ **Interface correspondant au backend**
 interface Recommendation {
   id?: string;
-  userId: string;
-  recommenderName: string;
-  recommenderPosition?: string;
-  recommendationText: string;
-  dateReceived: string;
+  userId: string; // ✅ Identifiant de l'utilisateur recevant la recommandation
+  recommenderId: string; // ✅ Identifiant de l'utilisateur qui recommande
+  content: string; // ✅ Contenu de la recommandation
+  createdAt: string; // ✅ Format YYYY-MM-DD
 }
 
 interface RecommendationState {
@@ -23,6 +23,7 @@ const initialState: RecommendationState = {
   error: null,
 };
 
+// ✅ **Récupérer le token d'authentification**
 const getAuthToken = () => localStorage.getItem("token");
 
 // ✅ **Récupérer les recommandations d'un utilisateur**
@@ -39,14 +40,13 @@ export const fetchRecommendationsByUser = createAsyncThunk(
 
       console.log("✅ Recommandations récupérées :", response.data);
 
-      // ✅ Correction : Adapter les champs de l'API au format attendu
+      // ✅ Adaptation des champs du backend au Redux
       return response.data.map((rec: any) => ({
         id: rec._id?.$oid || rec.id,
         userId: rec.userId,
-        recommenderName: rec.recommenderName || "Anonyme",
-        recommenderPosition: rec.recommenderPosition || "Non spécifié",
-        recommendationText: rec.content ?? "", // ✅ Évite le `null`
-        dateReceived: rec.createdAt || new Date().toISOString(), // ✅ Corrige le champ
+        recommenderId: rec.recommenderId,
+        content: rec.content ?? "", // ✅ Empêche `null`
+        createdAt: rec.createdAt?.$date?.split("T")[0] || new Date().toISOString().split("T")[0], // ✅ Format YYYY-MM-DD
       }));
     } catch (error: any) {
       console.error("❌ Erreur API :", error.response?.data || error.message);
@@ -58,17 +58,14 @@ export const fetchRecommendationsByUser = createAsyncThunk(
 // ✅ **Ajouter une recommandation**
 export const addRecommendation = createAsyncThunk(
   "recommendation/add",
-  async (recommendationData: Omit<Recommendation, "id" | "userId">, { rejectWithValue }) => {
+  async (recommendationData: Omit<Recommendation, "id">, { rejectWithValue }) => {
     try {
       const token = getAuthToken();
-      const userId = localStorage.getItem("userId");
-
       if (!token) return rejectWithValue("⚠️ Token non trouvé, veuillez vous reconnecter.");
-      if (!userId) return rejectWithValue("⚠️ ID utilisateur manquant, veuillez vous reconnecter.");
 
       const response = await axios.post(
         `${BASE_URL}/api/recommendations`,
-        { ...recommendationData, userId },
+        recommendationData,
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
@@ -77,10 +74,9 @@ export const addRecommendation = createAsyncThunk(
       return {
         id: response.data._id?.$oid || response.data.id,
         userId: response.data.userId,
-        recommenderName: response.data.recommenderName,
-        recommenderPosition: response.data.recommenderPosition || "Non spécifié",
-        recommendationText: response.data.content ?? "", // ✅ Corrige `null`
-        dateReceived: response.data.createdAt || new Date().toISOString(),
+        recommenderId: response.data.recommenderId,
+        content: response.data.content ?? "",
+        createdAt: response.data.createdAt?.$date?.split("T")[0] || new Date().toISOString().split("T")[0],
       };
     } catch (error: any) {
       console.error("❌ Erreur lors de l'ajout :", error.response?.data);
@@ -99,10 +95,7 @@ export const updateRecommendation = createAsyncThunk(
 
       const response = await axios.put(
         `${BASE_URL}/api/recommendations/${id}`,
-        {
-          ...recommendationData,
-          content: recommendationData.recommendationText, // ✅ Assure l'envoi correct des données
-        },
+        recommendationData,
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
@@ -111,10 +104,9 @@ export const updateRecommendation = createAsyncThunk(
       return {
         id: response.data._id?.$oid || response.data.id,
         userId: response.data.userId,
-        recommenderName: response.data.recommenderName,
-        recommenderPosition: response.data.recommenderPosition || "Non spécifié",
-        recommendationText: response.data.content ?? "", // ✅ Correction ici
-        dateReceived: response.data.createdAt || new Date().toISOString(),
+        recommenderId: response.data.recommenderId,
+        content: response.data.content ?? "",
+        createdAt: response.data.createdAt?.$date?.split("T")[0] || new Date().toISOString().split("T")[0],
       };
     } catch (error: any) {
       console.error("❌ Erreur lors de la mise à jour :", error.response?.data);
@@ -151,7 +143,6 @@ const recommendationSlice = createSlice({
   reducers: {},
   extraReducers: (builder) => {
     builder
-      // 🔹 **Récupérer les recommandations**
       .addCase(fetchRecommendationsByUser.pending, (state) => {
         state.status = "loading";
         state.error = null;
@@ -164,8 +155,6 @@ const recommendationSlice = createSlice({
         state.status = "failed";
         state.error = action.payload as string;
       })
-
-      // 🔹 **Ajouter une recommandation**
       .addCase(addRecommendation.pending, (state) => {
         state.status = "loading";
       })
@@ -177,8 +166,6 @@ const recommendationSlice = createSlice({
         state.status = "failed";
         state.error = action.payload as string;
       })
-
-      // 🔹 **Mettre à jour une recommandation**
       .addCase(updateRecommendation.pending, (state) => {
         state.status = "loading";
       })
@@ -192,8 +179,6 @@ const recommendationSlice = createSlice({
         state.status = "failed";
         state.error = action.payload as string;
       })
-
-      // 🔹 **Supprimer une recommandation**
       .addCase(deleteRecommendation.pending, (state) => {
         state.status = "loading";
       })

@@ -1,28 +1,151 @@
+/* Navbar.css */
 .navbar {
   display: flex;
   justify-content: space-between;
-  padding: 10px 20px;
-  background-color: #282c34;
+  align-items: center;
+  padding: 15px 30px;
+  background: linear-gradient(135deg, #1e2a44 0%, #282c34 100%); /* Dégradé moderne */
   color: white;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2); /* Ombre douce */
+  position: relative;
+  z-index: 1001;
 }
 
 .logo {
-  font-size: 1.5rem;
-  font-weight: bold;
+  font-size: 1.8rem;
+  font-weight: 700;
   text-decoration: none;
-  color: white;
+  color: #ffffff;
+  letter-spacing: 1px;
+  transition: color 0.3s ease;
 }
 
-.nav-links a, .nav-links button {
-  margin-left: 15px;
+.logo:hover {
+  color: #61dafb; /* Couleur React pour un effet moderne */
+}
+
+.navbar-right {
+  display: flex;
+  align-items: center;
+}
+
+.nav-links {
+  display: flex;
+  align-items: center;
+}
+
+.nav-links a,
+.nav-links button {
+  margin-left: 20px;
   text-decoration: none;
-  color: white;
+  color: #ffffff;
   background: none;
   border: none;
   cursor: pointer;
-  font-size: 1rem;
+  font-size: 1.1rem;
+  position: relative;
+  padding: 5px 0;
+  transition: color 0.3s ease;
 }
 
+/* Effet de soulignement animé */
+.nav-links a::after,
+.nav-links button::after {
+  content: "";
+  position: absolute;
+  width: 0;
+  height: 2px;
+  bottom: 0;
+  left: 0;
+  background-color: #61dafb;
+  transition: width 0.3s ease;
+}
+
+.nav-links a:hover::after,
+.nav-links button:hover::after {
+  width: 100%;
+}
+
+.nav-links a:hover,
 .nav-links button:hover {
-  text-decoration: underline;
+  color: #61dafb;
+}
+
+/* Menu hamburger */
+.hamburger {
+  display: none;
+  font-size: 1.8rem;
+  background: none;
+  border: none;
+  color: white;
+  cursor: pointer;
+  padding: 5px;
+  transition: transform 0.3s ease, color 0.3s ease;
+}
+
+.hamburger:hover {
+  transform: scale(1.1);
+  color: #61dafb;
+}
+
+/* Media Queries pour la responsivité */
+@media (max-width: 768px) {
+  .hamburger {
+    display: block;
+  }
+
+  .nav-links {
+    display: none;
+    position: absolute;
+    top: 100%; /* Sous la navbar */
+    left: 0;
+    right: 0;
+    background: linear-gradient(135deg, #1e2a44 0%, #282c34 100%);
+    flex-direction: column;
+    padding: 20px;
+    width: 100%;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    z-index: 1000;
+    transform: translateY(-10px); /* Légère animation d'entrée */
+    opacity: 0;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+  }
+
+  .nav-links.active {
+    display: flex;
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .nav-links a,
+  .nav-links button {
+    margin: 15px 0;
+    width: 100%;
+    text-align: center;
+    font-size: 1.2rem;
+  }
+
+  .nav-links a::after,
+  .nav-links button::after {
+    display: none; /* Désactive l'effet de soulignement sur mobile pour plus de clarté */
+  }
+}
+
+@media (max-width: 480px) {
+  .navbar {
+    padding: 10px 15px;
+  }
+
+  .logo {
+    font-size: 1.4rem;
+  }
+
+  .hamburger {
+    font-size: 1.5rem;
+  }
+
+  .nav-links a,
+  .nav-links button {
+    font-size: 1rem;
+  }
 }

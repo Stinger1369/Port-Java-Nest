@@ -1,9 +1,11 @@
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import "./ForgotPassword.css";
 
 const ForgotPassword = () => {
+  const { t, ready } = useTranslation();
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -17,22 +19,28 @@ const ForgotPassword = () => {
 
     try {
       const response = await axios.post("http://localhost:8080/api/auth/forgot-password", { email });
-      setMessage(response.data.message);
+      setMessage(t("forgotPassword.success", response.data.message));
       setEmailSent(true);
     } catch (error: any) {
-      setError(error.response?.data?.error || "Une erreur s'est produite.");
+      setError(error.response?.data?.error || t("forgotPassword.error.generic", "An error occurred."));
     }
   };
 
+  if (!ready) {
+    return <div>{t("loading", "Loading translations...")}</div>;
+  }
+
   return (
     <div className="forgot-password-container">
-      <h2>Mot de passe oublié</h2>
+      <h2>{t("forgotPassword.title", "Forgot Password")}</h2>
 
       {message && (
         <div className="success-message">
           <p>{message}</p>
-          <p>📩 Veuillez vérifier votre boîte email et suivre le lien pour réinitialiser votre mot de passe.</p>
-          <button onClick={() => navigate("/login")}>Retour à la connexion</button>
+          <p>{t("forgotPassword.successInstructions", "Please check your email and follow the link to reset your password.")}</p>
+          <button onClick={() => navigate("/login")}>
+            {t("forgotPassword.backToLogin", "Back to login")}
+          </button>
         </div>
       )}
 
@@ -42,16 +50,22 @@ const ForgotPassword = () => {
         <form onSubmit={handleForgotPassword}>
           <input
             type="email"
-            placeholder="Entrez votre email"
+            placeholder={t("forgotPassword.emailPlaceholder", "Enter your email")}
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
           />
-          <button type="submit">Envoyer</button>
+          <button type="submit">{t("forgotPassword.submit", "Send")}</button>
         </form>
       )}
     </div>
   );
 };
 
-export default ForgotPassword;
+const ForgotPasswordWithSuspense = () => (
+  <Suspense fallback={<div>Loading translations...</div>}>
+    <ForgotPassword />
+  </Suspense>
+);
+
+export default ForgotPasswordWithSuspense;

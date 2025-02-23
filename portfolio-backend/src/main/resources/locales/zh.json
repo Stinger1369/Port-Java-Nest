@@ -1,0 +1,107 @@
+{
+  "navbar": {
+    "logo": "我的应用",
+    "profile": "个人资料",
+    "portfolio": "作品集",
+    "logout": "退出",
+    "login": "登录",
+    "register": "注册"
+  },
+  "profile": {
+    "title": "我的个人资料",
+    "name": "姓名",
+    "email": "电子邮件",
+    "phone": "电话",
+    "address": "地址",
+    "city": "城市",
+    "country": "国家",
+    "sex": "性别",
+    "bio": "简介",
+    "edit": "编辑我的个人资料",
+    "loading": "正在加载数据...",
+    "error": "错误: {{message}}",
+    "notFound": "未找到用户。",
+    "sexOptions": {
+      "man": "男",
+      "woman": "女",
+      "other": "其他",
+      "unspecified": "未指定"
+    }
+  },
+  "login": {
+    "title": "登录",
+    "emailPlaceholder": "电子邮件",
+    "passwordPlaceholder": "密码",
+    "submit": "登录",
+    "error": {
+      "unverified": "您的账户尚未验证。请检查您的电子邮件。",
+      "userNotFound": "未找到用户。想创建一个账户吗？",
+      "generic": "登录失败，请检查您的凭据。"
+    },
+    "verifyPrompt": "您的账户尚未验证。",
+    "verifyButton": "验证我的账户",
+    "resendButton": "重新发送验证码",
+    "resendLoading": "发送中...",
+    "resendSuccess": "新的验证码已发送到您的电子邮件。",
+    "resendError": "发送验证码时出错。",
+    "registerButton": "创建账户",
+    "forgotPassword": "忘记密码？"
+  },
+  "register": {
+    "title": "创建账户",
+    "emailPlaceholder": "电子邮件",
+    "passwordPlaceholder": "密码",
+    "confirmPasswordPlaceholder": "确认密码",
+    "submit": "注册",
+    "success": "注册成功！验证码已发送到您的电子邮件，有效期为15分钟。",
+    "error": {
+      "passwordMismatch": "密码不匹配。",
+      "generic": "注册失败，请重试。"
+    }
+  },
+  "resetPassword": {
+    "title": "重置您的密码",
+    "newPasswordPlaceholder": "新密码",
+    "confirmPasswordPlaceholder": "确认新密码",
+    "submit": "重置密码",
+    "success": "您的密码已成功重置。正在跳转到登录页面...",
+    "error": {
+      "invalidToken": "无效或过期的令牌。",
+      "passwordMismatch": "密码不匹配。",
+      "generic": "重置密码时发生错误。请重试。"
+    }
+  },
+  "forgotPassword": {
+    "title": "忘记密码",
+    "emailPlaceholder": "输入您的电子邮件",
+    "submit": "发送",
+    "success": "重置邮件已发送到您的地址。",
+    "successInstructions": "请检查您的电子邮件并按照链接重置您的密码。",
+    "backToLogin": "返回登录",
+    "error": {
+      "generic": "发送重置邮件时发生错误。"
+    }
+  },
+  "editProfile": {
+    "title": "编辑个人资料",
+    "firstName": "名",
+    "lastName": "姓",
+    "phone": "电话",
+    "address": "地址",
+    "city": "城市",
+    "country": "国家",
+    "sex": "性别",
+    "bio": "简介",
+    "submit": "保存",
+    "backToProfile": "返回个人资料",
+    "loading": "加载中...",
+    "error": "错误: {{message}}",
+    "success": "个人资料更新成功",
+    "sexOptions": {
+      "man": "男",
+      "woman": "女",
+      "other": "其他",
+      "unspecified": "未指定"
+    }
+  }
+}

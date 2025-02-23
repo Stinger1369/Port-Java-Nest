@@ -93,6 +93,7 @@ portfolio-frontend/
 │   │       ├── Login/
 │   │       │   ├── Login.css
 │   │       │   └── Login.tsx
+│   │       ├── Profile.css
 │   │       ├── Profile.tsx
 │   │       ├── Register/
 │   │       │   ├── Register.css
@@ -117,7 +118,6 @@ portfolio-frontend/
 │   │   │   ├── socialLinkSlice.ts
 │   │   │   └── userSlice.ts
 │   │   └── store.ts
-│   ├── styles.css
 │   └── vite-env.d.ts
 ├── tree.js
 ├── tsconfig.app.json
