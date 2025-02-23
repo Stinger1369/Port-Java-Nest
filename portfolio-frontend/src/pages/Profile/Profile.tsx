@@ -2,7 +2,7 @@ import { useEffect, Suspense } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState, AppDispatch } from "../../redux/store";
 import { useNavigate } from "react-router-dom";
-import { fetchUser } from "../../redux/features/userSlice";
+import { fetchUser } from "../../redux/features/userSlice"; // ✅ Retiré fetchWeather et updateGeolocation
 import { useTranslation } from "react-i18next";
 import "./Profile.css";
 
@@ -65,25 +65,29 @@ const Profile = () => {
             <li>
               <i className="fas fa-phone"></i>
               <span>
-                <span className="label">{t("profile.phone", "Phone")} :</span> {user.phone || t("profile.unspecified", "Not provided")}
+                <span className="label">{t("profile.phone", "Phone")} :</span>{" "}
+                {user.phone || t("profile.unspecified", "Not provided")}
               </span>
             </li>
             <li>
               <i className="fas fa-map-marker-alt"></i>
               <span>
-                <span className="label">{t("profile.address", "Address")} :</span> {user.address || t("profile.unspecified", "Not provided")}
+                <span className="label">{t("profile.address", "Address")} :</span>{" "}
+                {user.address || t("profile.unspecified", "Not provided")}
               </span>
             </li>
             <li>
               <i className="fas fa-city"></i>
               <span>
-                <span className="label">{t("profile.city", "City")} :</span> {user.city || t("profile.unspecified", "Not provided")}
+                <span className="label">{t("profile.city", "City")} :</span>{" "}
+                {user.city || t("profile.unspecified", "Not provided")}
               </span>
             </li>
             <li>
               <i className="fas fa-globe"></i>
               <span>
-                <span className="label">{t("profile.country", "Country")} :</span> {user.country || t("profile.unspecified", "Not provided")}
+                <span className="label">{t("profile.country", "Country")} :</span>{" "}
+                {user.country || t("profile.unspecified", "Not provided")}
               </span>
             </li>
             <li>
@@ -95,7 +99,17 @@ const Profile = () => {
             <li>
               <i className="fas fa-book"></i>
               <span>
-                <span className="label">{t("profile.bio", "Biography")} :</span> {user.bio || t("profile.noBio", "No biography")}
+                <span className="label">{t("profile.bio", "Biography")} :</span>{" "}
+                {user.bio || t("profile.noBio", "No biography")}
+              </span>
+            </li>
+            <li>
+              <i className="fas fa-map-pin"></i>
+              <span>
+                <span className="label">{t("profile.location", "Location")} :</span>{" "}
+                {user.latitude && user.longitude
+                  ? `${user.latitude}, ${user.longitude}`
+                  : t("profile.noLocation", "Not provided")}
               </span>
             </li>
           </ul>

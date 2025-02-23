@@ -1,6 +1,7 @@
 package com.Portbil.portfolio_backend.controller;
 
 import com.Portbil.portfolio_backend.dto.UserDTO;
+import com.Portbil.portfolio_backend.dto.WeatherDTO; // ✅ Ajout de l'import
 import com.Portbil.portfolio_backend.entity.User;
 import com.Portbil.portfolio_backend.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -22,7 +23,6 @@ public class UserController {
 
     /**
      * ✅ Récupérer tous les utilisateurs
-     * Accessible uniquement par un ADMIN
      */
     @GetMapping
     @PreAuthorize("hasAuthority('ADMIN')")
@@ -33,10 +33,9 @@ public class UserController {
 
     /**
      * ✅ Récupérer un utilisateur par son ID
-     * Accessible uniquement par un ADMIN ou l'utilisateur lui-même
      */
     @GetMapping("/{id}")
-    @PreAuthorize("hasAuthority('ADMIN') or #id == authentication.principal.username") // ✅ Vérifie avec le nom d'utilisateur (email ou ID)
+    @PreAuthorize("hasAuthority('ADMIN') or #id == authentication.principal.username")
     public ResponseEntity<User> getUserById(@PathVariable String id) {
         System.out.println("🔹 Tentative de récupération de l'utilisateur ID: " + id);
 
@@ -47,28 +46,27 @@ public class UserController {
         }
 
         System.out.println("✅ Utilisateur trouvé : " + user.get().getEmail());
-        System.out.println("Phone renvoyé au frontend : " + user.get().getPhone()); // Log pour vérifier
+        System.out.println("Phone renvoyé au frontend : " + user.get().getPhone());
         return ResponseEntity.ok(user.get());
     }
 
     /**
-     * ✅ Modifier un utilisateur (Vérification d'authentification ajoutée)
-     * Accessible uniquement par l'utilisateur concerné
+     * ✅ Modifier un utilisateur
      */
     @PutMapping("/{id}")
-    @PreAuthorize("#id == authentication.principal.username") // ✅ Vérifie si l'ID de l'utilisateur connecté correspond
+    @PreAuthorize("#id == authentication.principal.username")
     public ResponseEntity<?> updateUser(@PathVariable String id, @RequestBody UserDTO userDTO) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
         System.out.println("🔹 Tentative de mise à jour de l'utilisateur ID: " + id);
-        System.out.println("Received phone from frontend: " + userDTO.getPhone()); // Log avant traitement
+        System.out.println("Received phone from frontend: " + userDTO.getPhone());
 
         if (authentication == null || authentication.getPrincipal() == null) {
             System.out.println("❌ Utilisateur non authentifié !");
             return ResponseEntity.status(403).body("Accès interdit : utilisateur non authentifié !");
         }
 
-        String authenticatedUserId = authentication.getName(); // 🔹 Récupère l'ID utilisateur stocké dans SecurityContextHolder
+        String authenticatedUserId = authentication.getName();
 
         System.out.println("✅ Utilisateur connecté avec ID : " + authenticatedUserId);
 
@@ -85,7 +83,7 @@ public class UserController {
             }
 
             System.out.println("✅ Mise à jour réussie pour l'utilisateur ID: " + id);
-            System.out.println("Saved phone in DB: " + updatedUser.get().getPhone()); // Log après mise à jour
+            System.out.println("Saved phone in DB: " + updatedUser.get().getPhone());
             return ResponseEntity.ok(updatedUser.get());
 
         } catch (IllegalArgumentException e) {
@@ -96,7 +94,6 @@ public class UserController {
 
     /**
      * ✅ Supprimer un utilisateur
-     * Accessible uniquement par un ADMIN ou l'utilisateur lui-même
      */
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAuthority('ADMIN') or #id == authentication.principal.username")
@@ -110,7 +107,7 @@ public class UserController {
             return ResponseEntity.status(403).build();
         }
 
-        String authenticatedUserId = authentication.getName(); // 🔹 L'ID de l'utilisateur connecté
+        String authenticatedUserId = authentication.getName();
 
         System.out.println("✅ Utilisateur connecté avec ID : " + authenticatedUserId);
 
@@ -127,6 +124,22 @@ public class UserController {
         } catch (IllegalArgumentException e) {
             System.out.println("❌ Erreur lors de la suppression : " + e.getMessage());
             return ResponseEntity.notFound().build();
+        }
+    }
+
+    /**
+     * ✅ Récupérer les données météo pour l'utilisateur connecté
+     */
+    @GetMapping("/{id}/weather")
+    @PreAuthorize("#id == authentication.principal.username")
+    public ResponseEntity<WeatherDTO> getWeather(@PathVariable String id) {
+        try {
+            WeatherDTO weather = userService.getWeatherForUser(id);
+            System.out.println("✅ Données météo récupérées pour l'utilisateur ID: " + id);
+            return ResponseEntity.ok(weather);
+        } catch (IllegalArgumentException e) {
+            System.out.println("⚠️ Erreur lors de la récupération de la météo : " + e.getMessage());
+            return ResponseEntity.badRequest().body(null);
         }
     }
 }

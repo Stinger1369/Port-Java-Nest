@@ -74,6 +74,10 @@ public class User implements UserDetails {
     // ✅ Référence vers le portfolio personnalisé de l'utilisateur
     private String portfolioId;
 
+    // ✅ Nouveaux champs pour la géolocalisation
+    private Double latitude;
+    private Double longitude;
+
     // ✅ Méthode pour récupérer toutes les IDs des sections du portfolio
     public List<String> getAllPortfolioIds() {
         List<String> allIds = new ArrayList<>();

@@ -1,6 +1,7 @@
 package com.Portbil.portfolio_backend.service;
 
 import com.Portbil.portfolio_backend.dto.UserDTO;
+import com.Portbil.portfolio_backend.dto.WeatherDTO; // ✅ Ajout de l'import
 import com.Portbil.portfolio_backend.entity.User;
 import com.Portbil.portfolio_backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -17,6 +18,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final EmailService emailService;
+    private final WeatherService weatherService; // ✅ Ajout pour récupérer la météo
 
     /**
      * ✅ Récupérer tous les utilisateurs
@@ -54,7 +56,7 @@ public class UserService {
 
             if (userDTO.getFirstName() != null) user.setFirstName(capitalizeFirstLetter(userDTO.getFirstName()));
             if (userDTO.getLastName() != null) user.setLastName(capitalizeFirstLetter(userDTO.getLastName()));
-            if (userDTO.getPhone() != null) user.setPhone(userDTO.getPhone()); // Pas de transformation
+            if (userDTO.getPhone() != null) user.setPhone(userDTO.getPhone());
             if (userDTO.getAddress() != null) user.setAddress(userDTO.getAddress());
             if (userDTO.getCity() != null) user.setCity(userDTO.getCity());
             if (userDTO.getCountry() != null) user.setCountry(userDTO.getCountry());
@@ -69,9 +71,13 @@ public class UserService {
 
             if (userDTO.getBio() != null) user.setBio(userDTO.getBio());
 
+            // ✅ Mise à jour des coordonnées de géolocalisation
+            if (userDTO.getLatitude() != null) user.setLatitude(userDTO.getLatitude());
+            if (userDTO.getLongitude() != null) user.setLongitude(userDTO.getLongitude());
+
             User savedUser = userRepository.save(user);
             System.out.println("✅ Mise à jour réussie pour l'utilisateur ID: " + id);
-            System.out.println("Phone enregistré dans MongoDB : " + savedUser.getPhone()); // Log après enregistrement
+            System.out.println("Phone enregistré dans MongoDB : " + savedUser.getPhone());
             return savedUser;
         });
     }
@@ -80,7 +86,7 @@ public class UserService {
      * ✅ Valider si la valeur de `sex` est correcte
      */
     private boolean isValidSex(String sex) {
-        if (sex == null || sex.isEmpty()) return true; // Accepter vide ou null
+        if (sex == null || sex.isEmpty()) return true;
         return sex.equalsIgnoreCase("Man") ||
                 sex.equalsIgnoreCase("Woman") ||
                 sex.equalsIgnoreCase("Other");
@@ -156,7 +162,7 @@ public class UserService {
     }
 
     /**
-     * ✅ Demande de réinitialisation du mot de passe (génère un token et envoie un email)
+     * ✅ Demande de réinitialisation du mot de passe
      */
     public void forgotPassword(String email) {
         Optional<User> userOpt = userRepository.findByEmail(email);
@@ -179,7 +185,7 @@ public class UserService {
     }
 
     /**
-     * ✅ Réinitialisation du mot de passe avec expiration et vérification des anciens mots de passe
+     * ✅ Réinitialisation du mot de passe
      */
     public void resetPassword(String token, String newPassword) {
         Optional<User> userOpt = userRepository.findByResetToken(token);
@@ -190,7 +196,7 @@ public class UserService {
         User user = userOpt.get();
 
         if (user.getResetTokenExpiration() == null || user.getResetTokenExpiration().isBefore(LocalDateTime.now())) {
-            throw new IllegalArgumentException("Le lien de réinitialisation a expiré. Veuillez en demander un nouveau.");
+            throw new IllegalArgumentException("Le lien de réinitialisation a expiré.");
         }
 
         if (user.getPreviousPasswords() == null) {
@@ -199,7 +205,7 @@ public class UserService {
 
         for (String oldPassword : user.getPreviousPasswords()) {
             if (passwordEncoder.matches(newPassword, oldPassword)) {
-                throw new IllegalArgumentException("⚠️ Ce mot de passe a déjà été utilisé. Veuillez en choisir un autre.");
+                throw new IllegalArgumentException("⚠️ Ce mot de passe a déjà été utilisé.");
             }
         }
 
@@ -230,5 +236,20 @@ public class UserService {
     private String capitalizeFirstLetter(String input) {
         if (input == null || input.isEmpty()) return input;
         return input.substring(0, 1).toUpperCase() + input.substring(1).toLowerCase();
+    }
+
+    /**
+     * ✅ Récupérer les données météo pour un utilisateur
+     */
+    public WeatherDTO getWeatherForUser(String userId) {
+        Optional<User> userOpt = userRepository.findById(userId);
+        if (userOpt.isEmpty()) {
+            throw new IllegalArgumentException("Utilisateur introuvable.");
+        }
+        User user = userOpt.get();
+        if (user.getLatitude() == null || user.getLongitude() == null) {
+            throw new IllegalArgumentException("Coordonnées de géolocalisation manquantes.");
+        }
+        return weatherService.getWeather(user.getLatitude(), user.getLongitude());
     }
 }

@@ -23,7 +23,7 @@ const Home = () => {
       <header className="hero-section">
         <div className="hero-content">
           <h1 className="hero-title">
-            <i className="fas fa-paint-brush"></i> {t("home.heroTitle", "Créez Votre Portfolio Gratuit avec PortfolioCraft")}
+            <i className="fas fa-paint-brush"></i> {t("home.heroTitle", "Créez Votre Portfolio Gratuit avec Portfolio")}
           </h1>
           <p className="hero-subtitle">
             {t("home.heroSubtitle", "Donnez vie à vos projets et compétences avec un portfolio unique, simple et professionnel.")}
@@ -38,13 +38,13 @@ const Home = () => {
           </div>
         </div>
         <div className="hero-image">
-          <img src="/portfolio-hero.png" alt="PortfolioCraft" className="hero-img" />
+          <img src="/portfolio-hero.png" alt="Portfolio" className="hero-img" />
         </div>
       </header>
 
       {/* Section Fonctionnalités */}
       <section className="features-section">
-        <h2 className="features-title">{t("home.featuresTitle", "Pourquoi Choisir PortfolioCraft ?")}</h2>
+        <h2 className="features-title">{t("home.featuresTitle", "Pourquoi Choisir Portfolio ?")}</h2>
         <div className="features-grid">
           <div className="feature-card">
             <i className="fas fa-tools feature-icon"></i>
@@ -75,7 +75,7 @@ const Home = () => {
 
       {/* Footer */}
       <footer className="footer">
-        <p>© 2025 PortfolioCraft. {t("home.footer", "Tous droits réservés.")}</p>
+        <p>© 2025 Portfolio. {t("home.footer", "Tous droits réservés.")}</p>
         <div className="footer-links">
           <a href="/about" className="footer-link"><i className="fas fa-info-circle"></i> À Propos</a>
           <a href="/contact" className="footer-link"><i className="fas fa-envelope"></i> Contact</a>

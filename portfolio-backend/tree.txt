@@ -1,6 +1,4 @@
 ./
-├── .gitattributes
-├── .gitignore
 ├── .idea/
 │   ├── .gitignore
 │   ├── compiler.xml
@@ -9,38 +7,98 @@
 │   ├── misc.xml
 │   ├── vcs.xml
 │   └── workspace.xml
-├── mvnw
-├── mvnw.cmd
-├── pom.xml
-├── readme
+├── .mvn/
+│   └── wrapper/
+│       └── maven-wrapper.properties
 ├── src/
 │   ├── main/
 │   │   ├── java/
 │   │   │   └── com/
 │   │   │       └── Portbil/
 │   │   │           └── portfolio_backend/
-│   │   │               ├── PortfolioBackendApplication.java
+│   │   │               ├── config/
 │   │   │               ├── controller/
 │   │   │               │   ├── AuthController.java
+│   │   │               │   ├── CertificationController.java
+│   │   │               │   ├── EducationController.java
+│   │   │               │   ├── ExperienceController.java
+│   │   │               │   ├── InterestController.java
+│   │   │               │   ├── LanguageController.java
+│   │   │               │   ├── PortfolioController.java
+│   │   │               │   ├── ProjectController.java
+│   │   │               │   ├── RecommendationController.java
+│   │   │               │   ├── SkillController.java
+│   │   │               │   ├── SocialLinkController.java
+│   │   │               │   ├── TranslationController.java
 │   │   │               │   └── UserController.java
 │   │   │               ├── dto/
-│   │   │               │   └── UserDTO.java
+│   │   │               │   ├── CertificationDTO.java
+│   │   │               │   ├── EducationDTO.java
+│   │   │               │   ├── ExperienceDTO.java
+│   │   │               │   ├── InterestDTO.java
+│   │   │               │   ├── LanguageDTO.java
+│   │   │               │   ├── PortfolioDTO.java
+│   │   │               │   ├── ProjectDTO.java
+│   │   │               │   ├── RecommendationDTO.java
+│   │   │               │   ├── SkillDto.java
+│   │   │               │   ├── SocialLinkDTO.java
+│   │   │               │   ├── UserDTO.java
+│   │   │               │   └── WeatherDTO.java
 │   │   │               ├── entity/
+│   │   │               │   ├── Certification.java
+│   │   │               │   ├── Education.java
+│   │   │               │   ├── Experience.java
+│   │   │               │   ├── Interest.java
+│   │   │               │   ├── Language.java
+│   │   │               │   ├── Portfolio.java
+│   │   │               │   ├── PortfolioCard.java
+│   │   │               │   ├── Project.java
+│   │   │               │   ├── Recommendation.java
 │   │   │               │   ├── Role.java
+│   │   │               │   ├── Skill.java
+│   │   │               │   ├── SocialLink.java
 │   │   │               │   └── User.java
 │   │   │               ├── exception/
 │   │   │               │   └── GlobalExceptionHandler.java
 │   │   │               ├── repository/
+│   │   │               │   ├── CertificationRepository.java
+│   │   │               │   ├── EducationRepository.java
+│   │   │               │   ├── ExperienceRepository.java
+│   │   │               │   ├── InterestRepository.java
+│   │   │               │   ├── LanguageRepository.java
+│   │   │               │   ├── PortfolioRepository.java
+│   │   │               │   ├── ProjectRepository.java
+│   │   │               │   ├── RecommendationRepository.java
+│   │   │               │   ├── SkillRepository.java
+│   │   │               │   ├── SocialLinkRepository.java
 │   │   │               │   └── UserRepository.java
 │   │   │               ├── security/
 │   │   │               │   ├── CustomUserDetailsService.java
 │   │   │               │   ├── JwtAuthenticationFilter.java
 │   │   │               │   ├── JwtUtil.java
 │   │   │               │   └── SecurityConfig.java
-│   │   │               └── service/
-│   │   │                   ├── EmailService.java
-│   │   │                   └── UserService.java
+│   │   │               ├── service/
+│   │   │               │   ├── CertificationService.java
+│   │   │               │   ├── EducationService.java
+│   │   │               │   ├── EmailService.java
+│   │   │               │   ├── ExperienceService.java
+│   │   │               │   ├── InterestService.java
+│   │   │               │   ├── LanguageService.java
+│   │   │               │   ├── PortfolioService.java
+│   │   │               │   ├── ProjectService.java
+│   │   │               │   ├── RecommendationService.java
+│   │   │               │   ├── SkillService.java
+│   │   │               │   ├── SocialLinkService.java
+│   │   │               │   ├── UserService.java
+│   │   │               │   └── WeatherService.java
+│   │   │               └── PortfolioBackendApplication.java
 │   │   └── resources/
+│   │       ├── locales/
+│   │       │   ├── ar.json
+│   │       │   ├── en.json
+│   │       │   ├── es.json
+│   │       │   ├── fr.json
+│   │       │   └── zh.json
 │   │       └── application.yml
 │   └── test/
 │       └── java/
@@ -50,56 +108,125 @@
 │                       └── PortfolioBackendApplicationTests.java
 ├── target/
 │   ├── classes/
-│   │   ├── application.yml
-│   │   └── com/
-│   │       └── Portbil/
-│   │           └── portfolio_backend/
-│   │               ├── PortfolioBackendApplication.class
-│   │               ├── controller/
-│   │               │   ├── AuthController.class
-│   │               │   └── UserController.class
-│   │               ├── dto/
-│   │               │   └── UserDTO.class
-│   │               ├── entity/
-│   │               │   ├── Role.class
-│   │               │   ├── User$UserBuilder.class
-│   │               │   └── User.class
-│   │               ├── exception/
-│   │               │   └── GlobalExceptionHandler.class
-│   │               ├── repository/
-│   │               │   └── UserRepository.class
-│   │               ├── security/
-│   │               │   ├── CustomUserDetailsService.class
-│   │               │   ├── JwtAuthenticationFilter.class
-│   │               │   ├── JwtUtil.class
-│   │               │   └── SecurityConfig.class
-│   │               └── service/
-│   │                   ├── EmailService.class
-│   │                   └── UserService.class
+│   │   ├── com/
+│   │   │   └── Portbil/
+│   │   │       └── portfolio_backend/
+│   │   │           ├── config/
+│   │   │           ├── controller/
+│   │   │           │   ├── AuthController.class
+│   │   │           │   ├── CertificationController.class
+│   │   │           │   ├── EducationController.class
+│   │   │           │   ├── ExperienceController.class
+│   │   │           │   ├── InterestController.class
+│   │   │           │   ├── LanguageController.class
+│   │   │           │   ├── PortfolioController.class
+│   │   │           │   ├── ProjectController.class
+│   │   │           │   ├── RecommendationController.class
+│   │   │           │   ├── SkillController.class
+│   │   │           │   ├── SocialLinkController.class
+│   │   │           │   ├── TranslationController.class
+│   │   │           │   └── UserController.class
+│   │   │           ├── dto/
+│   │   │           │   ├── CertificationDTO.class
+│   │   │           │   ├── CertificationDTO$CertificationDTOBuilder.class
+│   │   │           │   ├── EducationDTO.class
+│   │   │           │   ├── ExperienceDTO.class
+│   │   │           │   ├── InterestDTO.class
+│   │   │           │   ├── InterestDTO$InterestDTOBuilder.class
+│   │   │           │   ├── LanguageDTO.class
+│   │   │           │   ├── LanguageDTO$LanguageDTOBuilder.class
+│   │   │           │   ├── PortfolioDTO.class
+│   │   │           │   ├── PortfolioDTO$PortfolioDTOBuilder.class
+│   │   │           │   ├── ProjectDTO.class
+│   │   │           │   ├── ProjectDTO$ProjectDTOBuilder.class
+│   │   │           │   ├── RecommendationDTO.class
+│   │   │           │   ├── RecommendationDTO$RecommendationDTOBuilder.class
+│   │   │           │   ├── SkillDto.class
+│   │   │           │   ├── SocialLinkDTO.class
+│   │   │           │   ├── SocialLinkDTO$SocialLinkDTOBuilder.class
+│   │   │           │   ├── UserDTO.class
+│   │   │           │   └── WeatherDTO.class
+│   │   │           ├── entity/
+│   │   │           │   ├── Certification.class
+│   │   │           │   ├── Certification$CertificationBuilder.class
+│   │   │           │   ├── Education.class
+│   │   │           │   ├── Education$EducationBuilder.class
+│   │   │           │   ├── Experience.class
+│   │   │           │   ├── Experience$ExperienceBuilder.class
+│   │   │           │   ├── Interest.class
+│   │   │           │   ├── Interest$InterestBuilder.class
+│   │   │           │   ├── Language.class
+│   │   │           │   ├── Language$LanguageBuilder.class
+│   │   │           │   ├── Portfolio.class
+│   │   │           │   ├── Portfolio$PortfolioBuilder.class
+│   │   │           │   ├── PortfolioCard.class
+│   │   │           │   ├── PortfolioCard$PortfolioCardBuilder.class
+│   │   │           │   ├── Project.class
+│   │   │           │   ├── Project$ProjectBuilder.class
+│   │   │           │   ├── Recommendation.class
+│   │   │           │   ├── Recommendation$RecommendationBuilder.class
+│   │   │           │   ├── Role.class
+│   │   │           │   ├── Skill.class
+│   │   │           │   ├── Skill$SkillBuilder.class
+│   │   │           │   ├── SocialLink.class
+│   │   │           │   ├── SocialLink$SocialLinkBuilder.class
+│   │   │           │   ├── User.class
+│   │   │           │   └── User$UserBuilder.class
+│   │   │           ├── exception/
+│   │   │           │   └── GlobalExceptionHandler.class
+│   │   │           ├── repository/
+│   │   │           │   ├── CertificationRepository.class
+│   │   │           │   ├── EducationRepository.class
+│   │   │           │   ├── ExperienceRepository.class
+│   │   │           │   ├── InterestRepository.class
+│   │   │           │   ├── LanguageRepository.class
+│   │   │           │   ├── PortfolioRepository.class
+│   │   │           │   ├── ProjectRepository.class
+│   │   │           │   ├── RecommendationRepository.class
+│   │   │           │   ├── SkillRepository.class
+│   │   │           │   ├── SocialLinkRepository.class
+│   │   │           │   └── UserRepository.class
+│   │   │           ├── security/
+│   │   │           │   ├── CustomUserDetailsService.class
+│   │   │           │   ├── JwtAuthenticationFilter.class
+│   │   │           │   ├── JwtUtil.class
+│   │   │           │   └── SecurityConfig.class
+│   │   │           ├── service/
+│   │   │           │   ├── CertificationService.class
+│   │   │           │   ├── EducationService.class
+│   │   │           │   ├── EmailService.class
+│   │   │           │   ├── ExperienceService.class
+│   │   │           │   ├── InterestService.class
+│   │   │           │   ├── LanguageService.class
+│   │   │           │   ├── PortfolioService.class
+│   │   │           │   ├── ProjectService.class
+│   │   │           │   ├── RecommendationService.class
+│   │   │           │   ├── SkillService.class
+│   │   │           │   ├── SocialLinkService.class
+│   │   │           │   ├── UserService.class
+│   │   │           │   ├── WeatherService.class
+│   │   │           │   ├── WeatherService$WeatherResponse.class
+│   │   │           │   ├── WeatherService$WeatherResponse$Main.class
+│   │   │           │   └── WeatherService$WeatherResponse$Weather.class
+│   │   │           └── PortfolioBackendApplication.class
+│   │   ├── locales/
+│   │   │   ├── ar.json
+│   │   │   ├── en.json
+│   │   │   ├── es.json
+│   │   │   ├── fr.json
+│   │   │   └── zh.json
+│   │   └── application.yml
 │   ├── generated-sources/
 │   │   └── annotations/
 │   ├── generated-test-sources/
 │   │   └── test-annotations/
-│   ├── maven-archiver/
-│   │   └── pom.properties
-│   ├── maven-status/
-│   │   └── maven-compiler-plugin/
-│   │       ├── compile/
-│   │       │   └── default-compile/
-│   │       │       ├── createdFiles.lst
-│   │       │       └── inputFiles.lst
-│   │       └── testCompile/
-│   │           └── default-testCompile/
-│   │               ├── createdFiles.lst
-│   │               └── inputFiles.lst
-│   ├── portfolio-backend-0.0.1-SNAPSHOT.jar
-│   ├── surefire-reports/
-│   │   ├── TEST-com.Portbil.portfolio_backend.PortfolioBackendApplicationTests.xml
-│   │   └── com.Portbil.portfolio_backend.PortfolioBackendApplicationTests.txt
 │   └── test-classes/
-│       └── com/
-│           └── Portbil/
-│               └── portfolio_backend/
-│                   └── PortfolioBackendApplicationTests.class
+├── .gitattributes
+├── .gitignore
+├── HELP.md
+├── mvnw
+├── mvnw.cmd
+├── pom.xml
+├── readme.md
 ├── tree.js
 └── tree.txt

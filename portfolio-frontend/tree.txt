@@ -20,9 +20,13 @@ portfolio-frontend/
 │   │   ├── Navbar/
 │   │   │   ├── Navbar.css
 │   │   │   └── Navbar.tsx
+│   │   ├── PhoneInput/
+│   │   │   ├── PhoneInputComponent.css
+│   │   │   └── PhoneInputComponent.tsx
 │   │   └── ProtectedRoute.tsx
 │   ├── config/
 │   │   └── hostname.ts
+│   ├── i18n.ts
 │   ├── index.css
 │   ├── main.tsx
 │   ├── pages/
@@ -86,6 +90,7 @@ portfolio-frontend/
 │   │   │       └── UpdateSocialLink.tsx
 │   │   └── Profile/
 │   │       ├── EditProfile/
+│   │       │   ├── EditProfile.css
 │   │       │   └── EditProfile.tsx
 │   │       ├── ForgotPassword/
 │   │       │   ├── ForgotPassword.css

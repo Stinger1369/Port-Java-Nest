@@ -3,114 +3,167 @@
   justify-content: space-between;
   align-items: center;
   padding: 1rem 2rem;
-  background: rgba(255, 255, 255, 0.95); /* Fond blanc translucide */
-  backdrop-filter: blur(10px); /* Effet verre dépoli */
-  box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
-  position: fixed;
+  background-color: #1e2a44;
+  color: white;
+  position: sticky;
   top: 0;
-  left: 0;
-  right: 0;
-  z-index: 999; /* Réduit le z-index pour éviter de bloquer le contenu */
-  transition: background 0.3s ease;
-  height: 60px; /* Hauteur fixe pour la navbar */
-}
-
-.navbar:hover {
-  background: rgba(255, 255, 255, 1); /* Pleine opacité au survol */
+  z-index: 1000;
 }
 
 .navbar-logo {
   font-size: 1.5rem;
   font-weight: 700;
-  color: #333;
+  color: #61dafb;
   text-decoration: none;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
 }
 
 .navbar-logo i {
-  font-size: 1.8rem;
-  color: #007aff; /* Bleu Apple-inspired */
-}
-
-.navbar-logo:hover {
-  color: #007aff;
+  margin-right: 0.5rem;
 }
 
 .navbar-toggle {
   display: none;
   background: none;
   border: none;
-  font-size: 1.8rem;
-  color: #333;
+  color: white;
+  font-size: 1.5rem;
   cursor: pointer;
-  transition: color 0.3s ease, transform 0.3s ease;
-}
-
-.navbar-toggle:hover {
-  color: #007aff;
-  transform: rotate(90deg);
 }
 
 .navbar-links {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 2rem;
 }
 
 .nav-item {
+  color: white;
   text-decoration: none;
-  color: #333;
-  background: none;
-  border: none;
-  font-size: 1rem;
-  font-weight: 500;
+  font-size: 1.1rem;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 0.75rem;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: color 0.3s ease, background 0.3s ease, transform 0.2s ease;
-}
-
-.nav-item i {
-  font-size: 1.2rem;
+  padding: 0.5rem 1rem;
+  border-radius: 5px;
+  transition: background 0.3s ease;
 }
 
 .nav-item:hover {
-  color: #007aff;
-  background: rgba(0, 122, 255, 0.1);
-  transform: translateY(-2px);
+  background-color: rgba(255, 255, 255, 0.1);
 }
 
-/* Langue */
+.nav-item i {
+  margin-right: 0.5rem;
+}
+
+/* ✅ Styles pour la section météo */
+.navbar-weather {
+  position: relative;
+}
+
+.weather-toggle {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 1.1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  padding: 0.5rem 1rem;
+}
+
+.weather-toggle i {
+  margin-right: 0.5rem;
+}
+
+.weather-dropdown {
+  display: none;
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background-color: #ffffff;
+  border-radius: 5px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  padding: 1rem;
+  width: 250px;
+  z-index: 1000;
+}
+
+.weather-dropdown.active {
+  display: block;
+}
+
+.weather-dropdown h3 {
+  font-size: 1.2rem;
+  color: #1e2a44;
+  margin-bottom: 0.5rem;
+}
+
+.weather-dropdown .update-location-btn {
+  display: flex;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  background: linear-gradient(135deg, #28a745 0%, #218838 100%);
+  color: white;
+  border: none;
+  border-radius: 5px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.3s ease;
+  margin-bottom: 0.5rem;
+}
+
+.weather-dropdown .update-location-btn i {
+  margin-right: 0.5rem;
+}
+
+.weather-dropdown .update-location-btn:hover {
+  background: linear-gradient(135deg, #218838 0%, #28a745 100%);
+}
+
+.weather-dropdown .update-location-btn:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+.weather-dropdown .weather-details {
+  list-style: none;
+  padding: 0;
+}
+
+.weather-dropdown .weather-details li {
+  font-size: 0.9rem;
+  color: #333;
+  margin-bottom: 0.3rem;
+}
+
+.weather-dropdown .weather-details .label {
+  font-weight: 600;
+  color: #1e2a44;
+  margin-right: 0.5rem;
+}
+
+.weather-dropdown p {
+  font-size: 0.9rem;
+  color: #666;
+}
+
 .navbar-language {
   position: relative;
 }
 
 .language-toggle {
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-  padding: 0.5rem 0.75rem;
   background: none;
   border: none;
-  color: #333;
-  font-size: 0.9rem;
+  color: white;
+  font-size: 1.1rem;
   cursor: pointer;
-  border-radius: 8px;
-  transition: color 0.3s ease, background 0.3s ease;
+  display: flex;
+  align-items: center;
+  padding: 0.5rem 1rem;
 }
 
 .language-toggle i {
-  font-size: 1.1rem;
-}
-
-.language-toggle:hover {
-  color: #007aff;
-  background: rgba(0, 122, 255, 0.1);
+  margin-right: 0.5rem;
 }
 
 .language-dropdown {
@@ -118,37 +171,29 @@
   position: absolute;
   top: 100%;
   right: 0;
-  background: #fff;
-  border-radius: 8px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
-  padding: 0.5rem 0;
-  min-width: 120px;
-  opacity: 0;
-  transform: translateY(-10px);
-  transition: opacity 0.3s ease, transform 0.3s ease;
+  background-color: #ffffff;
+  border-radius: 5px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  padding: 0.5rem;
 }
 
 .language-dropdown.active {
   display: block;
-  opacity: 1;
-  transform: translateY(0);
 }
 
 .language-dropdown button {
+  display: block;
   width: 100%;
   padding: 0.5rem 1rem;
   background: none;
   border: none;
-  color: #333;
+  color: #1e2a44;
   text-align: left;
-  font-size: 0.9rem;
   cursor: pointer;
-  transition: background 0.3s ease, color 0.3s ease;
 }
 
 .language-dropdown button:hover {
-  background: rgba(0, 122, 255, 0.1);
-  color: #007aff;
+  background-color: #f0f0f0;
 }
 
 /* Responsivité */
@@ -159,16 +204,13 @@
 
   .navbar-links {
     display: none;
+    flex-direction: column;
     position: absolute;
     top: 100%;
     left: 0;
     right: 0;
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(10px);
-    flex-direction: column;
+    background-color: #1e2a44;
     padding: 1rem;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-    border-radius: 0 0 12px 12px;
   }
 
   .navbar-links.active {
@@ -177,44 +219,26 @@
 
   .nav-item {
     width: 100%;
-    justify-content: center;
-    padding: 0.75rem;
-    font-size: 1.1rem;
+    justify-content: flex-start;
+  }
+
+  .navbar-weather {
+    width: 100%;
+  }
+
+  .weather-dropdown {
+    position: static;
+    width: 100%;
+    box-shadow: none;
   }
 
   .navbar-language {
     width: 100%;
   }
 
-  .language-toggle {
-    width: 100%;
-    justify-content: center;
-  }
-
   .language-dropdown {
     width: 100%;
-    right: 0;
-  }
-}
-
-@media (max-width: 480px) {
-  .navbar {
-    padding: 0.75rem 1rem;
-  }
-
-  .navbar-logo {
-    font-size: 1.2rem;
-  }
-
-  .navbar-logo i {
-    font-size: 1.5rem;
-  }
-
-  .navbar-toggle {
-    font-size: 1.5rem;
-  }
-
-  .nav-item {
-    font-size: 1rem;
+    position: static;
+    box-shadow: none;
   }
 }
