@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useEffect, forwardRef } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState, AppDispatch } from "../../redux/store";
 import { fetchWeather, updateGeolocation } from "../../redux/features/userSlice";
@@ -6,28 +6,25 @@ import { useTranslation } from "react-i18next";
 import axios from "axios";
 import "./WeatherComponent.css";
 
-const WeatherComponent = () => {
+interface WeatherComponentProps {
+  isOpen: boolean;
+  onToggle: () => void;
+  onClose: () => void;
+}
+
+const WeatherComponent = forwardRef<HTMLDivElement, WeatherComponentProps>((props, ref) => {
   const { t, i18n } = useTranslation();
   const dispatch = useDispatch<AppDispatch>();
   const user = useSelector((state: RootState) => state.user.user);
   const weather = useSelector((state: RootState) => state.user.weather);
   const status = useSelector((state: RootState) => state.user.status);
   const token = useSelector((state: RootState) => state.auth.token);
-  const [isWeatherOpen, setIsWeatherOpen] = useState(false);
-
   const isRTL = i18n.language === "ar";
 
   useEffect(() => {
     if (!token || !user?.id) {
-      console.log("🔹 En attente de connexion de l'utilisateur et du token...");
       return;
     }
-
-    console.log("🔹 Démarrage de la surveillance automatique pour l'utilisateur:", user.id);
-    console.log("🔹 Coordonnées actuelles dans Redux:", {
-      latitude: user.latitude,
-      longitude: user.longitude,
-    });
 
     let watchId: number | undefined;
 
@@ -35,15 +32,10 @@ const WeatherComponent = () => {
       watchId = navigator.geolocation.watchPosition(
         (position) => {
           const { latitude, longitude } = position.coords;
-          console.log("🔹 Nouvelle position détectée par watchPosition:", { latitude, longitude });
-
           if (user.latitude !== latitude || user.longitude !== longitude) {
-            console.log("✅ Changement de géolocalisation détecté via watchPosition ! Mise à jour...");
             dispatch(updateGeolocation({ userId: user.id, latitude, longitude })).then(() => {
               dispatch(fetchWeather(user.id));
             });
-          } else {
-            console.log("ℹ️ Aucune différence détectée avec les coordonnées actuelles.");
           }
         },
         (err) => {
@@ -57,7 +49,6 @@ const WeatherComponent = () => {
         }
       );
     } else {
-      console.warn("❌ Géolocalisation non supportée. Tentative via IP...");
       fetchLocationFromIP();
     }
 
@@ -65,18 +56,13 @@ const WeatherComponent = () => {
       try {
         const response = await axios.get("https://ipapi.co/json/");
         const { latitude, longitude } = response.data;
-        console.log("🔹 Position détectée via IP:", { latitude, longitude });
-
         if (user.latitude !== latitude || user.longitude !== longitude) {
-          console.log("✅ Changement de géolocalisation détecté via IP ! Mise à jour...");
           dispatch(updateGeolocation({ userId: user.id, latitude, longitude })).then(() => {
             dispatch(fetchWeather(user.id));
           });
-        } else {
-          console.log("ℹ️ Aucune différence détectée via IP.");
         }
       } catch (error) {
-        console.error("❌ Erreur lors de la récupération de la localisation via IP:", error);
+        console.error("Erreur lors de la récupération de la localisation via IP:", error);
       }
     };
 
@@ -85,36 +71,22 @@ const WeatherComponent = () => {
     return () => {
       if (watchId !== undefined) {
         navigator.geolocation.clearWatch(watchId);
-        console.log("🛑 Surveillance de la géolocalisation arrêtée");
       }
     };
   }, [dispatch, user?.id, token]);
 
   useEffect(() => {
     if (token && user?.id && user.latitude && user.longitude && !weather) {
-      console.log("🔹 Récupération initiale de la météo pour:", user.id);
       dispatch(fetchWeather(user.id));
     }
   }, [token, user, weather, dispatch]);
 
-  const toggleWeatherMenu = () => {
-    setIsWeatherOpen(!isWeatherOpen);
-  };
-
   const handleManualUpdateGeolocation = () => {
-    if (!navigator.geolocation) {
-      console.warn("❌ Géolocalisation non supportée pour la mise à jour manuelle.");
-      return;
-    }
-    if (!user?.id) {
-      console.warn("❌ Aucun utilisateur connecté pour la mise à jour manuelle.");
-      return;
-    }
+    if (!navigator.geolocation || !user?.id) return;
 
     navigator.geolocation.getCurrentPosition(
       (position) => {
         const { latitude, longitude } = position.coords;
-        console.log("🔹 Mise à jour manuelle - Nouvelle position :", { latitude, longitude });
         dispatch(updateGeolocation({ userId: user.id, latitude, longitude })).then(() => {
           dispatch(fetchWeather(user.id));
         });
@@ -141,12 +113,12 @@ const WeatherComponent = () => {
 
   return (
     user && (
-      <div className="weather-container">
-        <button className="weather-toggle" onClick={toggleWeatherMenu}>
+      <div className={`weather-container ${isRTL ? "arabic" : ""}`} ref={ref}>
+        <button className="weather-toggle" onClick={props.onToggle}>
           <i className={weather ? getWeatherIconClass(weather.description) : "fas fa-cloud"}></i>{" "}
-          {weather ? `${weather.city}, ${Math.round(weather.temperature)}°C` : t("navbar.weather")}
+          {weather ? `${weather.city}, ${Math.round(weather.temperature)}°C` : t("weather.city")}
         </button>
-        <div className={`weather-panel ${isWeatherOpen ? "active" : ""} ${isRTL ? "rtl" : ""}`}>
+        <div className={`weather-panel ${props.isOpen ? "active" : ""} ${isRTL ? "arabic" : ""}`}>
           <div className="weather-header">
             <h3>{t("weather.title")}</h3>
             <button
@@ -227,6 +199,6 @@ const WeatherComponent = () => {
       </div>
     )
   );
-};
+});
 
 export default WeatherComponent;

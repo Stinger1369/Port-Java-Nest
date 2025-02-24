@@ -38,7 +38,7 @@ i18n
       },
     },
     detection: {
-      order: ["navigator", "localStorage", "querystring", "cookie", "htmlTag"], // Priorité : navigateur d'abord, puis localStorage
+      order: ["localStorage", "navigator", "querystring", "cookie", "htmlTag"], // Priorité : localStorage d'abord, puis navigateur
       caches: ["localStorage"], // Persiste la langue dans localStorage
       lookupLocalStorage: "i18nextLng", // Clé utilisée dans localStorage
     },
@@ -48,5 +48,10 @@ i18n
   .then(() => {
     console.log("Langue détectée au démarrage :", i18n.language); // Log pour confirmer la langue initiale
   });
+
+// Ajouter l'écouteur pour gérer la direction du texte
+i18n.on('languageChanged', (lng) => {
+  document.documentElement.dir = lng === 'ar' ? 'rtl' : 'ltr';
+});
 
 export default i18n;

@@ -1,29 +1,57 @@
-import { useState, useEffect } from "react"; // Ajoute useEffect
+import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState, AppDispatch } from "../../redux/store";
 import { logout } from "../../redux/features/authSlice";
-import { fetchUser } from "../../redux/features/userSlice"; // Ajoute fetchUser
+import { fetchUser } from "../../redux/features/userSlice";
 import { useTranslation } from "react-i18next";
 import LanguageSelector from "../LanguageSelector/LanguageSelector";
 import WeatherComponent from "../WeatherComponent/WeatherComponent";
+import UserDropdown from "../UserDropdown/UserDropdown";
 import "./Navbar.css";
 
 const Navbar = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
   const token = useSelector((state: RootState) => state.auth.token);
   const user = useSelector((state: RootState) => state.user.user);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isWeatherOpen, setIsWeatherOpen] = useState(false);
+  const [isLanguageOpen, setIsLanguageOpen] = useState(false);
 
-  // Charge l'utilisateur dès que le token est disponible
+  const isArabic = i18n.language === "ar";
+
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const weatherRef = useRef<HTMLDivElement>(null);
+  const languageRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     if (token && !user) {
-      console.log("🔹 Chargement initial de l'utilisateur avec le token:", token);
       dispatch(fetchUser());
     }
   }, [dispatch, token, user]);
+
+  // Gestion des clics en dehors
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsDropdownOpen(false);
+      }
+      if (weatherRef.current && !weatherRef.current.contains(event.target as Node)) {
+        setIsWeatherOpen(false);
+      }
+      if (languageRef.current && !languageRef.current.contains(event.target as Node)) {
+        setIsLanguageOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   const handleLogout = () => {
     dispatch(logout());
@@ -61,7 +89,7 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="navbar">
+    <nav className={`navbar ${isArabic ? "arabic" : ""}`}>
       <Link to="/" className="navbar-logo">
         <i className="fas fa-folder-open"></i> Portfolio
       </Link>
@@ -71,16 +99,24 @@ const Navbar = () => {
       <div className={`navbar-links ${isMenuOpen ? "active" : ""}`}>
         {token ? (
           <>
-            <Link to="/profile" onClick={() => setIsMenuOpen(false)} className="nav-item">
-              <i className="fas fa-user"></i> {t("navbar.profile")}
-            </Link>
             <button onClick={handlePortfolioClick} className="nav-item">
               <i className="fas fa-briefcase"></i> {t("navbar.portfolio")}
             </button>
-            <WeatherComponent />
+            <WeatherComponent
+              ref={weatherRef}
+              isOpen={isWeatherOpen}
+              onToggle={() => setIsWeatherOpen(!isWeatherOpen)}
+              onClose={() => setIsWeatherOpen(false)}
+            />
             <button onClick={handleLogout} className="nav-item">
               <i className="fas fa-sign-out-alt"></i> {t("navbar.logout")}
             </button>
+            <UserDropdown
+              ref={dropdownRef}
+              isOpen={isDropdownOpen}
+              onToggle={() => setIsDropdownOpen(!isDropdownOpen)}
+              onClose={() => setIsDropdownOpen(false)}
+            />
           </>
         ) : (
           <>
@@ -92,7 +128,12 @@ const Navbar = () => {
             </Link>
           </>
         )}
-        <LanguageSelector />
+        <LanguageSelector
+          ref={languageRef}
+          isOpen={isLanguageOpen}
+          onToggle={() => setIsLanguageOpen(!isLanguageOpen)}
+          onClose={() => setIsLanguageOpen(false)}
+        />
       </div>
     </nav>
   );

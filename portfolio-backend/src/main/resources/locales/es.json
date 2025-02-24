@@ -5,7 +5,13 @@
     "portfolio": "Portafolio",
     "logout": "Cerrar sesión",
     "login": "Iniciar sesión",
-    "register": "Registrarse"
+    "register": "Registrarse",
+    "menu": "Menú",
+    "member": "Miembro",
+    "settings": "Configuración",
+    "rencontre": "Encuentro",
+    "offersReceived": "Ofertas recibidas",
+    "messagesReceived": "Mensajes recibidos"
   },
   "profile": {
     "title": "Mi Perfil",

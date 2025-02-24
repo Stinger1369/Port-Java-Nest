@@ -35,8 +35,15 @@ logging:
   level:
     org.springframework.security: DEBUG
     org.springframework.web: DEBUG
+    org.springframework: DEBUG
+    com.Portbil.portfolio_backend: DEBUG
 
 # Ajout des propriétés pour OpenWeatherMap
 openweathermap:
   api-key: "617928418c5eb72ed4fbffd427f1d5d8"
   base-url: "https://api.openweathermap.org/data/2.5/weather"
+
+# Ajout de l'ID du développeur
+app:
+  developer:
+    id: "67b9dc8e204697696b571ebd"

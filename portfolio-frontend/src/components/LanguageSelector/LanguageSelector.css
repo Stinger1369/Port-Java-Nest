@@ -1,61 +1,107 @@
+/* LanguageSelector.css */
 .navbar-language {
   position: relative;
-  display: inline-block;
 }
 
 .language-toggle {
   background: none;
   border: none;
-  color: #fff; /* Ajuste selon ta navbar */
+  color: white;
+  font-size: 1.1rem;
   cursor: pointer;
-  font-size: 16px;
-  padding: 10px;
+  padding: 0.5rem 1rem;
+}
+
+/* Conteneur pour gérer l'icône et le texte dans le bouton */
+.toggle-content {
   display: flex;
   align-items: center;
-  gap: 5px;
 }
 
 .language-toggle i {
-  margin-right: 5px;
+  margin-right: 0.5rem; /* Marge à droite pour LTR */
+}
+
+/* Ajustements pour l'arabe (RTL) */
+.arabic .toggle-content {
+  flex-direction: row-reverse; /* Inverse l'ordre : icône à droite, texte à gauche */
+}
+
+.arabic .language-toggle i {
+  margin-right: 0; /* Supprime la marge droite */
+  margin-left: 0.5rem; /* Ajoute une marge gauche pour RTL */
 }
 
 .language-dropdown {
+  display: none;
   position: absolute;
   top: 100%;
   right: 0;
-  background-color: #fff;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  border-radius: 4px;
-  display: none;
-  flex-direction: column;
-  min-width: 150px;
-  z-index: 1000;
+  background-color: #ffffff;
+  border-radius: 5px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  padding: 0.5rem;
+}
+
+/* Ajustements pour l'arabe (RTL) */
+.arabic .language-dropdown {
+  right: auto; /* Supprime l'alignement à droite */
+  left: 0; /* Aligne à gauche pour RTL */
 }
 
 .language-dropdown.active {
+  display: block;
+}
+
+/* Conteneur pour gérer le drapeau et le texte dans les boutons du menu */
+.dropdown-item-content {
   display: flex;
+  align-items: center;
+  width: 100%;
 }
 
 .language-dropdown button {
+  width: 100%;
+  padding: 0.5rem 1rem;
   background: none;
   border: none;
-  padding: 10px;
+  color: #1e2a44;
   text-align: left;
   cursor: pointer;
-  color: #333;
-  display: flex;
-  align-items: center;
-  gap: 8px;
+}
+
+/* Ajustements pour l'arabe (RTL) */
+.arabic .dropdown-item-content {
+  flex-direction: row-reverse; /* Inverse l'ordre : drapeau à droite, texte à gauche */
+}
+
+.arabic .language-dropdown button {
+  text-align: right; /* Aligne le texte à droite pour RTL */
 }
 
 .language-dropdown button:hover {
-  background-color: #f5f5f5;
+  background-color: #f0f0f0;
 }
 
-/* Ajustements responsive */
+/* Responsivité */
 @media (max-width: 768px) {
+  .navbar-language {
+    width: 100%;
+  }
+
   .language-dropdown {
     position: static;
     width: 100%;
+    box-shadow: none;
+  }
+
+  /* Ajustements pour l'arabe sur mobile */
+  .arabic .language-toggle {
+    width: 100%;
+    justify-content: flex-end; /* Aligne à droite pour RTL */
+  }
+
+  .arabic .language-dropdown button {
+    justify-content: flex-end; /* Aligne le contenu à droite pour RTL */
   }
 }

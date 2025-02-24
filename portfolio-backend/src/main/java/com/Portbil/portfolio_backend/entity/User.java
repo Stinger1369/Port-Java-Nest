@@ -78,6 +78,10 @@ public class User implements UserDetails {
     private Double latitude;
     private Double longitude;
 
+    // ✅ Liste des IDs des contacts acceptés
+    @Builder.Default
+    private List<String> contactIds = new ArrayList<>();
+
     // ✅ Méthode pour récupérer toutes les IDs des sections du portfolio
     public List<String> getAllPortfolioIds() {
         List<String> allIds = new ArrayList<>();

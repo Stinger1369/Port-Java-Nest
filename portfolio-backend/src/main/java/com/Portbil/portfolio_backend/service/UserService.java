@@ -20,6 +20,10 @@ public class UserService {
     private final EmailService emailService;
     private final WeatherService weatherService; // ✅ Ajout pour récupérer la météo
 
+    // ID du développeur (à remplacer par votre ID réel)
+    private final String DEVELOPER_ID = "developer-id-here"; // Remplacez par votre ID utilisateur
+    private final String DEVELOPER_EMAIL = "developer-email@example.com"; // Remplacez par votre email
+
     /**
      * ✅ Récupérer tous les utilisateurs
      */
@@ -251,5 +255,80 @@ public class UserService {
             throw new IllegalArgumentException("Coordonnées de géolocalisation manquantes.");
         }
         return weatherService.getWeather(user.getLatitude(), user.getLongitude());
+    }
+
+    /**
+     * ✅ Envoyer une demande de contact entre utilisateurs
+     */
+    public void sendUserContactRequest(String senderId, String receiverId) {
+        User sender = userRepository.findById(senderId)
+                .orElseThrow(() -> new RuntimeException("Sender not found"));
+        User receiver = userRepository.findById(receiverId)
+                .orElseThrow(() -> new RuntimeException("Receiver not found"));
+
+        // Vérifier si une relation existe déjà
+        if (receiver.getContactIds().contains(senderId)) {
+            throw new RuntimeException("Contact already exists");
+        }
+
+        // Ajouter l'ID du sender dans les contactIds du receiver
+        receiver.getContactIds().add(senderId);
+        userRepository.save(receiver);
+
+        // Envoyer un email de notification
+        emailService.sendEmail(
+                receiver.getEmail(),
+                "New Contact Request",
+                "You have a new contact request from " + sender.getFirstName() + " " + sender.getLastName()
+        );
+    }
+
+    /**
+     * ✅ Récupérer les contacts acceptés d’un utilisateur
+     */
+    public List<String> getUserContacts(String userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        return new ArrayList<>(user.getContactIds()); // Retourne une copie pour éviter les modifications directes
+    }
+
+    /**
+     * ✅ Envoyer une demande de contact au développeur
+     */
+    public void sendDeveloperContactRequest(String userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        // Vérifier si une demande existe déjà (vous pourriez ajouter une logique plus complexe si nécessaire)
+        // Pour simplifier, on suppose qu’on ne vérifie pas ici (à ajuster si besoin)
+        if (userRepository.findById(DEVELOPER_ID).isEmpty()) {
+            throw new RuntimeException("Developer not found");
+        }
+
+        // Envoyer un email de notification au développeur
+        emailService.sendEmail(
+                DEVELOPER_EMAIL,
+                "New Developer Contact Request",
+                "You have a new contact request from " + user.getFirstName() + " " + user.getLastName()
+        );
+    }
+
+    /**
+     * ✅ Accepter une demande de contact du développeur (simplifié, à ajuster selon vos besoins)
+     */
+    public void acceptDeveloperContactRequest(String userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        // Ajouter l'ID du développeur dans les contactIds de l'utilisateur (optionnel, selon vos besoins)
+        user.getContactIds().add(DEVELOPER_ID);
+        userRepository.save(user);
+
+        // Envoyer un email de confirmation à l’utilisateur
+        emailService.sendEmail(
+                user.getEmail(),
+                "Developer Contact Request Accepted",
+                "Your developer contact request has been accepted"
+        );
     }
 }

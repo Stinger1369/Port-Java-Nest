@@ -5,7 +5,13 @@
     "portfolio": "محفظة",
     "logout": "تسجيل الخروج",
     "login": "تسجيل الدخول",
-    "register": "التسجيل"
+    "register": "التسجيل",
+    "menu": "قائمة",
+    "member": "عضو",
+    "settings": "إعدادات",
+    "rencontre": "لقاء",
+    "offersReceived": "العروض المستلمة",
+    "messagesReceived": "الرسائل المستلمة"
   },
   "profile": {
     "title": "ملفي الشخصي",

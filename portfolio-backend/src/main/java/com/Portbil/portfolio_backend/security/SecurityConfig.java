@@ -37,7 +37,8 @@ public class SecurityConfig {
                                 "/api/auth/verify",
                                 "/api/auth/forgot-password",
                                 "/api/auth/reset-password",
-                                "/api/translations/**" // ✅ Ajout pour autoriser l'accès public aux traductions
+                                "/api/translations/**",
+                                "/api/contacts/request"
                         ).permitAll() // ✅ Routes publiques
                         .requestMatchers("/api/portfolio/public/**").permitAll() // ✅ Rendre les portfolios accessibles publiquement
                         .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll() // ✅ Autoriser toutes les requêtes OPTIONS

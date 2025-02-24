@@ -21,6 +21,7 @@ import Social from "./pages/Portfolio/Social/Social";
 import Languages from "./pages/Portfolio/Languages/Languages";
 import Recommendations from "./pages/Portfolio/Recommendations/Recommendations";
 import Interests from "./pages/Portfolio/Interests/Interests";
+import Notifications from "./pages/UserMenuDropdown/Notification/Notifications";
 import "./App.css";
 
 const App = () => {
@@ -50,6 +51,7 @@ const App = () => {
                 <Route path="languages" element={<Languages />} />
                 <Route path="recommendations" element={<Recommendations />} />
                 <Route path="interests" element={<Interests />} />
+                {/* <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} /> */}
               </Route>
               <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
             </Routes>

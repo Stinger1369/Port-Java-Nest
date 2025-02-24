@@ -5,7 +5,13 @@
     "portfolio": "作品集",
     "logout": "退出",
     "login": "登录",
-    "register": "注册"
+    "register": "注册",
+    "menu": "菜单",
+    "member": "会员",
+    "settings": "设置",
+    "rencontre": "会面",
+    "offersReceived": "收到的报价",
+    "messagesReceived": "收到的消息"
   },
   "profile": {
     "title": "我的个人资料",

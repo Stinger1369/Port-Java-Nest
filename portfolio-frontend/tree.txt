@@ -17,13 +17,22 @@ portfolio-frontend/
 │   ├── assets/
 │   │   └── react.svg
 │   ├── components/
+│   │   ├── LanguageSelector/
+│   │   │   ├── LanguageSelector.css
+│   │   │   └── LanguageSelector.tsx
 │   │   ├── Navbar/
 │   │   │   ├── Navbar.css
 │   │   │   └── Navbar.tsx
 │   │   ├── PhoneInput/
 │   │   │   ├── PhoneInputComponent.css
 │   │   │   └── PhoneInputComponent.tsx
-│   │   └── ProtectedRoute.tsx
+│   │   ├── ProtectedRoute.tsx
+│   │   ├── UserDropdown/
+│   │   │   ├── UserDropdown.css
+│   │   │   └── UserDropdown.tsx
+│   │   └── WeatherComponent/
+│   │       ├── WeatherComponent.css
+│   │       └── WeatherComponent.tsx
 │   ├── config/
 │   │   └── hostname.ts
 │   ├── i18n.ts

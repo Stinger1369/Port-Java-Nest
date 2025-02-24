@@ -20,6 +20,7 @@
 │   │   │               ├── controller/
 │   │   │               │   ├── AuthController.java
 │   │   │               │   ├── CertificationController.java
+│   │   │               │   ├── ContactController.java
 │   │   │               │   ├── EducationController.java
 │   │   │               │   ├── ExperienceController.java
 │   │   │               │   ├── InterestController.java
@@ -33,6 +34,8 @@
 │   │   │               │   └── UserController.java
 │   │   │               ├── dto/
 │   │   │               │   ├── CertificationDTO.java
+│   │   │               │   ├── ContactDTO.java
+│   │   │               │   ├── ContactRequestDTO.java
 │   │   │               │   ├── EducationDTO.java
 │   │   │               │   ├── ExperienceDTO.java
 │   │   │               │   ├── InterestDTO.java
@@ -46,6 +49,7 @@
 │   │   │               │   └── WeatherDTO.java
 │   │   │               ├── entity/
 │   │   │               │   ├── Certification.java
+│   │   │               │   ├── Contact.java
 │   │   │               │   ├── Education.java
 │   │   │               │   ├── Experience.java
 │   │   │               │   ├── Interest.java
@@ -62,6 +66,7 @@
 │   │   │               │   └── GlobalExceptionHandler.java
 │   │   │               ├── repository/
 │   │   │               │   ├── CertificationRepository.java
+│   │   │               │   ├── ContactRepository.java
 │   │   │               │   ├── EducationRepository.java
 │   │   │               │   ├── ExperienceRepository.java
 │   │   │               │   ├── InterestRepository.java
@@ -79,6 +84,7 @@
 │   │   │               │   └── SecurityConfig.java
 │   │   │               ├── service/
 │   │   │               │   ├── CertificationService.java
+│   │   │               │   ├── ContactService.java
 │   │   │               │   ├── EducationService.java
 │   │   │               │   ├── EmailService.java
 │   │   │               │   ├── ExperienceService.java
@@ -129,6 +135,9 @@
 │   │   │           ├── dto/
 │   │   │           │   ├── CertificationDTO.class
 │   │   │           │   ├── CertificationDTO$CertificationDTOBuilder.class
+│   │   │           │   ├── ContactDTO.class
+│   │   │           │   ├── ContactDTO$ContactDTOBuilder.class
+│   │   │           │   ├── ContactRequestDTO.class
 │   │   │           │   ├── EducationDTO.class
 │   │   │           │   ├── ExperienceDTO.class
 │   │   │           │   ├── InterestDTO.class
@@ -149,6 +158,8 @@
 │   │   │           ├── entity/
 │   │   │           │   ├── Certification.class
 │   │   │           │   ├── Certification$CertificationBuilder.class
+│   │   │           │   ├── Contact.class
+│   │   │           │   ├── Contact$ContactBuilder.class
 │   │   │           │   ├── Education.class
 │   │   │           │   ├── Education$EducationBuilder.class
 │   │   │           │   ├── Experience.class
@@ -176,6 +187,7 @@
 │   │   │           │   └── GlobalExceptionHandler.class
 │   │   │           ├── repository/
 │   │   │           │   ├── CertificationRepository.class
+│   │   │           │   ├── ContactRepository.class
 │   │   │           │   ├── EducationRepository.class
 │   │   │           │   ├── ExperienceRepository.class
 │   │   │           │   ├── InterestRepository.class
@@ -207,7 +219,9 @@
 │   │   │           │   ├── WeatherService.class
 │   │   │           │   ├── WeatherService$WeatherResponse.class
 │   │   │           │   ├── WeatherService$WeatherResponse$Main.class
-│   │   │           │   └── WeatherService$WeatherResponse$Weather.class
+│   │   │           │   ├── WeatherService$WeatherResponse$Sys.class
+│   │   │           │   ├── WeatherService$WeatherResponse$Weather.class
+│   │   │           │   └── WeatherService$WeatherResponse$Wind.class
 │   │   │           └── PortfolioBackendApplication.class
 │   │   ├── locales/
 │   │   │   ├── ar.json
