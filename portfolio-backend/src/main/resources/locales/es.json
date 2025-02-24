@@ -146,5 +146,26 @@
     "ctaText": "Únete a miles de creadores y comienza hoy mismo.",
     "ctaButton": "Crear Mi Portafolio",
     "footer": "Todos los derechos reservados."
+  },
+  "weather": {
+    "title": "Clima",
+    "refresh": "Actualizar",
+    "currentConditions": "Condiciones actuales",
+    "wind": "Viento",
+    "visibility": "Visibilidad",
+    "sun": "Sol",
+    "city": "Ciudad",
+    "temperature": "Temperatura",
+    "feelsLike": "Sensación térmica",
+    "condition": "Condición",
+    "humidity": "Humedad",
+    "pressure": "Presión",
+    "windSpeed": "Velocidad del viento",
+    "windDirection": "Dirección del viento",
+    "distance": "Visibilidad",
+    "sunrise": "Amanecer",
+    "sunset": "Atardecer",
+    "uvIndex": "Índice UV",
+    "noData": "No hay datos del clima disponibles"
   }
 }

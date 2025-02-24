@@ -21,6 +21,7 @@
     "portfolio-frontend": "file:",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "react-flagkit": "^2.0.4",
     "react-i18next": "^15.4.1",
     "react-phone-input-2": "^2.15.1",
     "react-redux": "^9.2.0",

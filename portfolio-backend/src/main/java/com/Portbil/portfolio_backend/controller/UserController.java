@@ -60,6 +60,7 @@ public class UserController {
 
         System.out.println("🔹 Tentative de mise à jour de l'utilisateur ID: " + id);
         System.out.println("Received phone from frontend: " + userDTO.getPhone());
+        System.out.println("🔹 Coordonnées reçues du frontend: latitude=" + userDTO.getLatitude() + ", longitude=" + userDTO.getLongitude());
 
         if (authentication == null || authentication.getPrincipal() == null) {
             System.out.println("❌ Utilisateur non authentifié !");
@@ -84,6 +85,7 @@ public class UserController {
 
             System.out.println("✅ Mise à jour réussie pour l'utilisateur ID: " + id);
             System.out.println("Saved phone in DB: " + updatedUser.get().getPhone());
+            System.out.println("🔹 Nouvelles coordonnées enregistrées: latitude=" + updatedUser.get().getLatitude() + ", longitude=" + updatedUser.get().getLongitude());
             return ResponseEntity.ok(updatedUser.get());
 
         } catch (IllegalArgumentException e) {
@@ -136,6 +138,7 @@ public class UserController {
         try {
             WeatherDTO weather = userService.getWeatherForUser(id);
             System.out.println("✅ Données météo récupérées pour l'utilisateur ID: " + id);
+            System.out.println("🔹 Détails météo renvoyés: ville=" + weather.getCity() + ", temp=" + weather.getTemperature() + "°C");
             return ResponseEntity.ok(weather);
         } catch (IllegalArgumentException e) {
             System.out.println("⚠️ Erreur lors de la récupération de la météo : " + e.getMessage());

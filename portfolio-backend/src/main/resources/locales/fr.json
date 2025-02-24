@@ -145,5 +145,26 @@
     "ctaText": "Rejoignez des milliers de créateurs et commencez dès aujourd’hui.",
     "ctaButton": "Créer Mon Portfolio",
     "footer": "Tous droits réservés."
+  },
+  "weather": {
+    "title": "Météo",
+    "refresh": "Actualiser",
+    "currentConditions": "Conditions actuelles",
+    "wind": "Vent",
+    "visibility": "Visibilité",
+    "sun": "Soleil",
+    "city": "Ville",
+    "temperature": "Température",
+    "feelsLike": "Ressenti",
+    "condition": "Condition",
+    "humidity": "Humidité",
+    "pressure": "Pression",
+    "windSpeed": "Vitesse du vent",
+    "windDirection": "Direction du vent",
+    "distance": "Visibilité",
+    "sunrise": "Lever du soleil",
+    "sunset": "Coucher du soleil",
+    "uvIndex": "Indice UV",
+    "noData": "Aucune donnée météo disponible"
   }
 }

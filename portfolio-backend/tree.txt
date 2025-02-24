@@ -221,6 +221,10 @@
 │   ├── generated-test-sources/
 │   │   └── test-annotations/
 │   └── test-classes/
+│       └── com/
+│           └── Portbil/
+│               └── portfolio_backend/
+│                   └── PortfolioBackendApplicationTests.class
 ├── .gitattributes
 ├── .gitignore
 ├── HELP.md

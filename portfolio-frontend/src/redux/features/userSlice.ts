@@ -2,11 +2,20 @@ import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import axios from "axios";
 import { BASE_URL } from "../../config/hostname";
 
-// ✅ Interface pour les données météo
+// ✅ Interface pour les données météo avec les nouveaux éléments
 interface WeatherData {
   temperature: number;
   description: string;
   humidity: number;
+  city: string; // Plus optionnel car maintenant fourni par le backend
+  pressure: number;        // Pression atmosphérique (hPa)
+  windSpeed: number;       // Vitesse du vent (km/h)
+  windDirection: number;   // Direction du vent (degrés)
+  feelsLike: number;       // Température ressentie (°C)
+  visibility: number;      // Visibilité (mètres)
+  sunrise: number;         // Lever du soleil (timestamp UNIX)
+  sunset: number;          // Coucher du soleil (timestamp UNIX)
+  uvIndex: number;         // Indice UV (0-11+)
 }
 
 // ✅ Interface utilisateur mise à jour
@@ -21,8 +30,8 @@ interface User {
   country?: string;
   sex?: "Man" | "Woman" | "Other" | "";
   bio?: string;
-  latitude?: number; // ✅ Ajout pour la géolocalisation
-  longitude?: number; // ✅ Ajout pour la géolocalisation
+  latitude?: number;
+  longitude?: number;
 }
 
 // ✅ État initial Redux mis à jour
@@ -31,7 +40,7 @@ interface UserState {
   status: "idle" | "loading" | "succeeded" | "failed";
   error: string | null;
   message: string | null;
-  weather: WeatherData | null; // ✅ Ajout pour stocker la météo
+  weather: WeatherData | null;
 }
 
 const initialState: UserState = {
@@ -39,7 +48,7 @@ const initialState: UserState = {
   status: "idle",
   error: null,
   message: null,
-  weather: null, // ✅ Initialisation à null
+  weather: null,
 };
 
 // ✅ Récupérer l'utilisateur après connexion
@@ -77,6 +86,7 @@ export const fetchUser = createAsyncThunk(
 );
 
 // ✅ Mettre à jour le profil utilisateur
+// Correction : Utiliser PUT au lieu de GET pour la mise à jour
 export const updateUser = createAsyncThunk(
   "user/updateUser",
   async (userData: Partial<User>, { rejectWithValue }) => {
@@ -141,7 +151,8 @@ export const fetchWeather = createAsyncThunk(
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      console.log("✅ Météo récupérée :", response.data);
+      console.log("✅ Données météo brutes reçues de l'API :", response.data);
+      console.log("🔹 Ville détectée :", response.data.city);
       return response.data as WeatherData;
     } catch (error: any) {
       console.error("❌ Fetch weather failed:", error.response?.data);
@@ -189,12 +200,11 @@ const userSlice = createSlice({
       state.status = "idle";
       state.error = null;
       state.message = null;
-      state.weather = null; // ✅ Réinitialisation de la météo
+      state.weather = null;
     },
   },
   extraReducers: (builder) => {
     builder
-      // 🔹 Récupérer l'utilisateur
       .addCase(fetchUser.pending, (state) => {
         state.status = "loading";
       })
@@ -206,7 +216,6 @@ const userSlice = createSlice({
         state.status = "failed";
         state.error = action.payload as string;
       })
-      // 🔹 Mettre à jour l'utilisateur
       .addCase(updateUser.pending, (state) => {
         state.status = "loading";
       })
@@ -219,14 +228,13 @@ const userSlice = createSlice({
         state.status = "failed";
         state.error = action.payload as string;
       })
-      // 🔹 Supprimer l'utilisateur
       .addCase(deleteUser.pending, (state) => {
         state.status = "loading";
       })
       .addCase(deleteUser.fulfilled, (state) => {
         state.status = "succeeded";
         state.user = null;
-        state.weather = null; // ✅ Réinitialisation de la météo
+        state.weather = null;
         localStorage.removeItem("token");
         state.message = "User deleted successfully!";
       })
@@ -234,7 +242,6 @@ const userSlice = createSlice({
         state.status = "failed";
         state.error = action.payload as string;
       })
-      // 🔹 Récupérer la météo
       .addCase(fetchWeather.pending, (state) => {
         state.status = "loading";
       })
@@ -246,7 +253,6 @@ const userSlice = createSlice({
         state.status = "failed";
         state.error = action.payload as string;
       })
-      // 🔹 Mettre à jour la géolocalisation
       .addCase(updateGeolocation.pending, (state) => {
         state.status = "loading";
       })

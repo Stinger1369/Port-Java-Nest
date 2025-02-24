@@ -145,5 +145,26 @@
     "ctaText": "加入数千名创作者，今天就启动吧。",
     "ctaButton": "创建我的作品集",
     "footer": "保留所有权利。"
+  },
+  "weather": {
+    "title": "天气",
+    "refresh": "刷新",
+    "currentConditions": "当前状况",
+    "wind": "风",
+    "visibility": "能见度",
+    "sun": "太阳",
+    "city": "城市",
+    "temperature": "温度",
+    "feelsLike": "体感温度",
+    "condition": "天气状况",
+    "humidity": "湿度",
+    "pressure": "气压",
+    "windSpeed": "风速",
+    "windDirection": "风向",
+    "distance": "能见度",
+    "sunrise": "日出",
+    "sunset": "日落",
+    "uvIndex": "紫外线指数",
+    "noData": "暂无天气数据"
   }
 }

@@ -145,5 +145,26 @@
     "ctaText": "انضم إلى آلاف المبدعين وابدأ اليوم.",
     "ctaButton": "إنشاء محفظتي",
     "footer": "جميع الحقوق محفوظة."
+  },
+  "weather": {
+    "title": "الطقس",
+    "refresh": "تحديث",
+    "currentConditions": "الظروف الحالية",
+    "wind": "الرياح",
+    "visibility": "الرؤية",
+    "sun": "الشمس",
+    "city": "المدينة",
+    "temperature": "درجة الحرارة",
+    "feelsLike": "الشعور",
+    "condition": "الحالة",
+    "humidity": "الرطوبة",
+    "pressure": "الضغط",
+    "windSpeed": "سرعة الرياح",
+    "windDirection": "اتجاه الرياح",
+    "distance": "الرؤية",
+    "sunrise": "شروق الشمس",
+    "sunset": "غروب الشمس",
+    "uvIndex": "مؤشر الأشعة فوق البنفسجية",
+    "noData": "لا توجد بيانات طقس متاحة"
   }
 }
