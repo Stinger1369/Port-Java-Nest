@@ -1,7 +1,26 @@
 import { Outlet, Link } from "react-router-dom";
+import { useSelector } from "react-redux";
+import { RootState } from "../..//redux/store";
 import "./Portfolio.css"; // Styles du Portfolio
 
 const Portfolio = () => {
+  const user = useSelector((state: RootState) => state.user.user);
+
+  // ✅ Vérifier si le profil est incomplet
+  const isProfileIncomplete = !user?.firstName || !user?.lastName;
+
+  if (isProfileIncomplete) {
+    return (
+      <div className="portfolio-container">
+        <h1 className="portfolio-title">Mon Portfolio</h1>
+        <p className="incomplete-profile-message">
+          ⚠️ Veuillez compléter votre profil pour générer un portfolio.{" "}
+          <Link to="/edit-profile">Cliquez ici pour modifier votre profil</Link>.
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="portfolio-container">
       <nav className="portfolio-navbar">

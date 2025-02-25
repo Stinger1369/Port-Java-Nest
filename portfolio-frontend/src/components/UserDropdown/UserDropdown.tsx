@@ -14,7 +14,7 @@ const UserDropdown = forwardRef<HTMLDivElement, UserDropdownProps>((props, ref) 
   const isArabic = i18n.language === "ar";
 
   const handleItemClick = () => {
-    props.onClose(); // Ferme le menu quand un item est cliqué
+    props.onClose();
   };
 
   return (
@@ -38,10 +38,12 @@ const UserDropdown = forwardRef<HTMLDivElement, UserDropdownProps>((props, ref) 
         <Link to="/offers" onClick={handleItemClick} className={`dropdown-item ${isArabic ? "arabic" : ""}`}>
           <i className="fas fa-gift"></i> {t("navbar.offersReceived")}
         </Link>
+        <Link to="/history" onClick={handleItemClick} className={`dropdown-item ${isArabic ? "arabic" : ""}`}>
+          <i className="fas fa-history"></i> {t("navbar.contactHistory")} {/* ✅ Nouvelle entrée */}
+        </Link>
         <Link to="/messages" onClick={handleItemClick} className={`dropdown-item ${isArabic ? "arabic" : ""}`}>
           <i className="fas fa-envelope"></i> {t("navbar.messagesReceived")}
         </Link>
-        {/* Nouvelle entrée pour les notifications */}
         <Link to="/notifications" onClick={handleItemClick} className={`dropdown-item ${isArabic ? "arabic" : ""}`}>
           <i className="fas fa-bell"></i> {t("navbar.notifications")}
         </Link>

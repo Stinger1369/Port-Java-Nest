@@ -121,6 +121,7 @@
 │   │   │           ├── controller/
 │   │   │           │   ├── AuthController.class
 │   │   │           │   ├── CertificationController.class
+│   │   │           │   ├── ContactController.class
 │   │   │           │   ├── EducationController.class
 │   │   │           │   ├── ExperienceController.class
 │   │   │           │   ├── InterestController.class
@@ -154,6 +155,7 @@
 │   │   │           │   ├── SocialLinkDTO.class
 │   │   │           │   ├── SocialLinkDTO$SocialLinkDTOBuilder.class
 │   │   │           │   ├── UserDTO.class
+│   │   │           │   ├── UserDTO$UserDTOBuilder.class
 │   │   │           │   └── WeatherDTO.class
 │   │   │           ├── entity/
 │   │   │           │   ├── Certification.class
@@ -205,6 +207,7 @@
 │   │   │           │   └── SecurityConfig.class
 │   │   │           ├── service/
 │   │   │           │   ├── CertificationService.class
+│   │   │           │   ├── ContactService.class
 │   │   │           │   ├── EducationService.class
 │   │   │           │   ├── EmailService.class
 │   │   │           │   ├── ExperienceService.class

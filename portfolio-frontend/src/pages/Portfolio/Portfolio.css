@@ -131,7 +131,12 @@
 .profile-container.rtl .profile-edit-btn {
   margin: 2rem auto 0; /* Centré pour RTL */
 }
-
+.incomplete-profile-message {
+  color: #ff4444;
+  font-size: 1.2em;
+  text-align: center;
+  margin: 20px 0;
+}
 .profile-edit-btn i {
   margin-right: 0.5rem;
 }

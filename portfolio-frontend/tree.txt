@@ -48,6 +48,9 @@ portfolio-frontend/
 │   │   │   │   ├── Certifications.css
 │   │   │   │   ├── Certifications.tsx
 │   │   │   │   └── UpdateCertification.tsx
+│   │   │   ├── ContactPortfolio/
+│   │   │   │   ├── ContactPortfolio.css
+│   │   │   │   └── ContactPortfolio.tsx
 │   │   │   ├── Education/
 │   │   │   │   ├── AddEducation/
 │   │   │   │   │   ├── AddEducation.css
@@ -97,30 +100,35 @@ portfolio-frontend/
 │   │   │       ├── Social.css
 │   │   │       ├── Social.tsx
 │   │   │       └── UpdateSocialLink.tsx
-│   │   └── Profile/
-│   │       ├── EditProfile/
-│   │       │   ├── EditProfile.css
-│   │       │   └── EditProfile.tsx
-│   │       ├── ForgotPassword/
-│   │       │   ├── ForgotPassword.css
-│   │       │   └── ForgotPassword.tsx
-│   │       ├── Login/
-│   │       │   ├── Login.css
-│   │       │   └── Login.tsx
-│   │       ├── Profile.css
-│   │       ├── Profile.tsx
-│   │       ├── Register/
-│   │       │   ├── Register.css
-│   │       │   └── Register.tsx
-│   │       ├── ResetPassword/
-│   │       │   ├── ResetPassword.css
-│   │       │   └── ResetPassword.tsx
-│   │       └── VerifyAccount/
-│   │           └── VerifyAccount.tsx
+│   │   ├── Profile/
+│   │   │   ├── EditProfile/
+│   │   │   │   ├── EditProfile.css
+│   │   │   │   └── EditProfile.tsx
+│   │   │   ├── ForgotPassword/
+│   │   │   │   ├── ForgotPassword.css
+│   │   │   │   └── ForgotPassword.tsx
+│   │   │   ├── Login/
+│   │   │   │   ├── Login.css
+│   │   │   │   └── Login.tsx
+│   │   │   ├── Profile.css
+│   │   │   ├── Profile.tsx
+│   │   │   ├── Register/
+│   │   │   │   ├── Register.css
+│   │   │   │   └── Register.tsx
+│   │   │   ├── ResetPassword/
+│   │   │   │   ├── ResetPassword.css
+│   │   │   │   └── ResetPassword.tsx
+│   │   │   └── VerifyAccount/
+│   │   │       └── VerifyAccount.tsx
+│   │   └── UserMenuDropdown/
+│   │       └── Notification/
+│   │           ├── Notifications.css
+│   │           └── Notifications.tsx
 │   ├── redux/
 │   │   ├── features/
 │   │   │   ├── authSlice.ts
 │   │   │   ├── certificationSlice.ts
+│   │   │   ├── contactSlice.ts
 │   │   │   ├── educationSlice.ts
 │   │   │   ├── experienceSlice.ts
 │   │   │   ├── interestSlice.ts

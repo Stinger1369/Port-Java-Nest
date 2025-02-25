@@ -30,9 +30,6 @@ public class ContactController {
                 throw new RuntimeException("Accès interdit : vous ne pouvez envoyer une demande que pour votre propre compte");
             }
             effectiveSenderId = authenticatedUserId; // Priorité à l'utilisateur authentifié
-        } else {
-            // Si pas d'authentification ou utilisateur anonyme par défaut, garder senderId tel quel (null pour anonyme)
-            effectiveSenderId = request.getSenderId(); // Peut être null
         }
 
         return contactService.sendContactRequest(
@@ -41,7 +38,10 @@ public class ContactController {
                 request.getSenderEmail(),
                 request.getSenderPhone(),
                 request.getMessage(),
-                request.isDeveloperContact()
+                request.isDeveloperContact(),
+                request.getFirstName(), // ✅ Passer le prénom
+                request.getLastName(),  // ✅ Passer le nom
+                request.getCompany()    // ✅ Passer l'entreprise
         );
     }
 

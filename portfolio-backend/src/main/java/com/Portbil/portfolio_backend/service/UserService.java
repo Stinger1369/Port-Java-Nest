@@ -1,7 +1,7 @@
 package com.Portbil.portfolio_backend.service;
 
 import com.Portbil.portfolio_backend.dto.UserDTO;
-import com.Portbil.portfolio_backend.dto.WeatherDTO; // ✅ Ajout de l'import
+import com.Portbil.portfolio_backend.dto.WeatherDTO;
 import com.Portbil.portfolio_backend.entity.User;
 import com.Portbil.portfolio_backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -18,7 +18,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final EmailService emailService;
-    private final WeatherService weatherService; // ✅ Ajout pour récupérer la météo
+    private final WeatherService weatherService;
 
     // ID du développeur (à remplacer par votre ID réel)
     private final String DEVELOPER_ID = "developer-id-here"; // Remplacez par votre ID utilisateur
@@ -39,12 +39,12 @@ public class UserService {
     }
 
     /**
-     * ✅ Mettre à jour les informations d'un utilisateur avec correction du format `firstName` et `lastName`
+     * ✅ Mettre à jour les informations d'un utilisateur avec correction du format `firstName`, `lastName` et `slug`
      */
     public Optional<User> updateUser(String id, UserDTO userDTO) {
         return userRepository.findById(id).map(user -> {
             System.out.println("🔹 Mise à jour de l'utilisateur ID : " + id);
-            System.out.println("Phone reçu du DTO : " + userDTO.getPhone()); // Log avant mise à jour
+            System.out.println("Phone reçu du DTO : " + userDTO.getPhone());
 
             if (userDTO.getEmail() != null && !userDTO.getEmail().equals(user.getEmail())) {
                 Optional<User> existingUser = userRepository.findByEmail(userDTO.getEmail());
@@ -71,6 +71,12 @@ public class UserService {
                     throw new IllegalArgumentException("Sexe invalide. Les valeurs autorisées sont: 'Man', 'Woman', 'Other' ou vide.");
                 }
                 user.setSex(userDTO.getSex());
+            }
+
+            // ✅ Mise à jour du slug si fourni
+            if (userDTO.getSlug() != null && !userDTO.getSlug().isEmpty()) {
+                String newSlug = generateUniqueSlug(userDTO.getSlug(), id);
+                user.setSlug(newSlug);
             }
 
             if (userDTO.getBio() != null) user.setBio(userDTO.getBio());
@@ -111,7 +117,7 @@ public class UserService {
     }
 
     /**
-     * ✅ Inscription avec génération d'un code de validation par email
+     * ✅ Inscription avec génération d'un code de validation par email et slug unique
      */
     public User registerUser(String email, String password) {
         if (userRepository.findByEmail(email).isPresent()) {
@@ -119,12 +125,14 @@ public class UserService {
         }
 
         String confirmationCode = generateConfirmationCode();
+        String slug = generateUniqueSlug(email.split("@")[0], null); // Générer slug basé sur l'email
 
         User newUser = User.builder()
                 .email(email)
                 .password(passwordEncoder.encode(password))
                 .isVerified(false)
                 .confirmationCode(confirmationCode)
+                .slug(slug) // ✅ Ajout du slug
                 .previousPasswords(new ArrayList<>())
                 .build();
 
@@ -132,7 +140,7 @@ public class UserService {
 
         emailService.sendEmail(email, "Confirmation de votre compte",
                 "Bonjour,\n\nVotre code de validation est : " + confirmationCode +
-                        "\n\nMerci de confirmer votre compte.");
+                        "\n\nMerci de confirmer votre compte.\nVotre slug unique est : " + slug);
 
         return newUser;
     }
@@ -243,6 +251,23 @@ public class UserService {
     }
 
     /**
+     * ✅ Générer un slug unique basé sur une base donnée (email ou slug personnalisé)
+     */
+    private String generateUniqueSlug(String baseSlug, String userId) {
+        String slug = baseSlug.toLowerCase().replaceAll("[^a-z0-9]", "-");
+        String uniqueSlug = slug;
+        int counter = 1;
+
+        // Vérifier l'unicité du slug, en excluant l'utilisateur actuel si mise à jour
+        while (userRepository.findBySlug(uniqueSlug).isPresent() &&
+                (userId == null || !userRepository.findBySlug(uniqueSlug).get().getId().equals(userId))) {
+            uniqueSlug = slug + "-" + counter++;
+        }
+
+        return uniqueSlug;
+    }
+
+    /**
      * ✅ Récupérer les données météo pour un utilisateur
      */
     public WeatherDTO getWeatherForUser(String userId) {
@@ -266,20 +291,67 @@ public class UserService {
         User receiver = userRepository.findById(receiverId)
                 .orElseThrow(() -> new RuntimeException("Receiver not found"));
 
-        // Vérifier si une relation existe déjà
         if (receiver.getContactIds().contains(senderId)) {
             throw new RuntimeException("Contact already exists");
         }
 
-        // Ajouter l'ID du sender dans les contactIds du receiver
         receiver.getContactIds().add(senderId);
         userRepository.save(receiver);
 
-        // Envoyer un email de notification
+        // Construire un email HTML stylé
+        String senderName = sender.getFirstName() + " " + sender.getLastName();
+        String senderSlug = sender.getSlug() != null ? sender.getSlug() : "N/A";
+        String portfolioLink = "http://localhost:5173/portfolio/" + sender.getFirstName() + "/" + sender.getLastName() + "/" + senderSlug;
+
+        String htmlMessage = """
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <style>
+                body { font-family: Arial, sans-serif; color: #333; }
+                .container { max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 5px; }
+                .header { background-color: #4CAF50; color: white; padding: 10px; text-align: center; border-radius: 5px 5px 0 0; }
+                .content { padding: 20px; background-color: #f9f9f9; }
+                .footer { text-align: center; font-size: 12px; color: #777; margin-top: 20px; }
+                a { color: #4CAF50; text-decoration: none; }
+                a:hover { text-decoration: underline; }
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <div class="header">
+                    <h2>Nouvelle demande de contact</h2>
+                </div>
+                <div class="content">
+                    <p>Bonjour <strong>%s</strong>,</p>
+                    <p>Vous avez reçu une nouvelle demande de contact de la part de <strong>%s</strong>.</p>
+                    <p><strong>Détails du demandeur :</strong></p>
+                    <ul>
+                        <li>Email : %s</li>
+                        <li>Téléphone : %s</li>
+                    </ul>
+                    <p>Consultez son portfolio ici : <a href="%s">%s</a></p>
+                    <p>Pour répondre ou accepter cette demande, connectez-vous à votre compte et consultez vos demandes de contact.</p>
+                </div>
+                <div class="footer">
+                    <p>&copy; 2025 Votre Application. Tous droits réservés.</p>
+                </div>
+            </div>
+        </body>
+        </html>
+        """.formatted(
+                receiver.getFirstName() != null ? receiver.getFirstName() : "Utilisateur",
+                senderName,
+                sender.getEmail(),
+                sender.getPhone() != null ? sender.getPhone() : "Non fourni",
+                portfolioLink,
+                portfolioLink
+        );
+
         emailService.sendEmail(
                 receiver.getEmail(),
-                "New Contact Request",
-                "You have a new contact request from " + sender.getFirstName() + " " + sender.getLastName()
+                "Nouvelle demande de contact",
+                htmlMessage
         );
     }
 
@@ -289,7 +361,7 @@ public class UserService {
     public List<String> getUserContacts(String userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
-        return new ArrayList<>(user.getContactIds()); // Retourne une copie pour éviter les modifications directes
+        return new ArrayList<>(user.getContactIds());
     }
 
     /**
@@ -299,13 +371,10 @@ public class UserService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        // Vérifier si une demande existe déjà (vous pourriez ajouter une logique plus complexe si nécessaire)
-        // Pour simplifier, on suppose qu’on ne vérifie pas ici (à ajuster si besoin)
         if (userRepository.findById(DEVELOPER_ID).isEmpty()) {
             throw new RuntimeException("Developer not found");
         }
 
-        // Envoyer un email de notification au développeur
         emailService.sendEmail(
                 DEVELOPER_EMAIL,
                 "New Developer Contact Request",
@@ -314,17 +383,15 @@ public class UserService {
     }
 
     /**
-     * ✅ Accepter une demande de contact du développeur (simplifié, à ajuster selon vos besoins)
+     * ✅ Accepter une demande de contact du développeur
      */
     public void acceptDeveloperContactRequest(String userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        // Ajouter l'ID du développeur dans les contactIds de l'utilisateur (optionnel, selon vos besoins)
         user.getContactIds().add(DEVELOPER_ID);
         userRepository.save(user);
 
-        // Envoyer un email de confirmation à l’utilisateur
         emailService.sendEmail(
                 user.getEmail(),
                 "Developer Contact Request Accepted",

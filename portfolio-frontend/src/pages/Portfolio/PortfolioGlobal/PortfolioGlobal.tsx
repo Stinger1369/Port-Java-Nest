@@ -2,43 +2,63 @@ import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState, AppDispatch } from "../../../redux/store";
 import { fetchPortfolioByUser, fetchPortfolioByUsername } from "../../../redux/features/portfolioSlice";
-import { useParams } from "react-router-dom";
-import "./PortfolioGlobal.css"; // ✅ Styles du CV
+import { useParams, Link } from "react-router-dom";
+import "./PortfolioGlobal.css";
+
+// ✅ Définir les types pour le portfolio
+interface Education { id: string; degree: string; schoolName: string; startDate: string; }
+interface Experience { id: string; jobTitle: string; companyName: string; startDate: string; }
+interface Skill { id: string; name: string; }
+interface Project { id: string; title: string; }
+interface Certification { id: string; name: string; }
+interface SocialLink { id: string; platform: string; url: string; }
+interface Language { id: string; name: string; }
+interface Recommendation { id: string; content: string; }
+interface Interest { id: string; name: string; }
+
+interface Portfolio {
+  id?: string;
+  userId: string;
+  isPublic: boolean;
+  educations: Education[];
+  experiences: Experience[];
+  skills: Skill[];
+  projects: Project[];
+  certifications: Certification[];
+  socialLinks: SocialLink[];
+  languages: Language[];
+  recommendations: Recommendation[];
+  interests: Interest[];
+}
 
 const PortfolioGlobal = () => {
   console.log("🔄 Rendering PortfolioGlobal");
 
   const dispatch = useDispatch<AppDispatch>();
-  const { firstName, lastName } = useParams(); // ✅ Récupère les paramètres URL
+  const { firstName, lastName, slug } = useParams<{ firstName?: string; lastName?: string; slug?: string }>();
 
-  // Récupération des données Redux
   const { portfolio, status: portfolioStatus, error: portfolioError } = useSelector(
     (state: RootState) => state.portfolio
   );
   const user = useSelector((state: RootState) => state.user.user);
 
-  // ✅ Détecte si on est en mode "public" ou "connecté"
-  const isPublicView = Boolean(firstName && lastName);
+  const isPublicView = Boolean(firstName && lastName && slug);
   const isUserAuthenticated = Boolean(user && !isPublicView);
 
   useEffect(() => {
-    if (isPublicView) {
-      dispatch(fetchPortfolioByUsername({ firstName, lastName })); // ✅ Charge via Nom + Prénom
-    } else {
+    if (isPublicView && firstName && lastName && slug) {
+      dispatch(fetchPortfolioByUsername({ firstName, lastName, slug }));
+    } else if (isUserAuthenticated) {
       const userId = localStorage.getItem("userId");
       if (userId) {
-        dispatch(fetchPortfolioByUser(userId)); // ✅ Charge via userId (connecté)
+        dispatch(fetchPortfolioByUser(userId));
       }
     }
-  }, [dispatch, firstName, lastName]);
+  }, [dispatch, firstName, lastName, slug, isPublicView, isUserAuthenticated]);
 
-  // ✅ Générer l'URL du portfolio
   const baseURL = "http://localhost:5173/portfolio";
-  const portfolioURL = user
-    ? `${baseURL}/${user.firstName}/${user.lastName}`
-    : "";
+  const portfolioURL = user ? `${baseURL}/${user.firstName || "unknown"}/${user.lastName || "unknown"}/${user.slug || ""}` : "";
 
-  // ✅ Copie du lien dans le presse-papier
   const [copied, setCopied] = useState(false);
   const copyToClipboard = () => {
     if (!portfolioURL) return;
@@ -47,12 +67,37 @@ const PortfolioGlobal = () => {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const isOwnPortfolio = user && portfolio && user.id === portfolio.userId;
+
+  // ✅ Vérifier si le profil est incomplet pour l'utilisateur authentifié
+  const isProfileIncomplete = isUserAuthenticated && (!user?.firstName || !user?.lastName);
+
+  // ✅ Vérifier si le lien "Contacter" doit être affiché
+  const canShowContactLink = isPublicView && !isOwnPortfolio;
+
+  if (isProfileIncomplete) {
+    return (
+      <div className="portfolio-global-container">
+        <h1 className="portfolio-title">Mon Portfolio</h1>
+        <p>
+          ⚠️ Veuillez compléter votre profil pour générer un portfolio.{" "}
+          <Link to="/profile/edit-profile">Cliquez ici pour modifier votre profil</Link>.
+        </p>
+      </div>
+    );
+  }
+
   if (portfolioStatus === "loading") {
     return <p>⏳ Chargement du portfolio...</p>;
   }
 
   if (portfolioStatus === "failed") {
-    return <p>❌ Impossible de charger le portfolio : {portfolioError}</p>;
+    return (
+      <p>
+        ❌ Impossible de charger le portfolio :{" "}
+        {portfolioError || "Une erreur inattendue est survenue."}
+      </p>
+    );
   }
 
   if (!portfolio) {
@@ -65,7 +110,6 @@ const PortfolioGlobal = () => {
         {isPublicView ? `Portfolio de ${firstName} ${lastName}` : "Mon Portfolio"}
       </h1>
 
-      {/* ✅ Bouton visible uniquement si le user est connecté (pas en mode public) */}
       {isUserAuthenticated && portfolioURL && (
         <div className="portfolio-link-container">
           <button className="portfolio-link-btn" onClick={copyToClipboard}>
@@ -77,6 +121,14 @@ const PortfolioGlobal = () => {
               {portfolioURL}
             </a>
           </p>
+        </div>
+      )}
+
+      {canShowContactLink && (
+        <div className="contact-link">
+          <Link to={`/portfolio/${firstName}/${lastName}/${slug}/contact`}>
+            📬 Contacter {`${firstName} ${lastName}`}
+          </Link>
         </div>
       )}
 

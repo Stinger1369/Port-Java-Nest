@@ -2,6 +2,7 @@ package com.Portbil.portfolio_backend.entity;
 
 import lombok.*;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.Indexed; // Ajout pour l'index unique
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -37,6 +38,10 @@ public class User implements UserDetails {
 
     // ✅ Nouveau champ `sex` avec options limitées
     private String sex;
+
+    // ✅ Nouveau champ `slug` avec contrainte d'unicité
+    @Indexed(unique = true) // Assure que le slug est unique dans MongoDB
+    private String slug;
 
     private String profilePictureUrl;
     private Set<String> interests;

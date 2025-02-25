@@ -3,6 +3,7 @@ package com.Portbil.portfolio_backend.dto;
 import lombok.Builder;
 import lombok.Data;
 import org.springframework.lang.Nullable; // Remplacement de javax.annotation.Nullable par org.springframework.lang.Nullable
+import java.time.LocalDateTime;
 
 @Data
 @Builder
@@ -21,4 +22,6 @@ public class ContactDTO {
     private String senderName; // Nom de l'envoyeur (optionnel, peut être "Anonymous" pour non inscrit)
     private String receiverName; // Nom du destinataire (optionnel)
     private boolean isDeveloperContact; // Indique si c’est un contact avec le développeur
+    private LocalDateTime createdAt; // ✅ Ajout
+    private LocalDateTime acceptedAt; // ✅ Ajout
 }

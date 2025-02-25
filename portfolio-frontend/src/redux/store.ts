@@ -11,6 +11,7 @@ import portfolioReducer from "./features/portfolioSlice";
 import languageReducer from "./features/languageSlice";
 import recommendationReducer from "./features/recommendationSlice";
 import interestReducer from "./features/interestSlice";
+import contactReducer from "./features/contactSlice"; // Ajout du nouveau slice
 
 export const store = configureStore({
   reducer: {
@@ -26,6 +27,7 @@ export const store = configureStore({
     language: languageReducer,
     recommendation: recommendationReducer,
     interest: interestReducer,
+    contact: contactReducer, // Ajout au store
   },
 });
 

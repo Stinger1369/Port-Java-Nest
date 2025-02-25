@@ -21,7 +21,11 @@ import Social from "./pages/Portfolio/Social/Social";
 import Languages from "./pages/Portfolio/Languages/Languages";
 import Recommendations from "./pages/Portfolio/Recommendations/Recommendations";
 import Interests from "./pages/Portfolio/Interests/Interests";
+import ContactScreen from "./pages/Portfolio/ContactPortfolio/ContactPortfolio";
 import Notifications from "./pages/UserMenuDropdown/Notification/Notifications";
+import OffersReceived from "./pages/UserMenuDropdown/OffersReceived/OffersReceived";
+import ContactHistory from "./pages/UserMenuDropdown/ContactHistory/ContactHistory";
+import MembersList from "./pages/UserMenuDropdown/MembersList/MembersList";
 import "./App.css";
 
 const App = () => {
@@ -39,7 +43,12 @@ const App = () => {
               <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/edit-profile" element={<ProtectedRoute><EditProfile /></ProtectedRoute>} />
-              <Route path="/portfolio/:firstName/:lastName" element={<PortfolioGlobal />} />
+
+              {/* ✅ Routes publiques avec slug */}
+              <Route path="/portfolio/:firstName/:lastName/:slug" element={<PortfolioGlobal />} />
+              <Route path="/portfolio/:firstName/:lastName/:slug/contact" element={<ContactScreen />} />
+
+              {/* ✅ Routes protégées pour l'utilisateur authentifié */}
               <Route path="/portfolio" element={<ProtectedRoute><Portfolio /></ProtectedRoute>}>
                 <Route path="global" element={<PortfolioGlobal />} />
                 <Route path="education" element={<Education />} />
@@ -51,9 +60,13 @@ const App = () => {
                 <Route path="languages" element={<Languages />} />
                 <Route path="recommendations" element={<Recommendations />} />
                 <Route path="interests" element={<Interests />} />
-                {/* <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} /> */}
               </Route>
+
               <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+              <Route path="/offers" element={<ProtectedRoute><OffersReceived /></ProtectedRoute>} />
+              <Route path="/history" element={<ProtectedRoute><ContactHistory /></ProtectedRoute>} />
+              <Route path="/member" element={<ProtectedRoute><MembersList /></ProtectedRoute>} /> {/* ✅ Nouvelle route */}
+              {/* <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} /> */}
             </Routes>
           </main>
         </Suspense>

@@ -1,9 +1,8 @@
-import { useEffect, forwardRef } from "react";
+import React, { useEffect, forwardRef } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState, AppDispatch } from "../../redux/store";
 import { fetchWeather, updateGeolocation } from "../../redux/features/userSlice";
 import { useTranslation } from "react-i18next";
-import axios from "axios";
 import "./WeatherComponent.css";
 
 interface WeatherComponentProps {
@@ -15,16 +14,12 @@ interface WeatherComponentProps {
 const WeatherComponent = forwardRef<HTMLDivElement, WeatherComponentProps>((props, ref) => {
   const { t, i18n } = useTranslation();
   const dispatch = useDispatch<AppDispatch>();
-  const user = useSelector((state: RootState) => state.user.user);
-  const weather = useSelector((state: RootState) => state.user.weather);
-  const status = useSelector((state: RootState) => state.user.status);
+  const { user, weather, status, error } = useSelector((state: RootState) => state.user);
   const token = useSelector((state: RootState) => state.auth.token);
   const isRTL = i18n.language === "ar";
 
   useEffect(() => {
-    if (!token || !user?.id) {
-      return;
-    }
+    if (!token || !user?.id) return;
 
     let watchId: number | undefined;
 
@@ -40,7 +35,8 @@ const WeatherComponent = forwardRef<HTMLDivElement, WeatherComponentProps>((prop
         },
         (err) => {
           console.error("Erreur de géolocalisation automatique:", err.message);
-          fetchLocationFromIP();
+          // Si la géolocalisation échoue, fetchWeather gère les coordonnées via le backend
+          dispatch(fetchWeather(user.id));
         },
         {
           enableHighAccuracy: true,
@@ -49,37 +45,21 @@ const WeatherComponent = forwardRef<HTMLDivElement, WeatherComponentProps>((prop
         }
       );
     } else {
-      fetchLocationFromIP();
+      // Si la géolocalisation navigateur n'est pas disponible, utiliser fetchWeather
+      dispatch(fetchWeather(user.id));
     }
 
-    const fetchLocationFromIP = async () => {
-      try {
-        const response = await axios.get("https://ipapi.co/json/");
-        const { latitude, longitude } = response.data;
-        if (user.latitude !== latitude || user.longitude !== longitude) {
-          dispatch(updateGeolocation({ userId: user.id, latitude, longitude })).then(() => {
-            dispatch(fetchWeather(user.id));
-          });
-        }
-      } catch (error) {
-        console.error("Erreur lors de la récupération de la localisation via IP:", error);
-      }
-    };
-
-    fetchLocationFromIP();
+    // Charger la météo directement si pas encore chargée
+    if (!weather) {
+      dispatch(fetchWeather(user.id));
+    }
 
     return () => {
       if (watchId !== undefined) {
         navigator.geolocation.clearWatch(watchId);
       }
     };
-  }, [dispatch, user?.id, token]);
-
-  useEffect(() => {
-    if (token && user?.id && user.latitude && user.longitude && !weather) {
-      dispatch(fetchWeather(user.id));
-    }
-  }, [token, user, weather, dispatch]);
+  }, [dispatch, user?.id, token, user?.latitude, user?.longitude, weather]);
 
   const handleManualUpdateGeolocation = () => {
     if (!navigator.geolocation || !user?.id) return;
@@ -93,6 +73,7 @@ const WeatherComponent = forwardRef<HTMLDivElement, WeatherComponentProps>((prop
       },
       (err) => {
         console.error("Erreur de géolocalisation manuelle:", err.message);
+        dispatch(fetchWeather(user.id)); // Fallback sur le backend
       }
     );
   };

@@ -2,23 +2,23 @@ import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import axios from "axios";
 import { BASE_URL } from "../../config/hostname";
 
-// ✅ Interface pour les données météo avec les nouveaux éléments
+// Interface pour les données météo
 interface WeatherData {
   temperature: number;
   description: string;
   humidity: number;
-  city: string; // Plus optionnel car maintenant fourni par le backend
-  pressure: number;        // Pression atmosphérique (hPa)
-  windSpeed: number;       // Vitesse du vent (km/h)
-  windDirection: number;   // Direction du vent (degrés)
-  feelsLike: number;       // Température ressentie (°C)
-  visibility: number;      // Visibilité (mètres)
-  sunrise: number;         // Lever du soleil (timestamp UNIX)
-  sunset: number;          // Coucher du soleil (timestamp UNIX)
-  uvIndex: number;         // Indice UV (0-11+)
+  city: string;
+  pressure: number;
+  windSpeed: number;
+  windDirection: number;
+  feelsLike: number;
+  visibility: number;
+  sunrise: number;
+  sunset: number;
+  uvIndex: number;
 }
 
-// ✅ Interface utilisateur mise à jour
+// Interface utilisateur
 interface User {
   id: string;
   email: string;
@@ -32,11 +32,13 @@ interface User {
   bio?: string;
   latitude?: number;
   longitude?: number;
+  slug?: string;
 }
 
-// ✅ État initial Redux mis à jour
+// État initial Redux
 interface UserState {
   user: User | null;
+  members: User[]; // ✅ Ajout pour stocker la liste des membres
   status: "idle" | "loading" | "succeeded" | "failed";
   error: string | null;
   message: string | null;
@@ -45,13 +47,14 @@ interface UserState {
 
 const initialState: UserState = {
   user: null,
+  members: [], // ✅ Initialisé à vide
   status: "idle",
   error: null,
   message: null,
   weather: null,
 };
 
-// ✅ Récupérer l'utilisateur après connexion
+// Récupérer l'utilisateur après connexion
 export const fetchUser = createAsyncThunk(
   "user/fetchUser",
   async (_, { rejectWithValue }) => {
@@ -85,8 +88,32 @@ export const fetchUser = createAsyncThunk(
   }
 );
 
-// ✅ Mettre à jour le profil utilisateur
-// Correction : Utiliser PUT au lieu de GET pour la mise à jour
+// ✅ Nouvelle action : Récupérer tous les utilisateurs
+export const fetchAllUsers = createAsyncThunk(
+  "user/fetchAllUsers",
+  async (_, { rejectWithValue }) => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        console.warn("❌ Aucun token trouvé dans localStorage");
+        return rejectWithValue("No token found");
+      }
+
+      console.log("🔹 Fetching all users...");
+      const response = await axios.get(`${BASE_URL}/api/users/all`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      console.log("✅ Liste des utilisateurs récupérée :", response.data);
+      return response.data;
+    } catch (error: any) {
+      console.error("❌ Fetch all users failed:", error.response?.data);
+      return rejectWithValue(error.response?.data?.error || "Failed to fetch all users");
+    }
+  }
+);
+
+// Mettre à jour le profil utilisateur
 export const updateUser = createAsyncThunk(
   "user/updateUser",
   async (userData: Partial<User>, { rejectWithValue }) => {
@@ -120,7 +147,7 @@ export const updateUser = createAsyncThunk(
   }
 );
 
-// ✅ Supprimer le compte utilisateur
+// Supprimer le compte utilisateur
 export const deleteUser = createAsyncThunk(
   "user/deleteUser",
   async (userId: string, { rejectWithValue }) => {
@@ -139,7 +166,7 @@ export const deleteUser = createAsyncThunk(
   }
 );
 
-// ✅ Récupérer les données météo
+// Récupérer les données météo
 export const fetchWeather = createAsyncThunk(
   "user/fetchWeather",
   async (userId: string, { rejectWithValue }) => {
@@ -161,7 +188,7 @@ export const fetchWeather = createAsyncThunk(
   }
 );
 
-// ✅ Mettre à jour la géolocalisation
+// Mettre à jour la géolocalisation
 export const updateGeolocation = createAsyncThunk(
   "user/updateGeolocation",
   async (
@@ -190,13 +217,14 @@ export const updateGeolocation = createAsyncThunk(
   }
 );
 
-// ✅ Création du User Slice
+// Création du User Slice
 const userSlice = createSlice({
   name: "user",
   initialState,
   reducers: {
     clearUserState: (state) => {
       state.user = null;
+      state.members = []; // ✅ Réinitialiser la liste des membres
       state.status = "idle";
       state.error = null;
       state.message = null;
@@ -213,6 +241,17 @@ const userSlice = createSlice({
         state.user = action.payload;
       })
       .addCase(fetchUser.rejected, (state, action) => {
+        state.status = "failed";
+        state.error = action.payload as string;
+      })
+      .addCase(fetchAllUsers.pending, (state) => {
+        state.status = "loading";
+      })
+      .addCase(fetchAllUsers.fulfilled, (state, action: PayloadAction<User[]>) => {
+        state.status = "succeeded";
+        state.members = action.payload;
+      })
+      .addCase(fetchAllUsers.rejected, (state, action) => {
         state.status = "failed";
         state.error = action.payload as string;
       })
@@ -270,6 +309,6 @@ const userSlice = createSlice({
   },
 });
 
-// ✅ Exports
+// Exports
 export const { clearUserState } = userSlice.actions;
 export default userSlice.reducer;
