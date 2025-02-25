@@ -2,7 +2,7 @@ package com.Portbil.portfolio_backend.entity;
 
 import lombok.*;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.index.Indexed; // Ajout pour l'index unique
+import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -36,11 +36,11 @@ public class User implements UserDetails {
     private String city;
     private String country;
 
-    // ✅ Nouveau champ `sex` avec options limitées
+    // Nouveau champ `sex` avec options limitées
     private String sex;
 
-    // ✅ Nouveau champ `slug` avec contrainte d'unicité
-    @Indexed(unique = true) // Assure que le slug est unique dans MongoDB
+    // Nouveau champ `slug` avec contrainte d'unicité
+    @Indexed(unique = true)
     private String slug;
 
     private String profilePictureUrl;
@@ -56,7 +56,7 @@ public class User implements UserDetails {
     private boolean isVerified;
     private String confirmationCode;
 
-    // ✅ Liste des IDs des éléments du portfolio
+    // Liste des IDs des éléments du portfolio
     @Builder.Default
     private List<String> educationIds = new ArrayList<>();
     @Builder.Default
@@ -76,18 +76,18 @@ public class User implements UserDetails {
     @Builder.Default
     private List<String> interestIds = new ArrayList<>();
 
-    // ✅ Référence vers le portfolio personnalisé de l'utilisateur
+    // Référence vers le portfolio personnalisé de l'utilisateur
     private String portfolioId;
 
-    // ✅ Nouveaux champs pour la géolocalisation
+    // Nouveaux champs pour la géolocalisation
     private Double latitude;
     private Double longitude;
 
-    // ✅ Liste des IDs des contacts acceptés
+    // Liste des IDs des contacts acceptés
     @Builder.Default
     private List<String> contactIds = new ArrayList<>();
 
-    // ✅ Méthode pour récupérer toutes les IDs des sections du portfolio
+    // Méthode pour récupérer toutes les IDs des sections du portfolio
     public List<String> getAllPortfolioIds() {
         List<String> allIds = new ArrayList<>();
         allIds.addAll(educationIds);

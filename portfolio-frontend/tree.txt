@@ -20,6 +20,9 @@ portfolio-frontend/
 │   │   ├── LanguageSelector/
 │   │   │   ├── LanguageSelector.css
 │   │   │   └── LanguageSelector.tsx
+│   │   ├── MemberCard/
+│   │   │   ├── MemberCard.css
+│   │   │   └── MemberCard.tsx
 │   │   ├── Navbar/
 │   │   │   ├── Navbar.css
 │   │   │   └── Navbar.tsx
@@ -121,9 +124,18 @@ portfolio-frontend/
 │   │   │   └── VerifyAccount/
 │   │   │       └── VerifyAccount.tsx
 │   │   └── UserMenuDropdown/
-│   │       └── Notification/
-│   │           ├── Notifications.css
-│   │           └── Notifications.tsx
+│   │       ├── ContactHistory/
+│   │       │   ├── ContactHistory.css
+│   │       │   └── ContactHistory.tsx
+│   │       ├── MembersList/
+│   │       │   ├── MembersList.css
+│   │       │   └── MembersList.tsx
+│   │       ├── Notification/
+│   │       │   ├── Notifications.css
+│   │       │   └── Notifications.tsx
+│   │       └── OffersReceived/
+│   │           ├── OffersReceived.css
+│   │           └── OffersReceived.tsx
 │   ├── redux/
 │   │   ├── features/
 │   │   │   ├── authSlice.ts

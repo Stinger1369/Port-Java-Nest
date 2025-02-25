@@ -30,7 +30,9 @@ spring:
 jwt:
   secret: "Z2VubmVyZXIgdW5lIGNs6SBzdWZmaXNhbWFtZW50IGRlIDMyIGJ5dGVz"
   expirationMs: 86400000
-
+google:
+  maps:
+    api-key: AIzaSyDm7CfRG_9wnCW4H0u_pEu8ZtEbkHDLi8o
 logging:
   level:
     org.springframework.security: DEBUG

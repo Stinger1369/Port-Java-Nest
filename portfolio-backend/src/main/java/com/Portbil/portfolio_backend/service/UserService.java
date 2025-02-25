@@ -19,6 +19,7 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final EmailService emailService;
     private final WeatherService weatherService;
+    private final GoogleMapsService googleMapsService; // ✅ Importation correcte ajoutée
 
     // ID du développeur (à remplacer par votre ID réel)
     private final String DEVELOPER_ID = "developer-id-here"; // Remplacez par votre ID utilisateur
@@ -65,7 +66,7 @@ public class UserService {
             if (userDTO.getCity() != null) user.setCity(userDTO.getCity());
             if (userDTO.getCountry() != null) user.setCountry(userDTO.getCountry());
 
-            // ✅ Validation et mise à jour du sexe
+            // Validation et mise à jour du sexe
             if (userDTO.getSex() != null) {
                 if (!isValidSex(userDTO.getSex())) {
                     throw new IllegalArgumentException("Sexe invalide. Les valeurs autorisées sont: 'Man', 'Woman', 'Other' ou vide.");
@@ -73,7 +74,7 @@ public class UserService {
                 user.setSex(userDTO.getSex());
             }
 
-            // ✅ Mise à jour du slug si fourni
+            // Mise à jour du slug si fourni
             if (userDTO.getSlug() != null && !userDTO.getSlug().isEmpty()) {
                 String newSlug = generateUniqueSlug(userDTO.getSlug(), id);
                 user.setSlug(newSlug);
@@ -81,7 +82,7 @@ public class UserService {
 
             if (userDTO.getBio() != null) user.setBio(userDTO.getBio());
 
-            // ✅ Mise à jour des coordonnées de géolocalisation
+            // Mise à jour des coordonnées de géolocalisation
             if (userDTO.getLatitude() != null) user.setLatitude(userDTO.getLatitude());
             if (userDTO.getLongitude() != null) user.setLongitude(userDTO.getLongitude());
 
@@ -90,6 +91,25 @@ public class UserService {
             System.out.println("Phone enregistré dans MongoDB : " + savedUser.getPhone());
             return savedUser;
         });
+    }
+
+    /**
+     * ✅ Nouvelle méthode : Mettre à jour l'adresse via Google Maps
+     */
+    public User updateUserAddressFromCoordinates(String userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("Utilisateur introuvable : " + userId));
+
+        if (user.getLatitude() == null || user.getLongitude() == null) {
+            throw new IllegalArgumentException("Les coordonnées latitude/longitude sont manquantes pour cet utilisateur.");
+        }
+
+        String address = googleMapsService.getAddressFromCoordinates(user.getLatitude(), user.getLongitude());
+        user.setAddress(address);
+
+        User updatedUser = userRepository.save(user);
+        System.out.println("✅ Adresse mise à jour pour l'utilisateur ID : " + userId + " - Adresse : " + address);
+        return updatedUser;
     }
 
     /**
@@ -125,14 +145,14 @@ public class UserService {
         }
 
         String confirmationCode = generateConfirmationCode();
-        String slug = generateUniqueSlug(email.split("@")[0], null); // Générer slug basé sur l'email
+        String slug = generateUniqueSlug(email.split("@")[0], null);
 
         User newUser = User.builder()
                 .email(email)
                 .password(passwordEncoder.encode(password))
                 .isVerified(false)
                 .confirmationCode(confirmationCode)
-                .slug(slug) // ✅ Ajout du slug
+                .slug(slug)
                 .previousPasswords(new ArrayList<>())
                 .build();
 
@@ -258,7 +278,6 @@ public class UserService {
         String uniqueSlug = slug;
         int counter = 1;
 
-        // Vérifier l'unicité du slug, en excluant l'utilisateur actuel si mise à jour
         while (userRepository.findBySlug(uniqueSlug).isPresent() &&
                 (userId == null || !userRepository.findBySlug(uniqueSlug).get().getId().equals(userId))) {
             uniqueSlug = slug + "-" + counter++;
@@ -298,7 +317,6 @@ public class UserService {
         receiver.getContactIds().add(senderId);
         userRepository.save(receiver);
 
-        // Construire un email HTML stylé
         String senderName = sender.getFirstName() + " " + sender.getLastName();
         String senderSlug = sender.getSlug() != null ? sender.getSlug() : "N/A";
         String portfolioLink = "http://localhost:5173/portfolio/" + sender.getFirstName() + "/" + sender.getLastName() + "/" + senderSlug;
@@ -334,7 +352,7 @@ public class UserService {
                     <p>Pour répondre ou accepter cette demande, connectez-vous à votre compte et consultez vos demandes de contact.</p>
                 </div>
                 <div class="footer">
-                    <p>&copy; 2025 Votre Application. Tous droits réservés.</p>
+                    <p>© 2025 Votre Application. Tous droits réservés.</p>
                 </div>
             </div>
         </body>

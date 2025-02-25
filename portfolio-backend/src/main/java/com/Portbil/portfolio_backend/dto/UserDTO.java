@@ -1,12 +1,12 @@
 package com.Portbil.portfolio_backend.dto;
 
-import lombok.Builder; // ✅ Ajout de l'import pour Builder
+import lombok.Builder;
 import lombok.Data;
 
 @Data
-@Builder // ✅ Ajout de l'annotation Builder
+@Builder
 public class UserDTO {
-    private String id; // ✅ Ajouté pour correspondre à l'entité User
+    private String id;
     private String email;
     private String password;
     private String firstName;
@@ -19,7 +19,7 @@ public class UserDTO {
     private String slug;
     private String bio;
 
-    // ✅ Nouveaux champs pour la géolocalisation
+    // Champs pour la géolocalisation
     private Double latitude;
     private Double longitude;
 }
