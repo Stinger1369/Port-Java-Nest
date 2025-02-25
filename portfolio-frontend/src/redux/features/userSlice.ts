@@ -38,7 +38,7 @@ interface User {
 // État initial Redux
 interface UserState {
   user: User | null;
-  members: User[]; // ✅ Ajout pour stocker la liste des membres
+  members: User[];
   status: "idle" | "loading" | "succeeded" | "failed";
   error: string | null;
   message: string | null;
@@ -47,7 +47,7 @@ interface UserState {
 
 const initialState: UserState = {
   user: null,
-  members: [], // ✅ Initialisé à vide
+  members: [],
   status: "idle",
   error: null,
   message: null,
@@ -88,7 +88,7 @@ export const fetchUser = createAsyncThunk(
   }
 );
 
-// ✅ Nouvelle action : Récupérer tous les utilisateurs
+// Récupérer tous les utilisateurs
 export const fetchAllUsers = createAsyncThunk(
   "user/fetchAllUsers",
   async (_, { rejectWithValue }) => {
@@ -143,6 +143,32 @@ export const updateUser = createAsyncThunk(
     } catch (error: any) {
       console.error("❌ Update failed:", error.response?.data);
       return rejectWithValue(error.response?.data?.error || "Failed to update user");
+    }
+  }
+);
+
+// Nouvelle action : Mettre à jour l'adresse utilisateur via Google Maps
+export const updateUserAddress = createAsyncThunk(
+  "user/updateUserAddress",
+  async (userId: string, { rejectWithValue }) => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) throw new Error("No token found");
+
+      console.log("🔹 Updating address for user ID:", userId);
+      const response = await axios.put(
+        `${BASE_URL}/api/users/${userId}/address`,
+        {},
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      console.log("✅ Address updated successfully:", response.data);
+      return response.data;
+    } catch (error: any) {
+      console.error("❌ Address update failed:", error.response?.data);
+      return rejectWithValue(error.response?.data?.error || "Failed to update address");
     }
   }
 );
@@ -224,7 +250,7 @@ const userSlice = createSlice({
   reducers: {
     clearUserState: (state) => {
       state.user = null;
-      state.members = []; // ✅ Réinitialiser la liste des membres
+      state.members = [];
       state.status = "idle";
       state.error = null;
       state.message = null;
@@ -264,6 +290,18 @@ const userSlice = createSlice({
         state.message = "User updated successfully!";
       })
       .addCase(updateUser.rejected, (state, action) => {
+        state.status = "failed";
+        state.error = action.payload as string;
+      })
+      .addCase(updateUserAddress.pending, (state) => {
+        state.status = "loading";
+      })
+      .addCase(updateUserAddress.fulfilled, (state, action: PayloadAction<User>) => {
+        state.status = "succeeded";
+        state.user = action.payload;
+        state.message = "Address updated successfully!";
+      })
+      .addCase(updateUserAddress.rejected, (state, action) => {
         state.status = "failed";
         state.error = action.payload as string;
       })

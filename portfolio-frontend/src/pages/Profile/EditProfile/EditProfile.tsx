@@ -1,8 +1,8 @@
-import { useState, useEffect, Suspense } from "react";
+import { useState, useEffect, Suspense, useRef } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState, AppDispatch } from "../../../redux/store";
 import { useNavigate } from "react-router-dom";
-import { fetchUser, updateUser } from "../../../redux/features/userSlice";
+import { fetchUser, updateUser, updateUserAddress } from "../../../redux/features/userSlice";
 import { useTranslation } from "react-i18next";
 import PhoneInputComponent from "../../../components/PhoneInput/PhoneInputComponent";
 import "./EditProfile.css";
@@ -18,6 +18,7 @@ const EditProfile = () => {
   const message = useSelector((state: RootState) => state.user.message);
 
   const userId = localStorage.getItem("userId");
+  const autocompleteRef = useRef<HTMLInputElement>(null);
 
   const [formData, setFormData] = useState({
     firstName: "",
@@ -28,6 +29,8 @@ const EditProfile = () => {
     country: "",
     sex: "",
     bio: "",
+    latitude: 0,
+    longitude: 0,
   });
 
   useEffect(() => {
@@ -46,11 +49,42 @@ const EditProfile = () => {
         country: user.country || "",
         sex: user.sex || "",
         bio: user.bio || "",
+        latitude: user.latitude || 0,
+        longitude: user.longitude || 0,
       });
       console.log("Initial phone from user:", user.phone);
       console.log("Normalized phone in formData:", normalizedPhone);
     }
   }, [token, user, userId, dispatch, navigate]);
+
+  useEffect(() => {
+    if (autocompleteRef.current) {
+      const autocomplete = new google.maps.places.Autocomplete(autocompleteRef.current, {
+        types: ["address"],
+        fields: ["formatted_address", "geometry", "address_components"],
+      });
+
+      autocomplete.addListener("place_changed", () => {
+        const place = autocomplete.getPlace();
+        if (place.geometry) {
+          const latitude = place.geometry.location.lat();
+          const longitude = place.geometry.location.lng();
+          const address = place.formatted_address || "";
+          const city = place.address_components?.find(comp => comp.types.includes("locality"))?.long_name || "";
+          const country = place.address_components?.find(comp => comp.types.includes("country"))?.long_name || "";
+
+          setFormData((prev) => ({
+            ...prev,
+            address,
+            city,
+            country,
+            latitude,
+            longitude,
+          }));
+        }
+      });
+    }
+  }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -64,7 +98,19 @@ const EditProfile = () => {
     e.preventDefault();
     console.log("Submitted phone:", formData.phone);
     if (user) {
-      dispatch(updateUser({ id: user.id, ...formData }));
+      const payload = {
+        id: user.id,
+        ...formData,
+        latitude: formData.latitude || undefined,
+        longitude: formData.longitude || undefined,
+      };
+      dispatch(updateUser(payload));
+    }
+  };
+
+  const handleUpdateAddress = () => {
+    if (user) {
+      dispatch(updateUserAddress(user.id));
     }
   };
 
@@ -94,7 +140,17 @@ const EditProfile = () => {
         />
 
         <label>{t("editProfile.address", "Address")} :</label>
-        <input type="text" name="address" value={formData.address} onChange={handleChange} />
+        <input
+          type="text"
+          name="address"
+          value={formData.address}
+          onChange={handleChange}
+          ref={autocompleteRef}
+          placeholder={t("editProfile.addressPlaceholder", "Enter your address")}
+        />
+        <button type="button" onClick={handleUpdateAddress} disabled={!formData.latitude || !formData.longitude}>
+          {t("editProfile.updateAddress", "Update Address from Coordinates")}
+        </button>
 
         <label>{t("editProfile.city", "City")} :</label>
         <input type="text" name="city" value={formData.city} onChange={handleChange} />

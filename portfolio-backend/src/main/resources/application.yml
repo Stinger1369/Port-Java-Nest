@@ -6,18 +6,16 @@ spring:
     mongodb:
       uri: mongodb://localhost:27017/portfolio
       database: portfolio
-
   devtools:
     restart:
       enabled: true
     livereload:
       enabled: true
-
   mail:
     host: smtp.ionos.fr
     port: 465
-    username: renvarchits@lolaparfums.com
-    password: Dyhiatasseda90%
+    username: ${SPRING_MAIL_USERNAME}
+    password: ${SPRING_MAIL_PASSWORD}
     protocol: smtp
     properties:
       mail:
@@ -28,11 +26,13 @@ spring:
             enable: true
 
 jwt:
-  secret: "Z2VubmVyZXIgdW5lIGNs6SBzdWZmaXNhbWFtZW50IGRlIDMyIGJ5dGVz"
+  secret: ${JWT_SECRET}
   expirationMs: 86400000
+
 google:
   maps:
-    api-key: AIzaSyDm7CfRG_9wnCW4H0u_pEu8ZtEbkHDLi8o
+    api-key: ${GOOGLE_MAPS_API_KEY}
+
 logging:
   level:
     org.springframework.security: DEBUG
@@ -40,12 +40,10 @@ logging:
     org.springframework: DEBUG
     com.Portbil.portfolio_backend: DEBUG
 
-# Ajout des propriétés pour OpenWeatherMap
 openweathermap:
-  api-key: "617928418c5eb72ed4fbffd427f1d5d8"
-  base-url: "https://api.openweathermap.org/data/2.5/weather"
+  api-key: ${OPENWEATHERMAP_API_KEY}
+  base-url: https://api.openweathermap.org/data/2.5/weather
 
-# Ajout de l'ID du développeur
 app:
   developer:
-    id: "67b9dc8e204697696b571ebd"
+    id: ${APP_DEVELOPER_ID}
