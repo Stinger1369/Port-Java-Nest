@@ -3,6 +3,8 @@ package com.Portbil.portfolio_backend.service;
 import com.Portbil.portfolio_backend.dto.UserDTO;
 import com.Portbil.portfolio_backend.dto.WeatherDTO;
 import com.Portbil.portfolio_backend.entity.User;
+import com.Portbil.portfolio_backend.entity.Image;
+import com.Portbil.portfolio_backend.repository.ImageRepository;
 import com.Portbil.portfolio_backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -21,6 +23,7 @@ public class UserService {
     private final WeatherService weatherService;
     private final GoogleMapsService googleMapsService;
     private final EmailTemplateService emailTemplateService;
+    private final ImageRepository imageRepository;
 
     private final String DEVELOPER_ID = "developer-id-here";
     private final String DEVELOPER_EMAIL = "developer-email@example.com";
@@ -40,8 +43,7 @@ public class UserService {
     }
 
     /**
-     * Mettre à jour les informations d'un utilisateur avec correction du format `firstName`, `lastName` et `slug`
-     * Note : Les champs `city` et `country` ne sont plus utilisés dans l'interface, donc ignorés ici.
+     * Mettre à jour les informations d'un utilisateur avec correction du format `firstName`, `lastName`, `slug`, `city`, et `country`
      */
     public Optional<User> updateUser(String id, UserDTO userDTO) {
         return userRepository.findById(id).map(user -> {
@@ -85,6 +87,12 @@ public class UserService {
                 }
                 user.setLatitude(userDTO.getLatitudeAsDouble());
                 user.setLongitude(userDTO.getLongitudeAsDouble());
+
+                // Récupérer ville et pays à partir des coordonnées
+                Map<String, String> locationDetails = googleMapsService.getCityAndCountryFromCoordinates(
+                        userDTO.getLatitudeAsDouble(), userDTO.getLongitudeAsDouble());
+                user.setCity(locationDetails.get("city"));
+                user.setCountry(locationDetails.get("country"));
             } else if (userDTO.getLatitudeAsDouble() != null || userDTO.getLongitudeAsDouble() != null) {
                 throw new IllegalArgumentException("Les deux coordonnées (latitude et longitude) doivent être fournies ensemble.");
             }
@@ -92,12 +100,13 @@ public class UserService {
             User savedUser = userRepository.save(user);
             System.out.println("✅ Mise à jour réussie pour l'utilisateur ID: " + id);
             System.out.println("Phone enregistré dans MongoDB : " + savedUser.getPhone());
+            System.out.println("Ville et pays enregistrés : city=" + savedUser.getCity() + ", country=" + savedUser.getCountry());
             return savedUser;
         });
     }
 
     /**
-     * Mettre à jour l'adresse via Google Maps (utilisé par GoogleMapsController)
+     * Mettre à jour l'adresse, la ville, et le pays via Google Maps (utilisé par GoogleMapsController)
      */
     public User updateUserAddressFromCoordinates(String userId) {
         User user = userRepository.findById(userId)
@@ -110,8 +119,15 @@ public class UserService {
         String address = googleMapsService.getAddressFromCoordinates(user.getLatitude(), user.getLongitude());
         user.setAddress(address);
 
+        // Récupérer ville et pays à partir des coordonnées
+        Map<String, String> locationDetails = googleMapsService.getCityAndCountryFromCoordinates(
+                user.getLatitude(), user.getLongitude());
+        user.setCity(locationDetails.get("city"));
+        user.setCountry(locationDetails.get("country"));
+
         User updatedUser = userRepository.save(user);
         System.out.println("✅ Adresse mise à jour pour l'utilisateur ID : " + userId + " - Adresse : " + address);
+        System.out.println("Ville et pays enregistrés : city=" + updatedUser.getCity() + ", country=" + updatedUser.getCountry());
         return updatedUser;
     }
 
@@ -394,5 +410,43 @@ public class UserService {
                 "Developer Contact Request Accepted",
                 "Your developer contact request has been accepted"
         );
+    }
+
+    /**
+     * Récupérer l’URL complète de la photo de profil par défaut d’un utilisateur
+     */
+    public String getProfilePictureUrl(String userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("Utilisateur introuvable : " + userId));
+
+        if (user.getImageIds() == null || user.getImageIds().isEmpty()) {
+            return null; // Aucune image associée
+        }
+
+        // Récupérer l’image marquée comme photo de profil par défaut (isProfilePicture = true)
+        Image profileImage = imageRepository.findByUserIdAndIsProfilePicture(userId, true)
+                .orElseGet(() -> {
+                    // Si aucune image n’est marquée, prendre la plus récente
+                    return imageRepository.findByUserId(userId).stream()
+                            .max((img1, img2) -> img1.getUploadedAt().compareTo(img2.getUploadedAt()))
+                            .orElse(null);
+                });
+
+        if (profileImage == null) {
+            return null; // Aucune image trouvée
+        }
+
+        // Retourner l’URL complète en combinant le chemin avec la base URL du serveur Go
+        return "http://localhost:7000/" + profileImage.getPath();
+    }
+
+    /**
+     * Mettre à jour la photo de profil par défaut d’un utilisateur
+     */
+    public void updateProfilePictureUrl(String userId, String imagePath) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("Utilisateur introuvable : " + userId));
+        user.setProfilePictureUrl(imagePath); // Stocker le chemin ou l’URL directement
+        userRepository.save(user);
     }
 }

@@ -13,13 +13,13 @@ func main() {
 	r := gin.Default()
 	r.Use(middleware.CORSMiddleware())
 
-	// Serve static files from the "public/images" directory
 	r.Static("/images", "./public/images")
 
 	// Routes pour les images
 	r.POST("/server-image/ajouter-image", image.AjouterImage)
 	r.POST("/server-image/ajouter-images", image.AjouterImages)
 	r.GET("/server-image/image/:user_id/:nom", image.GetImage)
+	r.GET("/server-image/all-images/:user_id", image.GetAllImages) // Corrigé ici
 	r.PUT("/server-image/update-image/:user_id/:nom", image.UpdateImage)
 	r.DELETE("/server-image/delete-image/:user_id/:nom", image.DeleteImage)
 

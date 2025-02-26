@@ -6,6 +6,8 @@ interface GoogleMapsState {
   address: string | null;
   latitude: number | null;
   longitude: number | null;
+  city: string | null; // Ajouté pour gérer la ville
+  country: string | null; // Ajouté pour gérer le pays
   status: "idle" | "loading" | "succeeded" | "failed";
   error: string | null;
 }
@@ -14,6 +16,8 @@ const initialState: GoogleMapsState = {
   address: null,
   latitude: null,
   longitude: null,
+  city: null, // Initialisé à null
+  country: null, // Initialisé à null
   status: "idle",
   error: null,
 };
@@ -38,6 +42,8 @@ export const updateUserAddress = createAsyncThunk(
         address: response.data.address,
         latitude: response.data.latitude,
         longitude: response.data.longitude,
+        city: response.data.city, // Ajouté pour inclure la ville
+        country: response.data.country, // Ajouté pour inclure le pays
       };
     } catch (error: any) {
       console.error("❌ Address update failed:", error.response?.data);
@@ -66,7 +72,12 @@ export const updateGeolocation = createAsyncThunk(
       );
 
       console.log("✅ Géolocalisation mise à jour :", response.data);
-      return { latitude, longitude };
+      return {
+        latitude,
+        longitude,
+        city: response.data.city, // Ajouté pour inclure la ville
+        country: response.data.country, // Ajouté pour inclure le pays
+      };
     } catch (error: any) {
       console.error("❌ Update geolocation failed:", error.response?.data);
       return rejectWithValue(error.response?.data?.error || "Failed to update geolocation");
@@ -82,6 +93,8 @@ const googleMapsSlice = createSlice({
       state.address = null;
       state.latitude = null;
       state.longitude = null;
+      state.city = null; // Réinitialisé
+      state.country = null; // Réinitialisé
       state.status = "idle";
       state.error = null;
     },
@@ -91,11 +104,13 @@ const googleMapsSlice = createSlice({
       .addCase(updateUserAddress.pending, (state) => {
         state.status = "loading";
       })
-      .addCase(updateUserAddress.fulfilled, (state, action: PayloadAction<{ address: string; latitude: number; longitude: number }>) => {
+      .addCase(updateUserAddress.fulfilled, (state, action: PayloadAction<{ address: string; latitude: number; longitude: number; city: string; country: string }>) => {
         state.status = "succeeded";
         state.address = action.payload.address;
         state.latitude = action.payload.latitude;
         state.longitude = action.payload.longitude;
+        state.city = action.payload.city; // Mettre à jour la ville
+        state.country = action.payload.country; // Mettre à jour le pays
       })
       .addCase(updateUserAddress.rejected, (state, action) => {
         state.status = "failed";
@@ -104,10 +119,12 @@ const googleMapsSlice = createSlice({
       .addCase(updateGeolocation.pending, (state) => {
         state.status = "loading";
       })
-      .addCase(updateGeolocation.fulfilled, (state, action: PayloadAction<{ latitude: number; longitude: number }>) => {
+      .addCase(updateGeolocation.fulfilled, (state, action: PayloadAction<{ latitude: number; longitude: number; city: string; country: string }>) => {
         state.status = "succeeded";
         state.latitude = action.payload.latitude;
         state.longitude = action.payload.longitude;
+        state.city = action.payload.city; // Mettre à jour la ville
+        state.country = action.payload.country; // Mettre à jour le pays
       })
       .addCase(updateGeolocation.rejected, (state, action) => {
         state.status = "failed";

@@ -56,7 +56,12 @@ public class UserController {
                         .firstName(user.getFirstName())
                         .lastName(user.getLastName())
                         .phone(user.getPhone())
+                        .address(user.getAddress())
+                        .city(user.getCity()) // Inclure la ville
+                        .country(user.getCountry()) // Inclure le pays
+                        .sex(user.getSex()) // Inclure explicitement le sex
                         .slug(user.getSlug())
+                        .bio(user.getBio()) // Inclure explicitement le bio
                         .build())
                 .collect(Collectors.toList());
 
@@ -68,7 +73,7 @@ public class UserController {
      */
     @GetMapping("/{id}")
     @PreAuthorize("hasAuthority('ADMIN') or #id == authentication.principal.username")
-    public ResponseEntity<User> getUserById(@PathVariable String id) {
+    public ResponseEntity<UserDTO> getUserById(@PathVariable String id) {
         System.out.println("🔹 Tentative de récupération de l'utilisateur ID: " + id);
         Optional<User> user = userService.getUserById(id);
         if (user.isEmpty()) {
@@ -77,7 +82,21 @@ public class UserController {
         }
         System.out.println("✅ Utilisateur trouvé : " + user.get().getEmail());
         System.out.println("Phone renvoyé au frontend : " + user.get().getPhone());
-        return ResponseEntity.ok(user.get());
+        System.out.println("Sex et Bio renvoyés au frontend : sex=" + user.get().getSex() + ", bio=" + user.get().getBio()); // Log pour déboguer
+        UserDTO userDTO = UserDTO.builder()
+                .id(user.get().getId())
+                .email(user.get().getEmail())
+                .firstName(user.get().getFirstName())
+                .lastName(user.get().getLastName())
+                .phone(user.get().getPhone())
+                .address(user.get().getAddress())
+                .city(user.get().getCity()) // Inclure la ville
+                .country(user.get().getCountry()) // Inclure le pays
+                .sex(user.get().getSex()) // Inclure explicitement le sex
+                .slug(user.get().getSlug())
+                .bio(user.get().getBio()) // Inclure explicitement le bio
+                .build();
+        return ResponseEntity.ok(userDTO);
     }
 
     /**
@@ -96,6 +115,7 @@ public class UserController {
         System.out.println("🔹 Tentative de mise à jour de l'utilisateur ID: " + id);
         System.out.println("Received phone from frontend: " + (userDTO != null ? userDTO.getPhone() : "null"));
         System.out.println("🔹 Coordonnées reçues du frontend: latitude=" + (userDTO != null ? userDTO.getLatitude() : "null") + ", longitude=" + (userDTO != null ? userDTO.getLongitude() : "null"));
+        System.out.println("🔹 Sex et Bio reçus du frontend: sex=" + (userDTO != null ? userDTO.getSex() : "null") + ", bio=" + (userDTO != null ? userDTO.getBio() : "null")); // Log pour déboguer
 
         if (authentication == null || authentication.getPrincipal() == null) {
             log.error("❌ Utilisateur non authentifié !");
@@ -112,9 +132,13 @@ public class UserController {
         }
 
         try {
-            log.debug("Tentative de mise à jour de l'utilisateur avec les données : latitude={}, longitude={}",
+            log.debug("Tentative de mise à jour de l'utilisateur avec les données : latitude={}, longitude={}, city={}, country={}, sex={}, bio={}",
                     userDTO != null ? userDTO.getLatitude() : "null",
-                    userDTO != null ? userDTO.getLongitude() : "null");
+                    userDTO != null ? userDTO.getLongitude() : "null",
+                    userDTO != null ? userDTO.getCity() : "null",
+                    userDTO != null ? userDTO.getCountry() : "null",
+                    userDTO != null ? userDTO.getSex() : "null",
+                    userDTO != null ? userDTO.getBio() : "null");
 
             Optional<User> updatedUser = userService.updateUser(id, userDTO);
             if (updatedUser.isEmpty()) {
@@ -122,11 +146,30 @@ public class UserController {
                 return ResponseEntity.notFound().build();
             }
 
+            UserDTO responseDTO = UserDTO.builder()
+                    .id(updatedUser.get().getId())
+                    .email(updatedUser.get().getEmail())
+                    .firstName(updatedUser.get().getFirstName())
+                    .lastName(updatedUser.get().getLastName())
+                    .phone(updatedUser.get().getPhone())
+                    .address(updatedUser.get().getAddress())
+                    .city(updatedUser.get().getCity()) // Inclure la ville
+                    .country(updatedUser.get().getCountry()) // Inclure le pays
+                    .sex(updatedUser.get().getSex()) // Inclure explicitement le sex
+                    .slug(updatedUser.get().getSlug())
+                    .bio(updatedUser.get().getBio()) // Inclure explicitement le bio
+                    .build();
+
             log.info("✅ Mise à jour réussie pour l'utilisateur ID: {}", id);
             System.out.println("✅ Mise à jour réussie pour l'utilisateur ID: " + id);
             System.out.println("Saved phone in DB: " + updatedUser.get().getPhone());
-            System.out.println("🔹 Nouvelles coordonnées enregistrées: latitude=" + updatedUser.get().getLatitude() + ", longitude=" + updatedUser.get().getLongitude());
-            return ResponseEntity.ok(updatedUser.get());
+            System.out.println("🔹 Nouvelles coordonnées, ville, pays, sex et bio enregistrés: latitude=" + updatedUser.get().getLatitude() +
+                    ", longitude=" + updatedUser.get().getLongitude() +
+                    ", city=" + updatedUser.get().getCity() +
+                    ", country=" + updatedUser.get().getCountry() +
+                    ", sex=" + updatedUser.get().getSex() +
+                    ", bio=" + updatedUser.get().getBio());
+            return ResponseEntity.ok(responseDTO);
         } catch (IllegalArgumentException e) {
             log.error("⚠️ Erreur lors de la mise à jour : {}", e.getMessage(), e);
             return ResponseEntity.badRequest().body(e.getMessage());

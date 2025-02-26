@@ -4,34 +4,55 @@ import { RootState, AppDispatch } from "../../../redux/store";
 import { useNavigate } from "react-router-dom";
 import { fetchUser, updateUser } from "../../../redux/features/userSlice";
 import { updateUserAddress, updateGeolocation } from "../../../redux/features/googleMapsSlice";
+import { uploadImage, getUserImages } from "../../../redux/features/imageSlice"; // Importer aussi getUserImages
 import { useTranslation } from "react-i18next";
 import PhoneInputComponent from "../../../components/PhoneInput/PhoneInputComponent";
 import { useGoogleMaps } from "../../../hooks/useGoogleMaps";
 import "./EditProfile.css";
 
+interface Image {
+  id: string;
+  userId: string;
+  name: string;
+  path: string;
+  nsfw: boolean;
+  uploadedAt: string;
+}
+
 const EditProfile = () => {
   const { t, ready } = useTranslation();
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
-  const token = useSelector((state: RootState) => state.auth.token);
   const user = useSelector((state: RootState) => state.user.user);
-  const { address, latitude, longitude, status: googleMapsStatus, error: googleMapsError } = useSelector((state: RootState) => state.googleMaps);
+  const { address, latitude, longitude, city, country, status: googleMapsStatus, error: googleMapsError } = useSelector((state: RootState) => state.googleMaps);
   const status = useSelector((state: RootState) => state.user.status);
   const error = useSelector((state: RootState) => state.user.error);
   const message = useSelector((state: RootState) => state.user.message);
+  const images = useSelector((state: RootState) => state.image.images); // Récupérer les images
+  const imageStatus = useSelector((state: RootState) => state.image.status);
+  const imageError = useSelector((state: RootState) => state.image.error);
+  const imageMessage = useSelector((state: RootState) => state.image.message);
 
   const { isLoaded: isGoogleMapsLoaded, error: loadError } = useGoogleMaps();
 
   const userId = localStorage.getItem("userId");
   const autocompleteRef = useRef<HTMLInputElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalAddress, setModalAddress] = useState("");
   const [isAddressLoading, setIsAddressLoading] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [isImageUploading, setIsImageUploading] = useState(false);
+  const [profileImage, setProfileImage] = useState<Image | null>(null); // État pour stocker l'image de profil
+
   const [initialFormData, setInitialFormData] = useState({
     firstName: "",
     lastName: "",
     phone: "",
     address: "",
+    city: "",
+    country: "",
     sex: "",
     bio: "",
     latitude: 0,
@@ -42,23 +63,33 @@ const EditProfile = () => {
     lastName: "",
     phone: "",
     address: "",
+    city: "",
+    country: "",
     sex: "",
     bio: "",
   });
 
-  // Initialisation des données du formulaire et des données initiales
+  // Initialisation des données du formulaire et récupération des images
   useEffect(() => {
-    if (!token) {
+    if (!userId) {
       navigate("/login");
-    } else if (!user && userId) {
+    } else {
       dispatch(fetchUser());
-    } else if (user) {
+      dispatch(getUserImages(userId)); // Récupérer les images de l'utilisateur au chargement
+    }
+  }, [userId, dispatch, navigate]);
+
+  // Mettre à jour les données du formulaire et l'image de profil une fois les données chargées
+  useEffect(() => {
+    if (user) {
       const normalizedPhone = user.phone && !user.phone.startsWith("+") ? `+${user.phone}` : user.phone || "";
       const initialData = {
         firstName: user.firstName || "",
         lastName: user.lastName || "",
         phone: normalizedPhone,
         address: address || user.address || "",
+        city: city || user.city || "",
+        country: country || user.country || "",
         sex: user.sex || "",
         bio: user.bio || "",
         latitude: latitude || user.latitude || 0,
@@ -70,22 +101,31 @@ const EditProfile = () => {
         lastName: initialData.lastName,
         phone: initialData.phone,
         address: initialData.address,
+        city: initialData.city,
+        country: initialData.country,
         sex: initialData.sex,
         bio: initialData.bio,
       });
       setModalAddress(initialData.address);
+
+      // Trouver l'image de profil (celle avec isProfilePicture = true ou la plus récente)
+      const profileImg = images.find((img) => img.nsfw === false && img.name === "profile-picture.jpg") || // Priorité au nom
+        images.reduce((latest, current) =>
+          new Date(current.uploadedAt) > new Date(latest.uploadedAt) ? current : latest,
+          images[0]
+        );
+      setProfileImage(profileImg || null);
     }
-  }, [token, user, userId, dispatch, navigate, address, latitude, longitude]);
+  }, [user, images, address, latitude, longitude, city, country]);
 
   // Gestion de l’autocomplétion Google Maps dans le modal
   useEffect(() => {
     if (isGoogleMapsLoaded && autocompleteRef.current && isModalOpen) {
       const autocomplete = new google.maps.places.Autocomplete(autocompleteRef.current, {
         types: ["address"],
-        fields: ["formatted_address", "geometry"],
+        fields: ["formatted_address", "geometry", "address_components"],
       });
 
-      // Ajoute la fonction handlePlaceChange comme listener
       const handlePlaceChange = () => {
         const place = autocomplete.getPlace();
         if (place.geometry && user) {
@@ -93,8 +133,23 @@ const EditProfile = () => {
           const newLongitude = place.geometry.location.lng();
           const newAddress = place.formatted_address || "";
 
-          console.log("🔹 Nouvelles coordonnées avant updateGeolocation :", { latitude: newLatitude, longitude: newLongitude }); // Ajouté pour déboguer
+          let city = "";
+          let country = "";
+          place.address_components?.forEach((component) => {
+            if (component.types.includes("locality") || component.types.includes("sublocality")) {
+              city = component.long_name;
+            } else if (component.types.includes("country")) {
+              country = component.long_name;
+            }
+          });
+
+          console.log("🔹 Nouvelles coordonnées avant updateGeolocation :", { latitude: newLatitude, longitude: newLongitude });
           setModalAddress(newAddress);
+          setFormData((prev) => ({
+            ...prev,
+            city,
+            country,
+          }));
           dispatch(updateGeolocation({ userId: user.id, latitude: newLatitude, longitude: newLongitude }));
         }
       };
@@ -112,6 +167,62 @@ const EditProfile = () => {
     setFormData((prev) => ({ ...prev, phone }));
   }, []);
 
+  // Gérer la sélection d'un fichier image
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file && file.type.startsWith("image/")) {
+      setSelectedFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    } else {
+      setSelectedFile(null);
+      setImagePreview(null);
+      alert(t("editProfile.invalidImage", "Please select a valid image file."));
+    }
+  };
+
+  // Uploader l'image vers le serveur avec logs détaillés
+  const handleImageUpload = async () => {
+    if (!user || !selectedFile) {
+      console.log("❌ Impossible d'uploader l'image : utilisateur ou fichier non défini");
+      return;
+    }
+
+    setIsImageUploading(true);
+    console.log("🔹 Début de l'upload de l'image pour userId:", user.id, "nom:", selectedFile.name);
+    console.log("🔹 Détails du fichier sélectionné:", {
+      name: selectedFile.name,
+      type: selectedFile.type,
+      size: selectedFile.size,
+    });
+
+    try {
+      const result = await dispatch(uploadImage({ userId: user.id, name: "profile-picture.jpg", file: selectedFile }) as any);
+      console.log("🔹 Réponse de dispatch(uploadImage):", result);
+
+      if (uploadImage.fulfilled.match(result)) {
+        console.log("✅ Image uploadée avec succès, payload:", result.payload);
+        dispatch(getUserImages(user.id)); // Rafraîchir les images après l'upload
+      } else {
+        console.warn("⚠️ Upload non réussi, vérifie l'état Redux ou les erreurs");
+      }
+
+      setSelectedFile(null);
+      setImagePreview(null);
+    } catch (error) {
+      console.error("❌ Échec de l'upload de l'image :", error);
+      if (error instanceof Error) {
+        console.error("Détails de l'erreur:", error.message, error.stack);
+      }
+    } finally {
+      console.log("🔹 Fin de l'upload, état isImageUploading réinitialisé");
+      setIsImageUploading(false);
+    }
+  };
+
   // Vérifier si des modifications ont été apportées
   const hasChanges = useCallback(() => {
     return (
@@ -119,6 +230,8 @@ const EditProfile = () => {
       formData.lastName !== initialFormData.lastName ||
       formData.phone !== initialFormData.phone ||
       formData.address !== initialFormData.address ||
+      formData.city !== initialFormData.city ||
+      formData.country !== initialFormData.country ||
       formData.sex !== initialFormData.sex ||
       formData.bio !== initialFormData.bio ||
       latitude !== initialFormData.latitude ||
@@ -133,14 +246,14 @@ const EditProfile = () => {
       const payload = {
         id: user.id,
         ...formData,
-        latitude, // Récupéré de googleMapsSlice
-        longitude, // Récupéré de googleMapsSlice
+        latitude,
+        longitude,
       };
       dispatch(updateUser(payload));
     }
   };
 
-  // Mise à jour automatique de l’adresse via le backend
+  // Mise à jour automatique de l’adresse, ville, et pays via le backend
   const handleUpdateAddress = useCallback(async () => {
     if (user && (latitude || longitude)) {
       setIsAddressLoading(true);
@@ -150,8 +263,13 @@ const EditProfile = () => {
           setFormData((prev) => ({
             ...prev,
             address: updatedUser.address || prev.address,
+            city: updatedUser.city || prev.city,
+            country: updatedUser.country || prev.country,
           }));
           setModalAddress(updatedUser.address || "");
+        })
+        .catch((error) => {
+          console.error("❌ Erreur lors de la mise à jour de l’adresse :", error);
         });
       setIsAddressLoading(false);
     }
@@ -176,11 +294,14 @@ const EditProfile = () => {
     <div className="edit-profile-container">
       <h2>{t("editProfile.title", "Edit Profile")}</h2>
 
-      {status === "loading" && !isAddressLoading && <p>{t("editProfile.loading", "Loading...")}</p>}
+      {status === "loading" && !isAddressLoading && !isImageUploading && <p>{t("editProfile.loading", "Loading...")}</p>}
       {error && <p className="error">{t("editProfile.error", { message: error })}</p>}
       {googleMapsError && <p className="error">{t("editProfile.googleMapsError", { message: googleMapsError })}</p>}
       {loadError && <p className="error">{t("editProfile.googleMapsLoadError", { message: loadError })}</p>}
       {message && <p className="success">{t("editProfile.success", "Profile updated successfully")}</p>}
+      {imageStatus === "loading" && <p>{t("editProfile.uploadingImage", "Uploading image...")}</p>}
+      {imageError && <p className="error">{t("editProfile.imageError", { message: imageError })}</p>}
+      {imageMessage && <p className="success">{t("editProfile.imageSuccess", "Image uploaded successfully")}</p>}
       {!isGoogleMapsLoaded && <p>{t("editProfile.loadingGoogleMaps", "Loading Google Maps...")}</p>}
 
       <form onSubmit={handleSubmit}>
@@ -218,6 +339,26 @@ const EditProfile = () => {
           {t("editProfile.changeAddress", "Change Address")}
         </button>
 
+        <label>{t("editProfile.city", "City")} :</label>
+        <input
+          type="text"
+          name="city"
+          value={formData.city}
+          onChange={handleChange}
+          placeholder={t("editProfile.cityPlaceholder", "Your city")}
+          disabled
+        />
+
+        <label>{t("editProfile.country", "Country")} :</label>
+        <input
+          type="text"
+          name="country"
+          value={formData.country}
+          onChange={handleChange}
+          placeholder={t("editProfile.countryPlaceholder", "Your country")}
+          disabled
+        />
+
         <label>{t("editProfile.sex", "Sex")} :</label>
         <select name="sex" value={formData.sex} onChange={handleChange}>
           <option value="">{t("editProfile.sexOptions.unspecified", "Not specified")}</option>
@@ -228,6 +369,32 @@ const EditProfile = () => {
 
         <label>{t("editProfile.bio", "Bio")} :</label>
         <textarea name="bio" value={formData.bio} onChange={handleChange} />
+
+        <label>{t("editProfile.profilePicture", "Profile Picture")} :</label>
+        <div>
+          {profileImage && (
+            <img
+              src={`http://localhost:7000/${profileImage.path}`}
+              alt={t("editProfile.profilePreview", "Profile Picture Preview")}
+              style={{ maxWidth: "200px", marginBottom: "10px" }}
+            />
+          )}
+          <input
+            type="file"
+            ref={fileInputRef}
+            accept="image/*"
+            onChange={handleFileChange}
+            disabled={isImageUploading}
+          />
+          {imagePreview && (
+            <div>
+              <img src={imagePreview} alt={t("editProfile.preview", "Image Preview")} style={{ maxWidth: "200px", marginTop: "10px" }} />
+              <button type="button" onClick={handleImageUpload} disabled={isImageUploading}>
+                {isImageUploading ? t("editProfile.uploading", "Uploading...") : t("editProfile.upload", "Upload Image")}
+              </button>
+            </div>
+          )}
+        </div>
 
         <button type="submit" disabled={status === "loading" || !hasChanges()}>
           {t("editProfile.submit", "Save")}
@@ -256,7 +423,7 @@ const EditProfile = () => {
         </div>
       )}
 
-      <button onClick={() => navigate("/profile")} disabled={status === "loading"}>
+      <button onClick={() => navigate("/profile")} disabled={status === "loading" || isImageUploading}>
         {t("editProfile.backToProfile", "Back to profile")}
       </button>
     </div>

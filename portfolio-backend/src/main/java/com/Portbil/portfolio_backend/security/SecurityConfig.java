@@ -27,6 +27,7 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        System.out.println("🔹 Configuring SecurityFilterChain for /api/images/**");
         http
                 .cors(cors -> cors.configurationSource(corsConfigurationSource())) // Configuration CORS appliquée en premier
                 .csrf(csrf -> csrf.disable()) // Désactiver CSRF pour API REST stateless
@@ -42,8 +43,9 @@ public class SecurityConfig {
                         ).permitAll() // Routes publiques
                         .requestMatchers("/api/portfolio/public/**").permitAll() // Rendre les portfolios accessibles publiquement
                         .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll() // Autoriser toutes les requêtes OPTIONS
-                        .requestMatchers("/api/users/all").authenticated() // ✅ Nouvelle route protégée pour les utilisateurs authentifiés
-                        .requestMatchers("/api/users/**").authenticated() // Protection des autres routes /api/users/*
+                        .requestMatchers("/api/users/all").authenticated() // Route protégée pour les utilisateurs authentifiés
+                        .requestMatchers("/api/users/**").authenticated() // Protection des routes /api/users/*
+                        .requestMatchers("/api/images/**").authenticated() // Protection explicite pour /api/images/**
                         .anyRequest().authenticated() // Tout le reste nécessite une authentification
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // Pas de sessions

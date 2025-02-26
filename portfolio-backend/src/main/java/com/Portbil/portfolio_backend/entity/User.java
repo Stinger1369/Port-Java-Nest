@@ -43,7 +43,7 @@ public class User implements UserDetails {
     @Indexed(unique = true)
     private String slug;
 
-    private String profilePictureUrl;
+    private String profilePictureUrl; // Tu peux garder ce champ si tu veux stocker l'URL directement, mais il sera mis à jour via UserService
     private Set<String> interests;
     private String bio;
 
@@ -89,7 +89,7 @@ public class User implements UserDetails {
 
     // Liste des IDs des images associées à l'utilisateur
     @Builder.Default
-    private List<String> imageIds = new ArrayList<>(); // Nouveau champ
+    private List<String> imageIds = new ArrayList<>();
 
     // Méthode pour récupérer toutes les IDs des sections du portfolio
     public List<String> getAllPortfolioIds() {

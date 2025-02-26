@@ -16,8 +16,8 @@ public class UserDTO {
     private String lastName;
     private String phone;
     private String address;
-    private String city;
-    private String country;
+    private String city; // Ajouté pour gérer la ville
+    private String country; // Ajouté pour gérer le pays
     private String sex;
     private String slug;
     private String bio;

@@ -9,9 +9,13 @@ interface User {
   lastName?: string;
   phone?: string;
   address?: string;
+  city?: string; // Ajouté pour gérer la ville
+  country?: string; // Ajouté pour gérer le pays
   sex?: "Man" | "Woman" | "Other" | "";
   bio?: string;
   slug?: string;
+  latitude?: number; // Ajouté pour gérer la latitude
+  longitude?: number; // Ajouté pour gérer la longitude
 }
 
 interface UserState {
@@ -55,7 +59,7 @@ export const fetchUser = createAsyncThunk(
       }
 
       console.log("✅ Utilisateur récupéré :", response.data);
-      console.log("Phone reçu du backend:", response.data.phone);
+      console.log("Sex et Bio reçus du backend:", { sex: response.data.sex, bio: response.data.bio });
       return response.data;
     } catch (error: any) {
       console.error("❌ Fetch user failed:", error.response?.data);
@@ -81,7 +85,10 @@ export const fetchAllUsers = createAsyncThunk(
       });
 
       console.log("✅ Liste des utilisateurs récupérée :", response.data);
-      return response.data;
+      return response.data.map((user: any) => ({
+        ...user,
+        id: user.id || user._id.$oid, // Normalisation de l'ID MongoDB
+      }));
     } catch (error: any) {
       console.error("❌ Fetch all users failed:", error.response?.data);
       return rejectWithValue(error.response?.data?.error || "Failed to fetch all users");
@@ -106,7 +113,10 @@ export const fetchUserById = createAsyncThunk(
       });
 
       console.log("✅ Utilisateur récupéré :", response.data);
-      return response.data;
+      return {
+        ...response.data,
+        id: response.data.id || response.data._id.$oid, // Normalisation de l'ID MongoDB
+      };
     } catch (error: any) {
       console.error("❌ Fetch user by ID failed:", error.response?.data);
       return rejectWithValue(error.response?.data?.error || "Failed to fetch user");
@@ -128,7 +138,7 @@ export const updateUser = createAsyncThunk(
       };
 
       console.log("🔹 Sending update request for user:", payload);
-      console.log("Données envoyées au backend:", JSON.stringify(payload));
+      console.log("Données envoyées au backend:", JSON.stringify(payload, null, 2));
 
       const response = await axios.put(
         `${BASE_URL}/api/users/${userData.id}`,
@@ -137,7 +147,11 @@ export const updateUser = createAsyncThunk(
       );
 
       console.log("✅ Update successful:", response.data);
-      console.log("Phone reçu du backend après update:", response.data.phone);
+      console.log("Phone, City et Country reçus du backend après update:", {
+        phone: response.data.phone,
+        city: response.data.city,
+        country: response.data.country,
+      });
       return response.data;
     } catch (error: any) {
       console.error("❌ Update failed:", error.response?.data);
@@ -195,10 +209,7 @@ const userSlice = createSlice({
       })
       .addCase(fetchAllUsers.fulfilled, (state, action: PayloadAction<User[]>) => {
         state.status = "succeeded";
-        state.members = action.payload.map((user) => ({
-          ...user,
-          id: user.id || user._id.$oid, // Normalisation de l'ID MongoDB
-        }));
+        state.members = action.payload;
       })
       .addCase(fetchAllUsers.rejected, (state, action) => {
         state.status = "failed";
@@ -210,14 +221,10 @@ const userSlice = createSlice({
       .addCase(fetchUserById.fulfilled, (state, action: PayloadAction<User>) => {
         state.status = "succeeded";
         const index = state.members.findIndex((m) => m.id === action.payload.id);
-        const normalizedUser = {
-          ...action.payload,
-          id: action.payload.id || action.payload._id.$oid, // Normalisation de l'ID MongoDB
-        };
         if (index !== -1) {
-          state.members[index] = normalizedUser;
+          state.members[index] = action.payload;
         } else {
-          state.members.push(normalizedUser);
+          state.members.push(action.payload);
         }
       })
       .addCase(fetchUserById.rejected, (state, action) => {

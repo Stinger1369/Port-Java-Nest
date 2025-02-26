@@ -2,10 +2,14 @@ package com.Portbil.portfolio_backend.service;
 
 import com.google.maps.GeoApiContext;
 import com.google.maps.GeocodingApi;
+import com.google.maps.model.AddressComponentType;
 import com.google.maps.model.GeocodingResult;
 import com.google.maps.model.LatLng;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @Service
 public class GoogleMapsService {
@@ -36,7 +40,55 @@ public class GoogleMapsService {
             System.out.println("❌ Erreur lors de la récupération de l'adresse : " + e.getMessage());
             throw new RuntimeException("Erreur lors de la récupération de l'adresse via Google Maps : " + e.getMessage());
         } finally {
-            context.shutdown();
+            if (context != null) {
+                context.shutdown();
+            }
+        }
+    }
+
+    /**
+     * Récupère la ville et le pays à partir des coordonnées latitude/longitude via l'API Google Maps
+     */
+    public Map<String, String> getCityAndCountryFromCoordinates(double latitude, double longitude) {
+        GeoApiContext context = new GeoApiContext.Builder()
+                .apiKey(apiKey)
+                .build();
+
+        try {
+            GeocodingResult[] results = GeocodingApi.reverseGeocode(context, new LatLng(latitude, longitude))
+                    .await();
+
+            if (results != null && results.length > 0) {
+                String city = null;
+                String country = null;
+
+                // Parcourir les composants de l’adresse pour extraire ville et pays
+                for (com.google.maps.model.AddressComponent component : results[0].addressComponents) {
+                    for (AddressComponentType type : component.types) {
+                        if (type == AddressComponentType.LOCALITY || type == AddressComponentType.SUBLOCALITY) {
+                            city = component.longName;
+                        } else if (type == AddressComponentType.COUNTRY) {
+                            country = component.longName;
+                        }
+                    }
+                }
+
+                Map<String, String> locationDetails = new HashMap<>();
+                locationDetails.put("city", city != null ? city : "Not provided");
+                locationDetails.put("country", country != null ? country : "Not provided");
+
+                System.out.println("✅ Ville et pays récupérés via Google Maps : city=" + city + ", country=" + country);
+                return locationDetails;
+            } else {
+                throw new RuntimeException("Aucune localisation trouvée pour ces coordonnées.");
+            }
+        } catch (Exception e) {
+            System.out.println("❌ Erreur lors de la récupération de la ville et du pays : " + e.getMessage());
+            throw new RuntimeException("Erreur lors de la récupération de la ville et du pays via Google Maps : " + e.getMessage());
+        } finally {
+            if (context != null) {
+                context.shutdown();
+            }
         }
     }
 }
