@@ -1,10 +1,11 @@
 package com.Portbil.portfolio_backend.controller;
 
 import com.Portbil.portfolio_backend.dto.UserDTO;
-import com.Portbil.portfolio_backend.dto.WeatherDTO;
 import com.Portbil.portfolio_backend.entity.User;
 import com.Portbil.portfolio_backend.service.UserService;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -20,6 +21,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class UserController {
 
+    private static final Logger log = LoggerFactory.getLogger(UserController.class);
     private final UserService userService;
 
     /**
@@ -84,70 +86,53 @@ public class UserController {
     @PutMapping("/{id}")
     @PreAuthorize("#id == authentication.principal.username")
     public ResponseEntity<?> updateUser(@PathVariable String id, @RequestBody UserDTO userDTO) {
+        log.debug("Requête PUT reçue pour l'utilisateur ID: {}, JSON brut reçu: {}", id, userDTO != null ? userDTO.toString() : "null");
+        log.info("Début du traitement de la mise à jour pour l'utilisateur ID: {}", id);
+
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
+        log.debug("Authentification récupérée : {}", authentication != null ? authentication.getName() : "null");
+
         System.out.println("🔹 Tentative de mise à jour de l'utilisateur ID: " + id);
-        System.out.println("Received phone from frontend: " + userDTO.getPhone());
-        System.out.println("🔹 Coordonnées reçues du frontend: latitude=" + userDTO.getLatitude() + ", longitude=" + userDTO.getLongitude());
+        System.out.println("Received phone from frontend: " + (userDTO != null ? userDTO.getPhone() : "null"));
+        System.out.println("🔹 Coordonnées reçues du frontend: latitude=" + (userDTO != null ? userDTO.getLatitude() : "null") + ", longitude=" + (userDTO != null ? userDTO.getLongitude() : "null"));
 
         if (authentication == null || authentication.getPrincipal() == null) {
-            System.out.println("❌ Utilisateur non authentifié !");
+            log.error("❌ Utilisateur non authentifié !");
             return ResponseEntity.status(403).body("Accès interdit : utilisateur non authentifié !");
         }
 
         String authenticatedUserId = authentication.getName();
 
-        System.out.println("✅ Utilisateur connecté avec ID : " + authenticatedUserId);
+        log.debug("Utilisateur connecté avec ID : {}", authenticatedUserId);
 
         if (!authenticatedUserId.equals(id)) {
-            System.out.println("❌ Erreur : L'utilisateur ne peut modifier que son propre compte !");
+            log.warn("❌ Erreur : L'utilisateur {} ne peut modifier que son propre compte (ID: {}) !", authenticatedUserId, id);
             return ResponseEntity.status(403).body("Accès interdit : vous ne pouvez modifier que votre propre compte !");
         }
 
         try {
+            log.debug("Tentative de mise à jour de l'utilisateur avec les données : latitude={}, longitude={}",
+                    userDTO != null ? userDTO.getLatitude() : "null",
+                    userDTO != null ? userDTO.getLongitude() : "null");
+
             Optional<User> updatedUser = userService.updateUser(id, userDTO);
             if (updatedUser.isEmpty()) {
-                System.out.println("❌ Mise à jour impossible, utilisateur non trouvé : " + id);
+                log.error("❌ Mise à jour impossible, utilisateur non trouvé : {}", id);
                 return ResponseEntity.notFound().build();
             }
 
+            log.info("✅ Mise à jour réussie pour l'utilisateur ID: {}", id);
             System.out.println("✅ Mise à jour réussie pour l'utilisateur ID: " + id);
             System.out.println("Saved phone in DB: " + updatedUser.get().getPhone());
             System.out.println("🔹 Nouvelles coordonnées enregistrées: latitude=" + updatedUser.get().getLatitude() + ", longitude=" + updatedUser.get().getLongitude());
             return ResponseEntity.ok(updatedUser.get());
         } catch (IllegalArgumentException e) {
-            System.out.println("⚠️ Erreur lors de la mise à jour : " + e.getMessage());
+            log.error("⚠️ Erreur lors de la mise à jour : {}", e.getMessage(), e);
             return ResponseEntity.badRequest().body(e.getMessage());
-        }
-    }
-
-    /**
-     * ✅ Nouvelle route : Mettre à jour l'adresse d'un utilisateur via Google Maps
-     */
-    @PutMapping("/{id}/address")
-    @PreAuthorize("#id == authentication.principal.username")
-    public ResponseEntity<?> updateUserAddress(@PathVariable String id) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
-        if (authentication == null || authentication.getPrincipal() == null) {
-            System.out.println("❌ Utilisateur non authentifié !");
-            return ResponseEntity.status(403).body("Accès interdit : utilisateur non authentifié !");
-        }
-
-        String authenticatedUserId = authentication.getName();
-
-        if (!authenticatedUserId.equals(id)) {
-            System.out.println("❌ Erreur : L'utilisateur ne peut modifier que son propre compte !");
-            return ResponseEntity.status(403).body("Accès interdit : vous ne pouvez modifier que votre propre compte !");
-        }
-
-        try {
-            User updatedUser = userService.updateUserAddressFromCoordinates(id);
-            System.out.println("✅ Adresse mise à jour pour l'utilisateur ID: " + id);
-            return ResponseEntity.ok(updatedUser);
-        } catch (IllegalArgumentException e) {
-            System.out.println("⚠️ Erreur lors de la mise à jour de l'adresse : " + e.getMessage());
-            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (Exception e) {
+            log.error("Erreur inattendue lors de la mise à jour de l'utilisateur ID: {} - Message: {}", id, e.getMessage(), e);
+            return ResponseEntity.status(500).body("Erreur interne : " + e.getMessage());
         }
     }
 
@@ -183,23 +168,6 @@ public class UserController {
         } catch (IllegalArgumentException e) {
             System.out.println("❌ Erreur lors de la suppression : " + e.getMessage());
             return ResponseEntity.notFound().build();
-        }
-    }
-
-    /**
-     * ✅ Récupérer les données météo pour l'utilisateur connecté
-     */
-    @GetMapping("/{id}/weather")
-    @PreAuthorize("#id == authentication.principal.username")
-    public ResponseEntity<WeatherDTO> getWeather(@PathVariable String id) {
-        try {
-            WeatherDTO weather = userService.getWeatherForUser(id);
-            System.out.println("✅ Données météo récupérées pour l'utilisateur ID: " + id);
-            System.out.println("🔹 Détails météo renvoyés: ville=" + weather.getCity() + ", temp=" + weather.getTemperature() + "°C");
-            return ResponseEntity.ok(weather);
-        } catch (IllegalArgumentException e) {
-            System.out.println("⚠️ Erreur lors de la récupération de la météo : " + e.getMessage());
-            return ResponseEntity.badRequest().body(null);
         }
     }
 }

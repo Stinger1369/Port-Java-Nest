@@ -19,28 +19,29 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final EmailService emailService;
     private final WeatherService weatherService;
-    private final GoogleMapsService googleMapsService; // ✅ Importation correcte ajoutée
+    private final GoogleMapsService googleMapsService;
+    private final EmailTemplateService emailTemplateService;
 
-    // ID du développeur (à remplacer par votre ID réel)
-    private final String DEVELOPER_ID = "developer-id-here"; // Remplacez par votre ID utilisateur
-    private final String DEVELOPER_EMAIL = "developer-email@example.com"; // Remplacez par votre email
+    private final String DEVELOPER_ID = "developer-id-here";
+    private final String DEVELOPER_EMAIL = "developer-email@example.com";
 
     /**
-     * ✅ Récupérer tous les utilisateurs
+     * Récupérer tous les utilisateurs
      */
     public List<User> getAllUsers() {
         return userRepository.findAll();
     }
 
     /**
-     * ✅ Récupérer un utilisateur par ID
+     * Récupérer un utilisateur par ID
      */
     public Optional<User> getUserById(String id) {
         return userRepository.findById(id);
     }
 
     /**
-     * ✅ Mettre à jour les informations d'un utilisateur avec correction du format `firstName`, `lastName` et `slug`
+     * Mettre à jour les informations d'un utilisateur avec correction du format `firstName`, `lastName` et `slug`
+     * Note : Les champs `city` et `country` ne sont plus utilisés dans l'interface, donc ignorés ici.
      */
     public Optional<User> updateUser(String id, UserDTO userDTO) {
         return userRepository.findById(id).map(user -> {
@@ -63,10 +64,7 @@ public class UserService {
             if (userDTO.getLastName() != null) user.setLastName(capitalizeFirstLetter(userDTO.getLastName()));
             if (userDTO.getPhone() != null) user.setPhone(userDTO.getPhone());
             if (userDTO.getAddress() != null) user.setAddress(userDTO.getAddress());
-            if (userDTO.getCity() != null) user.setCity(userDTO.getCity());
-            if (userDTO.getCountry() != null) user.setCountry(userDTO.getCountry());
 
-            // Validation et mise à jour du sexe
             if (userDTO.getSex() != null) {
                 if (!isValidSex(userDTO.getSex())) {
                     throw new IllegalArgumentException("Sexe invalide. Les valeurs autorisées sont: 'Man', 'Woman', 'Other' ou vide.");
@@ -74,7 +72,6 @@ public class UserService {
                 user.setSex(userDTO.getSex());
             }
 
-            // Mise à jour du slug si fourni
             if (userDTO.getSlug() != null && !userDTO.getSlug().isEmpty()) {
                 String newSlug = generateUniqueSlug(userDTO.getSlug(), id);
                 user.setSlug(newSlug);
@@ -82,9 +79,15 @@ public class UserService {
 
             if (userDTO.getBio() != null) user.setBio(userDTO.getBio());
 
-            // Mise à jour des coordonnées de géolocalisation
-            if (userDTO.getLatitude() != null) user.setLatitude(userDTO.getLatitude());
-            if (userDTO.getLongitude() != null) user.setLongitude(userDTO.getLongitude());
+            if (userDTO.getLatitudeAsDouble() != null && userDTO.getLongitudeAsDouble() != null) {
+                if (userDTO.getLatitudeAsDouble() < -90 || userDTO.getLatitudeAsDouble() > 90 || userDTO.getLongitudeAsDouble() < -180 || userDTO.getLongitudeAsDouble() > 180) {
+                    throw new IllegalArgumentException("Coordonnées géographiques invalides.");
+                }
+                user.setLatitude(userDTO.getLatitudeAsDouble());
+                user.setLongitude(userDTO.getLongitudeAsDouble());
+            } else if (userDTO.getLatitudeAsDouble() != null || userDTO.getLongitudeAsDouble() != null) {
+                throw new IllegalArgumentException("Les deux coordonnées (latitude et longitude) doivent être fournies ensemble.");
+            }
 
             User savedUser = userRepository.save(user);
             System.out.println("✅ Mise à jour réussie pour l'utilisateur ID: " + id);
@@ -94,7 +97,7 @@ public class UserService {
     }
 
     /**
-     * ✅ Nouvelle méthode : Mettre à jour l'adresse via Google Maps
+     * Mettre à jour l'adresse via Google Maps (utilisé par GoogleMapsController)
      */
     public User updateUserAddressFromCoordinates(String userId) {
         User user = userRepository.findById(userId)
@@ -113,7 +116,7 @@ public class UserService {
     }
 
     /**
-     * ✅ Valider si la valeur de `sex` est correcte
+     * Valider si la valeur de `sex` est correcte
      */
     private boolean isValidSex(String sex) {
         if (sex == null || sex.isEmpty()) return true;
@@ -123,21 +126,21 @@ public class UserService {
     }
 
     /**
-     * ✅ Supprimer un utilisateur
+     * Supprimer un utilisateur
      */
     public void deleteUser(String id) {
         userRepository.deleteById(id);
     }
 
     /**
-     * ✅ Récupérer un utilisateur par email
+     * Récupérer un utilisateur par email
      */
     public Optional<User> getUserByEmail(String email) {
         return userRepository.findByEmail(email);
     }
 
     /**
-     * ✅ Inscription avec génération d'un code de validation par email et slug unique
+     * Inscription avec génération d'un code de validation par email et slug unique
      */
     public User registerUser(String email, String password) {
         if (userRepository.findByEmail(email).isPresent()) {
@@ -166,7 +169,7 @@ public class UserService {
     }
 
     /**
-     * ✅ Vérification du compte utilisateur avec le code reçu par email
+     * Vérification du compte utilisateur avec le code reçu par email
      */
     public boolean verifyUser(String email, String code) {
         Optional<User> userOpt = userRepository.findByEmail(email);
@@ -187,14 +190,14 @@ public class UserService {
     }
 
     /**
-     * ✅ Vérification du mot de passe avec hashage
+     * Vérification du mot de passe avec hashage
      */
     public boolean checkPassword(User user, String rawPassword) {
         return passwordEncoder.matches(rawPassword, user.getPassword());
     }
 
     /**
-     * ✅ Demande de réinitialisation du mot de passe
+     * Demande de réinitialisation du mot de passe
      */
     public void forgotPassword(String email) {
         Optional<User> userOpt = userRepository.findByEmail(email);
@@ -217,7 +220,7 @@ public class UserService {
     }
 
     /**
-     * ✅ Réinitialisation du mot de passe
+     * Réinitialisation du mot de passe
      */
     public void resetPassword(String token, String newPassword) {
         Optional<User> userOpt = userRepository.findByResetToken(token);
@@ -256,14 +259,14 @@ public class UserService {
     }
 
     /**
-     * ✅ Générer un code de confirmation à 6 chiffres
+     * Générer un code de confirmation à 6 chiffres
      */
     private String generateConfirmationCode() {
         return String.valueOf(100000 + new Random().nextInt(900000));
     }
 
     /**
-     * ✅ Méthode pour capitaliser la première lettre d'un mot
+     * Méthode pour capitaliser la première lettre d'un mot
      */
     private String capitalizeFirstLetter(String input) {
         if (input == null || input.isEmpty()) return input;
@@ -271,7 +274,7 @@ public class UserService {
     }
 
     /**
-     * ✅ Générer un slug unique basé sur une base donnée (email ou slug personnalisé)
+     * Générer un slug unique basé sur une base donnée (email ou slug personnalisé)
      */
     private String generateUniqueSlug(String baseSlug, String userId) {
         String slug = baseSlug.toLowerCase().replaceAll("[^a-z0-9]", "-");
@@ -287,7 +290,7 @@ public class UserService {
     }
 
     /**
-     * ✅ Récupérer les données météo pour un utilisateur
+     * Récupérer les données météo pour un utilisateur (utilisé par WeatherController)
      */
     public WeatherDTO getWeatherForUser(String userId) {
         Optional<User> userOpt = userRepository.findById(userId);
@@ -302,67 +305,41 @@ public class UserService {
     }
 
     /**
-     * ✅ Envoyer une demande de contact entre utilisateurs
+     * Envoyer une demande de contact entre utilisateurs
+     * @throws IllegalArgumentException si les ID sont invalides
+     * @throws IllegalStateException si le contact existe déjà
      */
     public void sendUserContactRequest(String senderId, String receiverId) {
+        if (senderId == null || senderId.isEmpty() || receiverId == null || receiverId.isEmpty()) {
+            throw new IllegalArgumentException("Les identifiants de l'expéditeur ou du destinataire ne peuvent pas être nuls ou vides.");
+        }
+        if (senderId.equals(receiverId)) {
+            throw new IllegalArgumentException("L'expéditeur et le destinataire ne peuvent pas être la même personne.");
+        }
+
         User sender = userRepository.findById(senderId)
-                .orElseThrow(() -> new RuntimeException("Sender not found"));
+                .orElseThrow(() -> new IllegalArgumentException("Expéditeur introuvable : " + senderId));
         User receiver = userRepository.findById(receiverId)
-                .orElseThrow(() -> new RuntimeException("Receiver not found"));
+                .orElseThrow(() -> new IllegalArgumentException("Destinataire introuvable : " + receiverId));
 
         if (receiver.getContactIds().contains(senderId)) {
-            throw new RuntimeException("Contact already exists");
+            throw new IllegalStateException("Une demande de contact existe déjà entre ces utilisateurs.");
         }
 
         receiver.getContactIds().add(senderId);
         userRepository.save(receiver);
 
-        String senderName = sender.getFirstName() + " " + sender.getLastName();
-        String senderSlug = sender.getSlug() != null ? sender.getSlug() : "N/A";
+        String senderName = Optional.ofNullable(sender.getFirstName())
+                .map(fn -> fn + " " + Optional.ofNullable(sender.getLastName()).orElse(""))
+                .orElse("Utilisateur inconnu");
+        String senderSlug = Optional.ofNullable(sender.getSlug()).orElse("N/A");
         String portfolioLink = "http://localhost:5173/portfolio/" + sender.getFirstName() + "/" + sender.getLastName() + "/" + senderSlug;
 
-        String htmlMessage = """
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <style>
-                body { font-family: Arial, sans-serif; color: #333; }
-                .container { max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 5px; }
-                .header { background-color: #4CAF50; color: white; padding: 10px; text-align: center; border-radius: 5px 5px 0 0; }
-                .content { padding: 20px; background-color: #f9f9f9; }
-                .footer { text-align: center; font-size: 12px; color: #777; margin-top: 20px; }
-                a { color: #4CAF50; text-decoration: none; }
-                a:hover { text-decoration: underline; }
-            </style>
-        </head>
-        <body>
-            <div class="container">
-                <div class="header">
-                    <h2>Nouvelle demande de contact</h2>
-                </div>
-                <div class="content">
-                    <p>Bonjour <strong>%s</strong>,</p>
-                    <p>Vous avez reçu une nouvelle demande de contact de la part de <strong>%s</strong>.</p>
-                    <p><strong>Détails du demandeur :</strong></p>
-                    <ul>
-                        <li>Email : %s</li>
-                        <li>Téléphone : %s</li>
-                    </ul>
-                    <p>Consultez son portfolio ici : <a href="%s">%s</a></p>
-                    <p>Pour répondre ou accepter cette demande, connectez-vous à votre compte et consultez vos demandes de contact.</p>
-                </div>
-                <div class="footer">
-                    <p>© 2025 Votre Application. Tous droits réservés.</p>
-                </div>
-            </div>
-        </body>
-        </html>
-        """.formatted(
-                receiver.getFirstName() != null ? receiver.getFirstName() : "Utilisateur",
+        String htmlMessage = emailTemplateService.generateContactRequestEmail(
+                Optional.ofNullable(receiver.getFirstName()).orElse("Utilisateur"),
                 senderName,
                 sender.getEmail(),
-                sender.getPhone() != null ? sender.getPhone() : "Non fourni",
-                portfolioLink,
+                Optional.ofNullable(sender.getPhone()).orElse("Non fourni"),
                 portfolioLink
         );
 
@@ -371,10 +348,12 @@ public class UserService {
                 "Nouvelle demande de contact",
                 htmlMessage
         );
+
+        System.out.println("✅ Demande de contact envoyée de " + senderId + " à " + receiverId);
     }
 
     /**
-     * ✅ Récupérer les contacts acceptés d’un utilisateur
+     * Récupérer les contacts acceptés d’un utilisateur
      */
     public List<String> getUserContacts(String userId) {
         User user = userRepository.findById(userId)
@@ -383,7 +362,7 @@ public class UserService {
     }
 
     /**
-     * ✅ Envoyer une demande de contact au développeur
+     * Envoyer une demande de contact au développeur
      */
     public void sendDeveloperContactRequest(String userId) {
         User user = userRepository.findById(userId)
@@ -401,7 +380,7 @@ public class UserService {
     }
 
     /**
-     * ✅ Accepter une demande de contact du développeur
+     * Accepter une demande de contact du développeur
      */
     public void acceptDeveloperContactRequest(String userId) {
         User user = userRepository.findById(userId)

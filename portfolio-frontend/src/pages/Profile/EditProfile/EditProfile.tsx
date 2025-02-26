@@ -1,10 +1,12 @@
-import { useState, useEffect, Suspense, useRef } from "react";
+import { useState, useEffect, useRef, useCallback, Suspense } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState, AppDispatch } from "../../../redux/store";
 import { useNavigate } from "react-router-dom";
-import { fetchUser, updateUser, updateUserAddress } from "../../../redux/features/userSlice";
+import { fetchUser, updateUser } from "../../../redux/features/userSlice";
+import { updateUserAddress, updateGeolocation } from "../../../redux/features/googleMapsSlice";
 import { useTranslation } from "react-i18next";
 import PhoneInputComponent from "../../../components/PhoneInput/PhoneInputComponent";
+import { useGoogleMaps } from "../../../hooks/useGoogleMaps";
 import "./EditProfile.css";
 
 const EditProfile = () => {
@@ -13,26 +15,38 @@ const EditProfile = () => {
   const navigate = useNavigate();
   const token = useSelector((state: RootState) => state.auth.token);
   const user = useSelector((state: RootState) => state.user.user);
+  const { address, latitude, longitude, status: googleMapsStatus, error: googleMapsError } = useSelector((state: RootState) => state.googleMaps);
   const status = useSelector((state: RootState) => state.user.status);
   const error = useSelector((state: RootState) => state.user.error);
   const message = useSelector((state: RootState) => state.user.message);
 
+  const { isLoaded: isGoogleMapsLoaded, error: loadError } = useGoogleMaps();
+
   const userId = localStorage.getItem("userId");
   const autocompleteRef = useRef<HTMLInputElement>(null);
-
-  const [formData, setFormData] = useState({
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalAddress, setModalAddress] = useState("");
+  const [isAddressLoading, setIsAddressLoading] = useState(false);
+  const [initialFormData, setInitialFormData] = useState({
     firstName: "",
     lastName: "",
     phone: "",
     address: "",
-    city: "",
-    country: "",
     sex: "",
     bio: "",
     latitude: 0,
     longitude: 0,
   });
+  const [formData, setFormData] = useState({
+    firstName: "",
+    lastName: "",
+    phone: "",
+    address: "",
+    sex: "",
+    bio: "",
+  });
 
+  // Initialisation des données du formulaire et des données initiales
   useEffect(() => {
     if (!token) {
       navigate("/login");
@@ -40,78 +54,118 @@ const EditProfile = () => {
       dispatch(fetchUser());
     } else if (user) {
       const normalizedPhone = user.phone && !user.phone.startsWith("+") ? `+${user.phone}` : user.phone || "";
-      setFormData({
+      const initialData = {
         firstName: user.firstName || "",
         lastName: user.lastName || "",
         phone: normalizedPhone,
-        address: user.address || "",
-        city: user.city || "",
-        country: user.country || "",
+        address: address || user.address || "",
         sex: user.sex || "",
         bio: user.bio || "",
-        latitude: user.latitude || 0,
-        longitude: user.longitude || 0,
+        latitude: latitude || user.latitude || 0,
+        longitude: longitude || user.longitude || 0,
+      };
+      setInitialFormData(initialData);
+      setFormData({
+        firstName: initialData.firstName,
+        lastName: initialData.lastName,
+        phone: initialData.phone,
+        address: initialData.address,
+        sex: initialData.sex,
+        bio: initialData.bio,
       });
-      console.log("Initial phone from user:", user.phone);
-      console.log("Normalized phone in formData:", normalizedPhone);
+      setModalAddress(initialData.address);
     }
-  }, [token, user, userId, dispatch, navigate]);
+  }, [token, user, userId, dispatch, navigate, address, latitude, longitude]);
 
+  // Gestion de l’autocomplétion Google Maps dans le modal
   useEffect(() => {
-    if (autocompleteRef.current) {
+    if (isGoogleMapsLoaded && autocompleteRef.current && isModalOpen) {
       const autocomplete = new google.maps.places.Autocomplete(autocompleteRef.current, {
         types: ["address"],
-        fields: ["formatted_address", "geometry", "address_components"],
+        fields: ["formatted_address", "geometry"],
       });
 
-      autocomplete.addListener("place_changed", () => {
+      // Ajoute la fonction handlePlaceChange comme listener
+      const handlePlaceChange = () => {
         const place = autocomplete.getPlace();
-        if (place.geometry) {
-          const latitude = place.geometry.location.lat();
-          const longitude = place.geometry.location.lng();
-          const address = place.formatted_address || "";
-          const city = place.address_components?.find(comp => comp.types.includes("locality"))?.long_name || "";
-          const country = place.address_components?.find(comp => comp.types.includes("country"))?.long_name || "";
+        if (place.geometry && user) {
+          const newLatitude = place.geometry.location.lat();
+          const newLongitude = place.geometry.location.lng();
+          const newAddress = place.formatted_address || "";
 
-          setFormData((prev) => ({
-            ...prev,
-            address,
-            city,
-            country,
-            latitude,
-            longitude,
-          }));
+          console.log("🔹 Nouvelles coordonnées avant updateGeolocation :", { latitude: newLatitude, longitude: newLongitude }); // Ajouté pour déboguer
+          setModalAddress(newAddress);
+          dispatch(updateGeolocation({ userId: user.id, latitude: newLatitude, longitude: newLongitude }));
         }
-      });
+      };
+
+      autocomplete.addListener("place_changed", handlePlaceChange);
     }
+  }, [isGoogleMapsLoaded, isModalOpen, dispatch, user]);
+
+  // Gestion des changements dans les champs
+  const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   }, []);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
+  const handlePhoneChange = useCallback((phone: string) => {
+    setFormData((prev) => ({ ...prev, phone }));
+  }, []);
 
-  const handlePhoneChange = (phone: string) => {
-    setFormData({ ...formData, phone });
-  };
+  // Vérifier si des modifications ont été apportées
+  const hasChanges = useCallback(() => {
+    return (
+      formData.firstName !== initialFormData.firstName ||
+      formData.lastName !== initialFormData.lastName ||
+      formData.phone !== initialFormData.phone ||
+      formData.address !== initialFormData.address ||
+      formData.sex !== initialFormData.sex ||
+      formData.bio !== initialFormData.bio ||
+      latitude !== initialFormData.latitude ||
+      longitude !== initialFormData.longitude
+    );
+  }, [formData, initialFormData, latitude, longitude]);
 
+  // Sauvegarde du formulaire
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Submitted phone:", formData.phone);
-    if (user) {
+    if (user && hasChanges()) {
       const payload = {
         id: user.id,
         ...formData,
-        latitude: formData.latitude || undefined,
-        longitude: formData.longitude || undefined,
+        latitude, // Récupéré de googleMapsSlice
+        longitude, // Récupéré de googleMapsSlice
       };
       dispatch(updateUser(payload));
     }
   };
 
-  const handleUpdateAddress = () => {
-    if (user) {
-      dispatch(updateUserAddress(user.id));
+  // Mise à jour automatique de l’adresse via le backend
+  const handleUpdateAddress = useCallback(async () => {
+    if (user && (latitude || longitude)) {
+      setIsAddressLoading(true);
+      await dispatch(updateUserAddress(user.id))
+        .unwrap()
+        .then((updatedUser) => {
+          setFormData((prev) => ({
+            ...prev,
+            address: updatedUser.address || prev.address,
+          }));
+          setModalAddress(updatedUser.address || "");
+        });
+      setIsAddressLoading(false);
     }
+  }, [dispatch, user, latitude, longitude]);
+
+  // Gestion du modal
+  const openModal = () => setIsModalOpen(true);
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setModalAddress(address || formData.address);
+  };
+  const saveModalAddress = () => {
+    setFormData((prev) => ({ ...prev, address: modalAddress }));
+    setIsModalOpen(false);
   };
 
   if (!ready) {
@@ -122,9 +176,12 @@ const EditProfile = () => {
     <div className="edit-profile-container">
       <h2>{t("editProfile.title", "Edit Profile")}</h2>
 
-      {status === "loading" && <p>{t("editProfile.loading", "Loading...")}</p>}
+      {status === "loading" && !isAddressLoading && <p>{t("editProfile.loading", "Loading...")}</p>}
       {error && <p className="error">{t("editProfile.error", { message: error })}</p>}
+      {googleMapsError && <p className="error">{t("editProfile.googleMapsError", { message: googleMapsError })}</p>}
+      {loadError && <p className="error">{t("editProfile.googleMapsLoadError", { message: loadError })}</p>}
       {message && <p className="success">{t("editProfile.success", "Profile updated successfully")}</p>}
+      {!isGoogleMapsLoaded && <p>{t("editProfile.loadingGoogleMaps", "Loading Google Maps...")}</p>}
 
       <form onSubmit={handleSubmit}>
         <label>{t("editProfile.firstName", "First Name")} :</label>
@@ -145,18 +202,21 @@ const EditProfile = () => {
           name="address"
           value={formData.address}
           onChange={handleChange}
-          ref={autocompleteRef}
-          placeholder={t("editProfile.addressPlaceholder", "Enter your address")}
+          placeholder={t("editProfile.addressPlaceholder", "Your current address")}
+          disabled
         />
-        <button type="button" onClick={handleUpdateAddress} disabled={!formData.latitude || !formData.longitude}>
-          {t("editProfile.updateAddress", "Update Address from Coordinates")}
+        <button
+          type="button"
+          onClick={handleUpdateAddress}
+          disabled={isAddressLoading || (!latitude && !longitude)}
+        >
+          {isAddressLoading
+            ? t("editProfile.updatingAddress", "Updating...")
+            : t("editProfile.updateAddress", "Update Address Automatically")}
         </button>
-
-        <label>{t("editProfile.city", "City")} :</label>
-        <input type="text" name="city" value={formData.city} onChange={handleChange} />
-
-        <label>{t("editProfile.country", "Country")} :</label>
-        <input type="text" name="country" value={formData.country} onChange={handleChange} />
+        <button type="button" onClick={openModal} disabled={!isGoogleMapsLoaded}>
+          {t("editProfile.changeAddress", "Change Address")}
+        </button>
 
         <label>{t("editProfile.sex", "Sex")} :</label>
         <select name="sex" value={formData.sex} onChange={handleChange}>
@@ -169,10 +229,34 @@ const EditProfile = () => {
         <label>{t("editProfile.bio", "Bio")} :</label>
         <textarea name="bio" value={formData.bio} onChange={handleChange} />
 
-        <button type="submit">{t("editProfile.submit", "Save")}</button>
+        <button type="submit" disabled={status === "loading" || !hasChanges()}>
+          {t("editProfile.submit", "Save")}
+        </button>
       </form>
 
-      <button onClick={() => navigate("/profile")}>
+      {isModalOpen && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <h3>{t("editProfile.modalTitle", "Change Your Address")}</h3>
+            <input
+              type="text"
+              value={modalAddress}
+              onChange={(e) => setModalAddress(e.target.value)}
+              ref={autocompleteRef}
+              placeholder={t("editProfile.addressPlaceholder", "Enter your address")}
+              disabled={!isGoogleMapsLoaded}
+            />
+            <div className="modal-actions">
+              <button onClick={saveModalAddress} disabled={!modalAddress}>
+                {t("editProfile.modalSave", "Save")}
+              </button>
+              <button onClick={closeModal}>{t("editProfile.modalCancel", "Cancel")}</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <button onClick={() => navigate("/profile")} disabled={status === "loading"}>
         {t("editProfile.backToProfile", "Back to profile")}
       </button>
     </div>

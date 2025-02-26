@@ -4,7 +4,7 @@ import "./MemberCard.css";
 
 interface MemberCardProps {
   member: User;
-  onClick: () => void; // ✅ Ajout de la prop onClick
+  onClick: () => void;
 }
 
 const MemberCard: React.FC<MemberCardProps> = ({ member, onClick }) => {

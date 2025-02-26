@@ -36,10 +36,10 @@ public class User implements UserDetails {
     private String city;
     private String country;
 
-    // Nouveau champ `sex` avec options limitées
+    // Champ `sex` avec options limitées
     private String sex;
 
-    // Nouveau champ `slug` avec contrainte d'unicité
+    // Champ `slug` avec contrainte d'unicité
     @Indexed(unique = true)
     private String slug;
 
@@ -79,13 +79,17 @@ public class User implements UserDetails {
     // Référence vers le portfolio personnalisé de l'utilisateur
     private String portfolioId;
 
-    // Nouveaux champs pour la géolocalisation
+    // Champs pour la géolocalisation
     private Double latitude;
     private Double longitude;
 
     // Liste des IDs des contacts acceptés
     @Builder.Default
     private List<String> contactIds = new ArrayList<>();
+
+    // Liste des IDs des images associées à l'utilisateur
+    @Builder.Default
+    private List<String> imageIds = new ArrayList<>(); // Nouveau champ
 
     // Méthode pour récupérer toutes les IDs des sections du portfolio
     public List<String> getAllPortfolioIds() {

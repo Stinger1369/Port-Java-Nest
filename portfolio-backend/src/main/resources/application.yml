@@ -2,6 +2,8 @@ server:
   port: 8080
 
 spring:
+  main:
+    allow-bean-definition-overriding: true  # Ajout pour permettre le remplacement des beans
   data:
     mongodb:
       uri: mongodb://localhost:27017/portfolio
@@ -39,6 +41,7 @@ logging:
     org.springframework.web: DEBUG
     org.springframework: DEBUG
     com.Portbil.portfolio_backend: DEBUG
+    com.Portbil.portfolio_backend.config: DEBUG
 
 openweathermap:
   api-key: ${OPENWEATHERMAP_API_KEY}

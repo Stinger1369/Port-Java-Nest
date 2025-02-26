@@ -11,7 +11,9 @@ import portfolioReducer from "./features/portfolioSlice";
 import languageReducer from "./features/languageSlice";
 import recommendationReducer from "./features/recommendationSlice";
 import interestReducer from "./features/interestSlice";
-import contactReducer from "./features/contactSlice"; // Ajout du nouveau slice
+import contactReducer from "./features/contactSlice";
+import googleMapsReducer from "./features/googleMapsSlice"; // Nouveau slice
+import weatherReducer from "./features/weatherSlice"; // Nouveau slice
 
 export const store = configureStore({
   reducer: {
@@ -27,7 +29,9 @@ export const store = configureStore({
     language: languageReducer,
     recommendation: recommendationReducer,
     interest: interestReducer,
-    contact: contactReducer, // Ajout au store
+    contact: contactReducer,
+    googleMaps: googleMapsReducer, // Ajout au store
+    weather: weatherReducer, // Ajout au store
   },
 });
 

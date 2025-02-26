@@ -2,23 +2,6 @@ import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import axios from "axios";
 import { BASE_URL } from "../../config/hostname";
 
-// Interface pour les données météo
-interface WeatherData {
-  temperature: number;
-  description: string;
-  humidity: number;
-  city: string;
-  pressure: number;
-  windSpeed: number;
-  windDirection: number;
-  feelsLike: number;
-  visibility: number;
-  sunrise: number;
-  sunset: number;
-  uvIndex: number;
-}
-
-// Interface utilisateur
 interface User {
   id: string;
   email: string;
@@ -26,23 +9,17 @@ interface User {
   lastName?: string;
   phone?: string;
   address?: string;
-  city?: string;
-  country?: string;
   sex?: "Man" | "Woman" | "Other" | "";
   bio?: string;
-  latitude?: number;
-  longitude?: number;
   slug?: string;
 }
 
-// État initial Redux
 interface UserState {
   user: User | null;
   members: User[];
   status: "idle" | "loading" | "succeeded" | "failed";
   error: string | null;
   message: string | null;
-  weather: WeatherData | null;
 }
 
 const initialState: UserState = {
@@ -51,7 +28,6 @@ const initialState: UserState = {
   status: "idle",
   error: null,
   message: null,
-  weather: null,
 };
 
 // Récupérer l'utilisateur après connexion
@@ -113,6 +89,31 @@ export const fetchAllUsers = createAsyncThunk(
   }
 );
 
+// Récupérer un utilisateur spécifique par ID
+export const fetchUserById = createAsyncThunk(
+  "user/fetchUserById",
+  async (userId: string, { rejectWithValue }) => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        console.warn("❌ Aucun token trouvé dans localStorage");
+        return rejectWithValue("No token found");
+      }
+
+      console.log("🔹 Fetching user with ID:", userId);
+      const response = await axios.get(`${BASE_URL}/api/users/${userId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      console.log("✅ Utilisateur récupéré :", response.data);
+      return response.data;
+    } catch (error: any) {
+      console.error("❌ Fetch user by ID failed:", error.response?.data);
+      return rejectWithValue(error.response?.data?.error || "Failed to fetch user");
+    }
+  }
+);
+
 // Mettre à jour le profil utilisateur
 export const updateUser = createAsyncThunk(
   "user/updateUser",
@@ -132,9 +133,7 @@ export const updateUser = createAsyncThunk(
       const response = await axios.put(
         `${BASE_URL}/api/users/${userData.id}`,
         payload,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+        { headers: { Authorization: `Bearer ${token}` } }
       );
 
       console.log("✅ Update successful:", response.data);
@@ -143,32 +142,6 @@ export const updateUser = createAsyncThunk(
     } catch (error: any) {
       console.error("❌ Update failed:", error.response?.data);
       return rejectWithValue(error.response?.data?.error || "Failed to update user");
-    }
-  }
-);
-
-// Nouvelle action : Mettre à jour l'adresse utilisateur via Google Maps
-export const updateUserAddress = createAsyncThunk(
-  "user/updateUserAddress",
-  async (userId: string, { rejectWithValue }) => {
-    try {
-      const token = localStorage.getItem("token");
-      if (!token) throw new Error("No token found");
-
-      console.log("🔹 Updating address for user ID:", userId);
-      const response = await axios.put(
-        `${BASE_URL}/api/users/${userId}/address`,
-        {},
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-
-      console.log("✅ Address updated successfully:", response.data);
-      return response.data;
-    } catch (error: any) {
-      console.error("❌ Address update failed:", error.response?.data);
-      return rejectWithValue(error.response?.data?.error || "Failed to update address");
     }
   }
 );
@@ -192,58 +165,6 @@ export const deleteUser = createAsyncThunk(
   }
 );
 
-// Récupérer les données météo
-export const fetchWeather = createAsyncThunk(
-  "user/fetchWeather",
-  async (userId: string, { rejectWithValue }) => {
-    try {
-      const token = localStorage.getItem("token");
-      if (!token) throw new Error("No token found");
-
-      const response = await axios.get(`${BASE_URL}/api/users/${userId}/weather`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      console.log("✅ Données météo brutes reçues de l'API :", response.data);
-      console.log("🔹 Ville détectée :", response.data.city);
-      return response.data as WeatherData;
-    } catch (error: any) {
-      console.error("❌ Fetch weather failed:", error.response?.data);
-      return rejectWithValue(error.response?.data?.error || "Failed to fetch weather");
-    }
-  }
-);
-
-// Mettre à jour la géolocalisation
-export const updateGeolocation = createAsyncThunk(
-  "user/updateGeolocation",
-  async (
-    { userId, latitude, longitude }: { userId: string; latitude: number; longitude: number },
-    { rejectWithValue }
-  ) => {
-    try {
-      const token = localStorage.getItem("token");
-      if (!token) throw new Error("No token found");
-
-      const payload = { latitude, longitude };
-      const response = await axios.put(
-        `${BASE_URL}/api/users/${userId}`,
-        payload,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-
-      console.log("✅ Géolocalisation mise à jour :", response.data);
-      return { latitude, longitude };
-    } catch (error: any) {
-      console.error("❌ Update geolocation failed:", error.response?.data);
-      return rejectWithValue(error.response?.data?.error || "Failed to update geolocation");
-    }
-  }
-);
-
-// Création du User Slice
 const userSlice = createSlice({
   name: "user",
   initialState,
@@ -254,7 +175,6 @@ const userSlice = createSlice({
       state.status = "idle";
       state.error = null;
       state.message = null;
-      state.weather = null;
     },
   },
   extraReducers: (builder) => {
@@ -275,9 +195,32 @@ const userSlice = createSlice({
       })
       .addCase(fetchAllUsers.fulfilled, (state, action: PayloadAction<User[]>) => {
         state.status = "succeeded";
-        state.members = action.payload;
+        state.members = action.payload.map((user) => ({
+          ...user,
+          id: user.id || user._id.$oid, // Normalisation de l'ID MongoDB
+        }));
       })
       .addCase(fetchAllUsers.rejected, (state, action) => {
+        state.status = "failed";
+        state.error = action.payload as string;
+      })
+      .addCase(fetchUserById.pending, (state) => {
+        state.status = "loading";
+      })
+      .addCase(fetchUserById.fulfilled, (state, action: PayloadAction<User>) => {
+        state.status = "succeeded";
+        const index = state.members.findIndex((m) => m.id === action.payload.id);
+        const normalizedUser = {
+          ...action.payload,
+          id: action.payload.id || action.payload._id.$oid, // Normalisation de l'ID MongoDB
+        };
+        if (index !== -1) {
+          state.members[index] = normalizedUser;
+        } else {
+          state.members.push(normalizedUser);
+        }
+      })
+      .addCase(fetchUserById.rejected, (state, action) => {
         state.status = "failed";
         state.error = action.payload as string;
       })
@@ -293,60 +236,21 @@ const userSlice = createSlice({
         state.status = "failed";
         state.error = action.payload as string;
       })
-      .addCase(updateUserAddress.pending, (state) => {
-        state.status = "loading";
-      })
-      .addCase(updateUserAddress.fulfilled, (state, action: PayloadAction<User>) => {
-        state.status = "succeeded";
-        state.user = action.payload;
-        state.message = "Address updated successfully!";
-      })
-      .addCase(updateUserAddress.rejected, (state, action) => {
-        state.status = "failed";
-        state.error = action.payload as string;
-      })
       .addCase(deleteUser.pending, (state) => {
         state.status = "loading";
       })
       .addCase(deleteUser.fulfilled, (state) => {
         state.status = "succeeded";
         state.user = null;
-        state.weather = null;
         localStorage.removeItem("token");
         state.message = "User deleted successfully!";
       })
       .addCase(deleteUser.rejected, (state, action) => {
         state.status = "failed";
         state.error = action.payload as string;
-      })
-      .addCase(fetchWeather.pending, (state) => {
-        state.status = "loading";
-      })
-      .addCase(fetchWeather.fulfilled, (state, action: PayloadAction<WeatherData>) => {
-        state.status = "succeeded";
-        state.weather = action.payload;
-      })
-      .addCase(fetchWeather.rejected, (state, action) => {
-        state.status = "failed";
-        state.error = action.payload as string;
-      })
-      .addCase(updateGeolocation.pending, (state) => {
-        state.status = "loading";
-      })
-      .addCase(updateGeolocation.fulfilled, (state, action: PayloadAction<{ latitude: number; longitude: number }>) => {
-        state.status = "succeeded";
-        if (state.user) {
-          state.user.latitude = action.payload.latitude;
-          state.user.longitude = action.payload.longitude;
-        }
-      })
-      .addCase(updateGeolocation.rejected, (state, action) => {
-        state.status = "failed";
-        state.error = action.payload as string;
       });
   },
 });
 
-// Exports
 export const { clearUserState } = userSlice.actions;
 export default userSlice.reducer;

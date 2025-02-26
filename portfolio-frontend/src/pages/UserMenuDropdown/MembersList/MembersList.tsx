@@ -1,50 +1,44 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState, AppDispatch } from "../../../redux/store";
-import { fetchAllUsers } from "../../../redux/features/userSlice";
+import { fetchAllUsers, fetchUserById, User } from "../../../redux/features/userSlice";
+import { useNavigate } from "react-router-dom"; // Ajout pour navigation
 import MemberCard from "../../../components/MemberCard/MemberCard";
-import axios from "axios";
 import "./MembersList.css";
 
 const MembersList: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
-  const { members, status, error } = useSelector((state: RootState) => state.user);
+  const navigate = useNavigate(); // Ajouté pour redirection
+  const { user, members, status, error } = useSelector((state: RootState) => state.user);
   const [selectedMember, setSelectedMember] = useState<User | null>(null);
-  const [updateLoading, setUpdateLoading] = useState(false);
-  const [updateError, setUpdateError] = useState<string | null>(null);
 
   useEffect(() => {
     dispatch(fetchAllUsers());
   }, [dispatch]);
 
-  const openModal = (member: User) => setSelectedMember(member);
-  const closeModal = () => {
-    setSelectedMember(null);
-    setUpdateError(null);
+  const openModal = async (member: User) => {
+    setSelectedMember(member);
+    await dispatch(fetchUserById(member.id)); // Charger les données complètes
   };
 
-  const handleUpdateAddress = async (userId: string) => {
-    setUpdateLoading(true);
-    setUpdateError(null);
+  const closeModal = () => {
+    setSelectedMember(null);
+  };
 
-    try {
-      const token = localStorage.getItem("token");
-      const response = await axios.put(
-        `http://localhost:8080/api/users/${userId}/address`,
-        {},
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      setSelectedMember(response.data); // Met à jour le membre avec les nouvelles données
-      console.log("✅ Adresse mise à jour avec succès pour l'utilisateur ID:", userId);
-    } catch (err: any) {
-      setUpdateError(err.response?.data || "Erreur lors de la mise à jour de l'adresse");
-      console.error("❌ Erreur lors de la mise à jour de l'adresse:", err);
-    } finally {
-      setUpdateLoading(false);
-    }
+  const handleEditProfile = () => {
+    navigate("/edit-profile"); // Rediriger vers EditProfile
   };
 
   const formatValue = (value: string | number | undefined) => value || "Non renseigné";
+
+  const getUpdatedMember = () => {
+    if (!selectedMember) return null;
+    return members.find((m) => m.id === selectedMember.id) || selectedMember;
+  };
+
+  const displayedMember = getUpdatedMember();
+  const currentUserId = user?.id || localStorage.getItem("userId"); // ID de l'utilisateur connecté
+  const isCurrentUser = displayedMember && currentUserId === displayedMember.id;
 
   if (status === "loading") {
     return <p className="loading">⏳ Chargement des membres...</p>;
@@ -72,33 +66,28 @@ const MembersList: React.FC = () => {
         ))}
       </div>
 
-      {selectedMember && (
+      {displayedMember && (
         <div className="modal-overlay">
           <div className="modal-content">
             <h2>Détails du membre</h2>
-            <p><strong>ID :</strong> {formatValue(selectedMember.id)}</p>
-            <p><strong>Email :</strong> {formatValue(selectedMember.email)}</p>
-            <p><strong>Prénom :</strong> {formatValue(selectedMember.firstName)}</p>
-            <p><strong>Nom :</strong> {formatValue(selectedMember.lastName)}</p>
-            <p><strong>Téléphone :</strong> {formatValue(selectedMember.phone)}</p>
-            <p><strong>Adresse :</strong> {formatValue(selectedMember.address)}</p>
-            <p><strong>Ville :</strong> {formatValue(selectedMember.city)}</p>
-            <p><strong>Pays :</strong> {formatValue(selectedMember.country)}</p>
-            <p><strong>Sexe :</strong> {formatValue(selectedMember.sex)}</p>
-            <p><strong>Slug :</strong> {formatValue(selectedMember.slug)}</p>
-            <p><strong>Bio :</strong> {formatValue(selectedMember.bio)}</p>
-            <p><strong>Latitude :</strong> {formatValue(selectedMember.latitude)}</p>
-            <p><strong>Longitude :</strong> {formatValue(selectedMember.longitude)}</p>
+            <p><strong>ID :</strong> {formatValue(displayedMember.id)}</p>
+            <p><strong>Email :</strong> {formatValue(displayedMember.email)}</p>
+            <p><strong>Prénom :</strong> {formatValue(displayedMember.firstName)}</p>
+            <p><strong>Nom :</strong> {formatValue(displayedMember.lastName)}</p>
+            <p><strong>Téléphone :</strong> {formatValue(displayedMember.phone)}</p>
+            <p><strong>Adresse :</strong> {formatValue(displayedMember.address)}</p>
+            <p><strong>Sexe :</strong> {formatValue(displayedMember.sex)}</p>
+            <p><strong>Slug :</strong> {formatValue(displayedMember.slug)}</p>
+            <p><strong>Bio :</strong> {formatValue(displayedMember.bio)}</p>
+            <p><strong>Latitude :</strong> {formatValue(displayedMember.latitude)}</p>
+            <p><strong>Longitude :</strong> {formatValue(displayedMember.longitude)}</p>
 
-            {updateError && <p className="error-message">{updateError}</p>}
             <div className="modal-actions">
-              <button
-                className="update-address-button"
-                onClick={() => handleUpdateAddress(selectedMember.id)}
-                disabled={updateLoading || !selectedMember.latitude || !selectedMember.longitude}
-              >
-                {updateLoading ? "Mise à jour..." : "Mettre à jour l'adresse"}
-              </button>
+              {isCurrentUser && (
+                <button className="edit-profile-button" onClick={handleEditProfile}>
+                  <i className="fas fa-edit"></i> Edit Profile
+                </button>
+              )}
               <button className="close-button" onClick={closeModal}>
                 <i className="fas fa-times"></i> Fermer
               </button>

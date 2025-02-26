@@ -1,7 +1,8 @@
-import React, { useEffect, forwardRef } from "react";
+import React, { useState, useEffect, forwardRef } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState, AppDispatch } from "../../redux/store";
-import { fetchWeather, updateGeolocation } from "../../redux/features/userSlice";
+import { fetchWeather } from "../../redux/features/weatherSlice";
+import { updateGeolocation } from "../../redux/features/googleMapsSlice";
 import { useTranslation } from "react-i18next";
 import "./WeatherComponent.css";
 
@@ -14,66 +15,100 @@ interface WeatherComponentProps {
 const WeatherComponent = forwardRef<HTMLDivElement, WeatherComponentProps>((props, ref) => {
   const { t, i18n } = useTranslation();
   const dispatch = useDispatch<AppDispatch>();
-  const { user, weather, status, error } = useSelector((state: RootState) => state.user);
+  const user = useSelector((state: RootState) => state.user.user);
+  const { weather, status, error } = useSelector((state: RootState) => state.weather);
+  const { latitude, longitude } = useSelector((state: RootState) => state.googleMaps);
   const token = useSelector((state: RootState) => state.auth.token);
   const isRTL = i18n.language === "ar";
+  const [geoError, setGeoError] = useState<string | null>(null);
+  const [isGeoLoading, setIsGeoLoading] = useState(false);
 
   useEffect(() => {
     if (!token || !user?.id) return;
 
     let watchId: number | undefined;
 
-    if (navigator.geolocation) {
-      watchId = navigator.geolocation.watchPosition(
-        (position) => {
-          const { latitude, longitude } = position.coords;
-          if (user.latitude !== latitude || user.longitude !== longitude) {
-            dispatch(updateGeolocation({ userId: user.id, latitude, longitude })).then(() => {
+    const fetchGeoAndWeather = () => {
+      if (navigator.geolocation) {
+        watchId = navigator.geolocation.watchPosition(
+          (position) => {
+            const { latitude: newLatitude, longitude: newLongitude } = position.coords;
+            if (latitude !== newLatitude || longitude !== newLongitude) {
+              dispatch(updateGeolocation({ userId: user.id, latitude: newLatitude, longitude: newLongitude })).then(() => {
+                dispatch(fetchWeather(user.id));
+              });
+            } else if (!weather) {
               dispatch(fetchWeather(user.id));
-            });
+            }
+          },
+          (err) => {
+            setGeoError(t("weather.geoError", { message: err.message }));
+            console.error("Erreur de géolocalisation automatique:", err.message);
+            if (!weather) {
+              dispatch(fetchWeather(user.id));
+            }
+          },
+          {
+            enableHighAccuracy: true,
+            timeout: 15000,
+            maximumAge: 60000,
           }
-        },
-        (err) => {
-          console.error("Erreur de géolocalisation automatique:", err.message);
-          // Si la géolocalisation échoue, fetchWeather gère les coordonnées via le backend
+        );
+      } else {
+        setGeoError(t("weather.geoNotSupported", "Geolocation is not supported by this browser."));
+        if (!weather) {
           dispatch(fetchWeather(user.id));
-        },
-        {
-          enableHighAccuracy: true,
-          timeout: 10000,
-          maximumAge: 0,
         }
-      );
-    } else {
-      // Si la géolocalisation navigateur n'est pas disponible, utiliser fetchWeather
-      dispatch(fetchWeather(user.id));
-    }
+      }
+    };
 
-    // Charger la météo directement si pas encore chargée
-    if (!weather) {
-      dispatch(fetchWeather(user.id));
-    }
+    fetchGeoAndWeather();
 
     return () => {
       if (watchId !== undefined) {
         navigator.geolocation.clearWatch(watchId);
       }
     };
-  }, [dispatch, user?.id, token, user?.latitude, user?.longitude, weather]);
+  }, [dispatch, user?.id, token, latitude, longitude, weather, t]);
 
   const handleManualUpdateGeolocation = () => {
-    if (!navigator.geolocation || !user?.id) return;
+    if (!navigator.geolocation || !user?.id) {
+      setGeoError(t("weather.geoNotSupported", "Geolocation is not supported by this browser."));
+      if (!weather) {
+        dispatch(fetchWeather(user.id));
+      }
+      return;
+    }
+
+    setIsGeoLoading(true);
+    setGeoError(null);
 
     navigator.geolocation.getCurrentPosition(
       (position) => {
-        const { latitude, longitude } = position.coords;
-        dispatch(updateGeolocation({ userId: user.id, latitude, longitude })).then(() => {
-          dispatch(fetchWeather(user.id));
-        });
+        const { latitude: newLatitude, longitude: newLongitude } = position.coords;
+        dispatch(updateGeolocation({ userId: user.id, latitude: newLatitude, longitude: newLongitude }))
+          .unwrap()
+          .then(() => {
+            dispatch(fetchWeather(user.id));
+          })
+          .catch((err) => {
+            setGeoError(t("weather.geoErrorManual", { message: err }));
+            dispatch(fetchWeather(user.id));
+          })
+          .finally(() => {
+            setIsGeoLoading(false);
+          });
       },
       (err) => {
+        setGeoError(t("weather.geoErrorManual", { message: err.message }));
         console.error("Erreur de géolocalisation manuelle:", err.message);
-        dispatch(fetchWeather(user.id)); // Fallback sur le backend
+        dispatch(fetchWeather(user.id));
+        setIsGeoLoading(false);
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 20000,
+        maximumAge: 0,
       }
     );
   };
@@ -105,12 +140,16 @@ const WeatherComponent = forwardRef<HTMLDivElement, WeatherComponentProps>((prop
             <button
               className="refresh-btn"
               onClick={handleManualUpdateGeolocation}
-              disabled={status === "loading"}
+              disabled={status === "loading" || isGeoLoading}
             >
-              <i className="fas fa-sync-alt"></i> {t("weather.refresh")}
+              <i className={`fas fa-sync-alt ${isGeoLoading ? "fa-spin" : ""}`}></i>{" "}
+              {isGeoLoading ? t("weather.refreshing") : t("weather.refresh")}
             </button>
           </div>
-          {weather ? (
+          {status === "loading" && !geoError && <p>{t("weather.loading")}</p>}
+          {error || geoError ? (
+            <p className="error">{error || geoError}</p>
+          ) : weather ? (
             <ul className="weather-details">
               <div className="weather-section">
                 <h4>{t("weather.currentConditions")}</h4>

@@ -38,6 +38,8 @@ portfolio-frontend/
 │   │       └── WeatherComponent.tsx
 │   ├── config/
 │   │   └── hostname.ts
+│   ├── hooks/
+│   │   └── useGoogleMaps.ts
 │   ├── i18n.ts
 │   ├── index.css
 │   ├── main.tsx
@@ -143,6 +145,7 @@ portfolio-frontend/
 │   │   │   ├── contactSlice.ts
 │   │   │   ├── educationSlice.ts
 │   │   │   ├── experienceSlice.ts
+│   │   │   ├── googleMapsSlice.ts
 │   │   │   ├── interestSlice.ts
 │   │   │   ├── languageSlice.ts
 │   │   │   ├── portfolioSlice.ts
@@ -150,7 +153,8 @@ portfolio-frontend/
 │   │   │   ├── recommendationSlice.ts
 │   │   │   ├── skillSlice.ts
 │   │   │   ├── socialLinkSlice.ts
-│   │   │   └── userSlice.ts
+│   │   │   ├── userSlice.ts
+│   │   │   └── weatherSlice.ts
 │   │   └── store.ts
 │   └── vite-env.d.ts
 ├── tree.js

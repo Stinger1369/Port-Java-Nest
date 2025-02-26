@@ -17,12 +17,16 @@
 │   │   │       └── Portbil/
 │   │   │           └── portfolio_backend/
 │   │   │               ├── config/
+│   │   │               │   ├── AppConfig.java
+│   │   │               │   └── RequestLoggingInterceptor.java
 │   │   │               ├── controller/
 │   │   │               │   ├── AuthController.java
 │   │   │               │   ├── CertificationController.java
 │   │   │               │   ├── ContactController.java
 │   │   │               │   ├── EducationController.java
 │   │   │               │   ├── ExperienceController.java
+│   │   │               │   ├── GoogleMapsController.java
+│   │   │               │   ├── ImageController.java
 │   │   │               │   ├── InterestController.java
 │   │   │               │   ├── LanguageController.java
 │   │   │               │   ├── PortfolioController.java
@@ -31,13 +35,15 @@
 │   │   │               │   ├── SkillController.java
 │   │   │               │   ├── SocialLinkController.java
 │   │   │               │   ├── TranslationController.java
-│   │   │               │   └── UserController.java
+│   │   │               │   ├── UserController.java
+│   │   │               │   └── WeatherController.java
 │   │   │               ├── dto/
 │   │   │               │   ├── CertificationDTO.java
 │   │   │               │   ├── ContactDTO.java
 │   │   │               │   ├── ContactRequestDTO.java
 │   │   │               │   ├── EducationDTO.java
 │   │   │               │   ├── ExperienceDTO.java
+│   │   │               │   ├── ImageDTO.java
 │   │   │               │   ├── InterestDTO.java
 │   │   │               │   ├── LanguageDTO.java
 │   │   │               │   ├── PortfolioDTO.java
@@ -52,6 +58,7 @@
 │   │   │               │   ├── Contact.java
 │   │   │               │   ├── Education.java
 │   │   │               │   ├── Experience.java
+│   │   │               │   ├── Image.java
 │   │   │               │   ├── Interest.java
 │   │   │               │   ├── Language.java
 │   │   │               │   ├── Portfolio.java
@@ -63,12 +70,16 @@
 │   │   │               │   ├── SocialLink.java
 │   │   │               │   └── User.java
 │   │   │               ├── exception/
-│   │   │               │   └── GlobalExceptionHandler.java
+│   │   │               │   ├── GlobalExceptionHandler.java
+│   │   │               │   └── GoApiException.java
+│   │   │               ├── model/
+│   │   │               │   └── ErrorResponse.java
 │   │   │               ├── repository/
 │   │   │               │   ├── CertificationRepository.java
 │   │   │               │   ├── ContactRepository.java
 │   │   │               │   ├── EducationRepository.java
 │   │   │               │   ├── ExperienceRepository.java
+│   │   │               │   ├── ImageRepository.java
 │   │   │               │   ├── InterestRepository.java
 │   │   │               │   ├── LanguageRepository.java
 │   │   │               │   ├── PortfolioRepository.java
@@ -87,7 +98,10 @@
 │   │   │               │   ├── ContactService.java
 │   │   │               │   ├── EducationService.java
 │   │   │               │   ├── EmailService.java
+│   │   │               │   ├── EmailTemplateService.java
 │   │   │               │   ├── ExperienceService.java
+│   │   │               │   ├── GoogleMapsService.java
+│   │   │               │   ├── ImageService.java
 │   │   │               │   ├── InterestService.java
 │   │   │               │   ├── LanguageService.java
 │   │   │               │   ├── PortfolioService.java
@@ -105,6 +119,8 @@
 │   │       │   ├── es.json
 │   │       │   ├── fr.json
 │   │       │   └── zh.json
+│   │       ├── templates/
+│   │       │   └── contact-request-email.html
 │   │       └── application.yml
 │   └── test/
 │       └── java/
@@ -118,12 +134,18 @@
 │   │   │   └── Portbil/
 │   │   │       └── portfolio_backend/
 │   │   │           ├── config/
+│   │   │           │   ├── AppConfig.class
+│   │   │           │   ├── RequestLoggingInterceptor.class
+│   │   │           │   ├── RequestLoggingInterceptor$CachedBodyHttpServletRequest.class
+│   │   │           │   └── RequestLoggingInterceptor$CachedBodyHttpServletRequest$CachedServletInputStream.class
 │   │   │           ├── controller/
 │   │   │           │   ├── AuthController.class
 │   │   │           │   ├── CertificationController.class
 │   │   │           │   ├── ContactController.class
 │   │   │           │   ├── EducationController.class
 │   │   │           │   ├── ExperienceController.class
+│   │   │           │   ├── GoogleMapsController.class
+│   │   │           │   ├── ImageController.class
 │   │   │           │   ├── InterestController.class
 │   │   │           │   ├── LanguageController.class
 │   │   │           │   ├── PortfolioController.class
@@ -132,7 +154,8 @@
 │   │   │           │   ├── SkillController.class
 │   │   │           │   ├── SocialLinkController.class
 │   │   │           │   ├── TranslationController.class
-│   │   │           │   └── UserController.class
+│   │   │           │   ├── UserController.class
+│   │   │           │   └── WeatherController.class
 │   │   │           ├── dto/
 │   │   │           │   ├── CertificationDTO.class
 │   │   │           │   ├── CertificationDTO$CertificationDTOBuilder.class
@@ -141,6 +164,8 @@
 │   │   │           │   ├── ContactRequestDTO.class
 │   │   │           │   ├── EducationDTO.class
 │   │   │           │   ├── ExperienceDTO.class
+│   │   │           │   ├── ImageDTO.class
+│   │   │           │   ├── ImageDTO$ImageDTOBuilder.class
 │   │   │           │   ├── InterestDTO.class
 │   │   │           │   ├── InterestDTO$InterestDTOBuilder.class
 │   │   │           │   ├── LanguageDTO.class
@@ -166,6 +191,8 @@
 │   │   │           │   ├── Education$EducationBuilder.class
 │   │   │           │   ├── Experience.class
 │   │   │           │   ├── Experience$ExperienceBuilder.class
+│   │   │           │   ├── Image.class
+│   │   │           │   ├── Image$ImageBuilder.class
 │   │   │           │   ├── Interest.class
 │   │   │           │   ├── Interest$InterestBuilder.class
 │   │   │           │   ├── Language.class
@@ -186,12 +213,16 @@
 │   │   │           │   ├── User.class
 │   │   │           │   └── User$UserBuilder.class
 │   │   │           ├── exception/
-│   │   │           │   └── GlobalExceptionHandler.class
+│   │   │           │   ├── GlobalExceptionHandler.class
+│   │   │           │   └── GoApiException.class
+│   │   │           ├── model/
+│   │   │           │   └── ErrorResponse.class
 │   │   │           ├── repository/
 │   │   │           │   ├── CertificationRepository.class
 │   │   │           │   ├── ContactRepository.class
 │   │   │           │   ├── EducationRepository.class
 │   │   │           │   ├── ExperienceRepository.class
+│   │   │           │   ├── ImageRepository.class
 │   │   │           │   ├── InterestRepository.class
 │   │   │           │   ├── LanguageRepository.class
 │   │   │           │   ├── PortfolioRepository.class
@@ -210,7 +241,10 @@
 │   │   │           │   ├── ContactService.class
 │   │   │           │   ├── EducationService.class
 │   │   │           │   ├── EmailService.class
+│   │   │           │   ├── EmailTemplateService.class
 │   │   │           │   ├── ExperienceService.class
+│   │   │           │   ├── GoogleMapsService.class
+│   │   │           │   ├── ImageService.class
 │   │   │           │   ├── InterestService.class
 │   │   │           │   ├── LanguageService.class
 │   │   │           │   ├── PortfolioService.class
@@ -232,16 +266,15 @@
 │   │   │   ├── es.json
 │   │   │   ├── fr.json
 │   │   │   └── zh.json
+│   │   ├── templates/
+│   │   │   └── contact-request-email.html
 │   │   └── application.yml
 │   ├── generated-sources/
 │   │   └── annotations/
 │   ├── generated-test-sources/
 │   │   └── test-annotations/
 │   └── test-classes/
-│       └── com/
-│           └── Portbil/
-│               └── portfolio_backend/
-│                   └── PortfolioBackendApplicationTests.class
+├── .env
 ├── .gitattributes
 ├── .gitignore
 ├── HELP.md
