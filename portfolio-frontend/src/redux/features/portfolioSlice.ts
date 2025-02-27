@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import axios from "axios";
+import { BASE_URL } from "../../config/hostname"; // Import de la configuration de l'URL
 
 // ✅ Définir des interfaces spécifiques pour chaque section du portfolio
 interface Education {
@@ -93,8 +94,8 @@ export const fetchPortfolioByUser = createAsyncThunk(
       if (!token) return rejectWithValue("Token non trouvé, veuillez vous reconnecter.");
 
       const response = await axios.get<Portfolio>(
-        `http://localhost:8080/api/portfolio/user/${userId}`,
-        { headers: { Authorization: `Bearer ${token}` } }
+        `${BASE_URL}/api/portfolio/user/${userId}`,
+        { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } }
       );
 
       return response.data;
@@ -117,7 +118,8 @@ export const fetchPortfolioByUsername = createAsyncThunk(
   ) => {
     try {
       const response = await axios.get<Portfolio>(
-        `http://localhost:8080/api/portfolio/public/${firstName}/${lastName}/${slug}`
+        `${BASE_URL}/api/portfolio/public/${firstName}/${lastName}/${slug}`,
+        { headers: { 'Content-Type': 'application/json' } }
       );
 
       return response.data;
@@ -134,15 +136,15 @@ export const fetchPortfolioByUsername = createAsyncThunk(
 // ✅ Mettre à jour le portfolio
 export const updatePortfolio = createAsyncThunk(
   "portfolio/update",
-  async (userId: string, { rejectWithValue }) => {
+  async (portfolioData: Partial<Portfolio> & { userId: string }, { rejectWithValue }) => {
     try {
       const token = getAuthToken();
       if (!token) return rejectWithValue("Token non trouvé, veuillez vous reconnecter.");
 
       const response = await axios.post<Portfolio>(
-        `http://localhost:8080/api/portfolio/user/${userId}/update`,
-        {},
-        { headers: { Authorization: `Bearer ${token}` } }
+        `${BASE_URL}/api/portfolio/user/${portfolioData.userId}/update`,
+        portfolioData,
+        { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } }
       );
       return response.data;
     } catch (error: any) {

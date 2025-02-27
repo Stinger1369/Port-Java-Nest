@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import axios from "axios";
+import { BASE_URL } from "../../config/hostname"; // Import de la configuration de l'URL
 import { fetchUser } from "./userSlice"; // Import pour récupérer l'utilisateur après connexion
 
 // Définition du type pour l'état de l'authentification
@@ -23,14 +24,14 @@ const initialState: AuthState = {
 // ✅ **Connexion utilisateur**
 export const login = createAsyncThunk(
   "auth/login",
-  async ({ email, password }, { rejectWithValue, dispatch }) => {
+  async ({ email, password }: { email: string; password: string }, { rejectWithValue, dispatch }) => {
     try {
-      const response = await axios.post("http://localhost:8080/api/auth/login", {
+      const response = await axios.post(`${BASE_URL}/api/auth/login`, {
         email,
         password,
+      }, {
+        headers: { 'Content-Type': 'application/json' }
       });
-
-      console.log("📥 Réponse brute du serveur :", response.data);
 
       const { token, userId } = response.data;
 
@@ -38,34 +39,37 @@ export const login = createAsyncThunk(
         throw new Error("Login response is missing token or userId");
       }
 
-      // Plus besoin de vérifier `verified` ici, le backend s'en charge
       console.log("✅ Connexion réussie :", { token, userId });
 
+      // Stockage dans le localStorage
       localStorage.setItem("token", token);
       localStorage.setItem("userId", userId);
+
+      // Récupérer les données de l'utilisateur après connexion
       dispatch(fetchUser());
 
       return { token, userId };
-    } catch (error) {
-      console.error("❌ Login failed:", error.response?.data || error.message);
-      return rejectWithValue(error.response?.data?.error || "Login failed");
+    } catch (error: any) {
+      console.error("❌ Login failed:", error.response?.data?.error || error.message);
+      return rejectWithValue(error.response?.data?.error || "Échec de la connexion");
     }
   }
 );
 
-
 // ✅ **Inscription utilisateur**
 export const register = createAsyncThunk(
   "auth/register",
-  async ({ email, password }: { email: string; password: string }, thunkAPI) => {
+  async ({ email, password }: { email: string; password: string }, { rejectWithValue }) => {
     try {
-      const response = await axios.post("http://localhost:8080/api/auth/register", {
+      const response = await axios.post(`${BASE_URL}/api/auth/register`, {
         email,
         password,
+      }, {
+        headers: { 'Content-Type': 'application/json' }
       });
       return response.data;
     } catch (error: any) {
-      return thunkAPI.rejectWithValue(error.response?.data?.error || "Registration failed");
+      return rejectWithValue(error.response?.data?.error || "Échec de l'inscription");
     }
   }
 );
@@ -75,13 +79,15 @@ export const verifyEmail = createAsyncThunk(
   "auth/verifyEmail",
   async ({ email, code }: { email: string; code: string }, { rejectWithValue }) => {
     try {
-      const response = await axios.post("http://localhost:8080/api/auth/verify", { email, code });
+      const response = await axios.post(`${BASE_URL}/api/auth/verify`, { email, code }, {
+        headers: { 'Content-Type': 'application/json' }
+      });
 
       console.log("✅ Vérification réussie :", response.data);
       return response.data;
     } catch (error: any) {
-      console.error("❌ Échec de la vérification :", error.response?.data || error.message);
-      return rejectWithValue(error.response?.data?.error || "Échec de la vérification.");
+      console.error("❌ Échec de la vérification :", error.response?.data?.error || error.message);
+      return rejectWithValue(error.response?.data?.error || "Échec de la vérification");
     }
   }
 );
@@ -89,56 +95,48 @@ export const verifyEmail = createAsyncThunk(
 // ✅ **Demande de réinitialisation du mot de passe**
 export const forgotPassword = createAsyncThunk(
   "auth/forgotPassword",
-  async ({ email }: { email: string }, thunkAPI) => {
+  async ({ email }: { email: string }, { rejectWithValue }) => {
     try {
-      const response = await axios.post("http://localhost:8080/api/auth/forgot-password", {
-        email,
+      const response = await axios.post(`${BASE_URL}/api/auth/forgot-password`, { email }, {
+        headers: { 'Content-Type': 'application/json' }
       });
       return response.data;
     } catch (error: any) {
-      return thunkAPI.rejectWithValue(error.response?.data?.error || "Password reset request failed");
+      return rejectWithValue(error.response?.data?.error || "Échec de la demande de réinitialisation");
     }
   }
 );
 
-// ✅ **Réinitialisation du mot de passe avec vérification des anciens mots de passe**
+// ✅ **Réinitialisation du mot de passe**
 export const resetPassword = createAsyncThunk(
   "auth/resetPassword",
-  async ({ token, newPassword }: { token: string; newPassword: string }, thunkAPI) => {
+  async ({ token, newPassword }: { token: string; newPassword: string }, { rejectWithValue }) => {
     try {
-      const response = await axios.post("http://localhost:8080/api/auth/reset-password", {
+      const response = await axios.post(`${BASE_URL}/api/auth/reset-password`, {
         token,
         newPassword,
+      }, {
+        headers: { 'Content-Type': 'application/json' }
       });
 
       return response.data;
     } catch (error: any) {
-      const errorMessage = error.response?.data?.error || "Password reset failed";
-
-      // Vérification si le message d'erreur concerne un ancien mot de passe déjà utilisé
+      const errorMessage = error.response?.data?.error || "Échec de la réinitialisation du mot de passe";
       if (errorMessage.includes("Ce mot de passe a déjà été utilisé")) {
-        return thunkAPI.rejectWithValue("⚠️ Ce mot de passe a déjà été utilisé. Veuillez en choisir un autre.");
+        return rejectWithValue("⚠️ Ce mot de passe a déjà été utilisé. Veuillez en choisir un autre.");
       }
-
-      return thunkAPI.rejectWithValue(errorMessage);
+      return rejectWithValue(errorMessage);
     }
   }
 );
 
 // ✅ **Déconnexion utilisateur**
 export const logout = createAsyncThunk("auth/logout", async (_, { dispatch }) => {
-  console.log("🚪 Déconnexion...");
   localStorage.removeItem("token");
   localStorage.removeItem("userId");
   dispatch(clearAuthState());
+  return { message: "Déconnexion réussie" };
 });
-
-// ✅ **Déconnexion automatique après une période d'inactivité**
-const setAutoLogout = (dispatch: any, delay: number) => {
-  setTimeout(() => {
-    dispatch(logout());
-  }, delay);
-};
 
 // ✅ **Création du slice Redux**
 const authSlice = createSlice({
@@ -146,20 +144,13 @@ const authSlice = createSlice({
   initialState,
   reducers: {
     clearAuthState: (state) => {
-      console.log("🧹 Nettoyage de l'état utilisateur");
       state.userId = null;
       state.token = null;
-      state.message = null;
+      state.loading = false;
       state.error = null;
+      state.message = null;
       localStorage.removeItem("token");
       localStorage.removeItem("userId");
-    },
-    loginSuccess: (state, action: PayloadAction<{ token: string; userId: string }>) => {
-      console.log("🔄 Stockage réussi :", action.payload);
-      state.token = action.payload.token;
-      state.userId = action.payload.userId;
-      localStorage.setItem("token", action.payload.token);
-      localStorage.setItem("userId", action.payload.userId);
     },
   },
   extraReducers: (builder) => {
@@ -169,19 +160,16 @@ const authSlice = createSlice({
         state.error = null;
         state.message = null;
       })
-      .addCase(login.fulfilled, (state, action) => {
-        console.log("✅ Connexion Redux réussie :", action.payload);
+      .addCase(login.fulfilled, (state, action: PayloadAction<{ token: string; userId: string }>) => {
         state.loading = false;
         state.token = action.payload.token;
         state.userId = action.payload.userId;
-        state.message = "Login successful!";
+        state.message = "Connexion réussie !";
       })
       .addCase(login.rejected, (state, action) => {
-        console.error("❌ Connexion échouée :", action.payload);
         state.loading = false;
         state.error = action.payload as string;
       })
-
       .addCase(register.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -189,13 +177,12 @@ const authSlice = createSlice({
       })
       .addCase(register.fulfilled, (state) => {
         state.loading = false;
-        state.message = "Registration successful! Please verify your email.";
+        state.message = "Inscription réussie ! Vérifiez votre email pour activer votre compte.";
       })
       .addCase(register.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
       })
-
       .addCase(verifyEmail.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -203,13 +190,25 @@ const authSlice = createSlice({
       })
       .addCase(verifyEmail.fulfilled, (state) => {
         state.loading = false;
-        state.message = "Account verified successfully!";
+        state.message = "Email vérifié avec succès !";
       })
       .addCase(verifyEmail.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
       })
-
+      .addCase(forgotPassword.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+        state.message = null;
+      })
+      .addCase(forgotPassword.fulfilled, (state) => {
+        state.loading = false;
+        state.message = "Un email de réinitialisation a été envoyé.";
+      })
+      .addCase(forgotPassword.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
       .addCase(resetPassword.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -217,22 +216,21 @@ const authSlice = createSlice({
       })
       .addCase(resetPassword.fulfilled, (state) => {
         state.loading = false;
-        state.message = "Password reset successful! Please log in again.";
+        state.message = "Mot de passe réinitialisé avec succès !";
       })
       .addCase(resetPassword.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
       })
-
       .addCase(logout.fulfilled, (state) => {
-        console.log("✅ Déconnexion réussie");
+        state.loading = false;
         state.token = null;
         state.userId = null;
-        state.message = "Logged out successfully!";
+        state.message = "Déconnexion réussie !";
       });
   },
 });
 
 // ✅ **Exports**
-export const { clearAuthState, loginSuccess } = authSlice.actions;
+export const { clearAuthState } = authSlice.actions;
 export default authSlice.reducer;

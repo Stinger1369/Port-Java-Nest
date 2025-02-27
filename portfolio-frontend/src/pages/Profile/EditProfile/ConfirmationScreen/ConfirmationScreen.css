@@ -1,0 +1,178 @@
+/* Variables globales pour cohérence */
+:root {
+  --primary-color: #5e43ff; /* Violet profond */
+  --secondary-color: #00e7ff; /* Cyan lumineux */
+  --background-color: #eef2f7; /* Fond gris clair */
+  --text-color: #0f172a; /* Bleu-noir */
+  --button-bg: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+  --button-hover: linear-gradient(135deg, #4835d4, #00b8d4);
+  --gray-button-bg: linear-gradient(135deg, #6b7280, #4b5563); /* Gris pour Previous */
+  --gray-button-hover: linear-gradient(135deg, #4b5563, #374151);
+  --shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+  --border-radius: 12px;
+  --transition: all 0.3s ease;
+}
+
+/* Conteneur principal */
+.confirmation-screen {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 2rem;
+  background: var(--background-color);
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow);
+  animation: fadeIn 0.5s ease-out;
+}
+
+/* Titre */
+.confirmation-screen h3 {
+  font-size: 1.75rem;
+  font-weight: 600;
+  color: var(--text-color);
+  margin-bottom: 1.5rem;
+  text-align: center;
+  background: var(--button-bg);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Liste de confirmation */
+.confirmation-screen ul {
+  list-style: none;
+  padding: 0;
+  margin-bottom: 2rem;
+}
+
+.confirmation-screen li {
+  display: flex;
+  align-items: center;
+  padding: 1rem;
+  margin-bottom: 0.75rem;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: var(--border-radius);
+  font-size: 1rem;
+  color: var(--text-color);
+  box-shadow: var(--shadow);
+  transition: var(--transition);
+}
+
+.confirmation-screen li:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+}
+
+.confirmation-screen li .label-icon {
+  font-size: 1.2rem;
+  color: var(--primary-color);
+  margin-right: 0.75rem;
+  transition: var(--transition);
+}
+
+.confirmation-screen li:hover .label-icon {
+  color: var(--secondary-color);
+}
+
+.confirmation-screen li span.label {
+  flex: 1;
+  font-weight: 500;
+  color: var(--text-color);
+}
+
+.confirmation-screen li span.value {
+  flex: 2;
+  color: var(--text-color);
+  font-weight: 400;
+  word-break: break-word;
+}
+
+/* Bouton de sauvegarde */
+.confirmation-screen button {
+  display: block;
+  width: 100%;
+  padding: 0.85rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: white;
+  background: var(--button-bg);
+  border: none;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  transition: var(--transition);
+  box-shadow: var(--shadow);
+}
+
+.confirmation-screen button:hover {
+  background: var(--button-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+}
+
+.confirmation-screen button:active {
+  transform: translateY(0);
+  box-shadow: var(--shadow);
+}
+
+/* Animation */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .confirmation-screen {
+    padding: 1.5rem;
+    margin: 1rem;
+  }
+
+  .confirmation-screen h3 {
+    font-size: 1.5rem;
+  }
+
+  .confirmation-screen li {
+    font-size: 0.95rem;
+    padding: 0.75rem;
+  }
+
+  .confirmation-screen button {
+    padding: 0.7rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .confirmation-screen {
+    padding: 1rem;
+  }
+
+  .confirmation-screen h3 {
+    font-size: 1.25rem;
+  }
+
+  .confirmation-screen li {
+    flex-direction: column;
+    text-align: left;
+    padding: 0.6rem;
+  }
+
+  .confirmation-screen li .label-icon {
+    margin-right: 0;
+    margin-bottom: 0.25rem;
+  }
+
+  .confirmation-screen li span.label,
+  .confirmation-screen li span.value {
+    flex: none;
+    width: 100%;
+  }
+
+  .confirmation-screen button {
+    font-size: 0.9rem;
+  }
+}

@@ -1,0 +1,56 @@
+version: '3.8'
+
+services:
+  # Frontend (React/Vite)
+  frontend:
+    build:
+      context: ./portfolio-frontend
+      dockerfile: Dockerfile
+    ports:
+      - "5173:80" # Mapper le port 80 du conteneur au port 5173 de l'hôte
+    volumes:
+      - ./portfolio-frontend:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=production
+
+  # Backend Spring Boot
+  backend:
+    build:
+      context: ./portfolio-backend
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080" # Mapper le port 8080 du conteneur au port 8080 de l'hôte
+    environment:
+      - SPRING_MAIL_USERNAME=${SPRING_MAIL_USERNAME}
+      - SPRING_MAIL_PASSWORD=${SPRING_MAIL_PASSWORD}
+      - JWT_SECRET=${JWT_SECRET}
+      - GOOGLE_MAPS_API_KEY=${GOOGLE_MAPS_API_KEY}
+      - OPENWEATHERMAP_API_KEY=${OPENWEATHERMAP_API_KEY}
+      - APP_DEVELOPER_ID=${APP_DEVELOPER_ID}
+    depends_on:
+      - mongodb
+    volumes:
+      - ./portfolio-backend:/app
+
+  # Serveur d'images Go
+  image-server:
+    build:
+      context: ./image-server
+      dockerfile: Dockerfile
+    ports:
+      - "7000:7000" # Mapper le port 7000 du conteneur au port 7000 de l'hôte
+    volumes:
+      - ./image-server/public:/app/public
+      - ./image-server/models:/app/models
+
+  # MongoDB pour le backend
+  mongodb:
+    image: mongo:latest
+    ports:
+      - "27017:27017" # Mapper le port 27017 du conteneur au port 27017 de l'hôte
+    volumes:
+      - mongodb_data:/data/db
+
+volumes:
+  mongodb_data:

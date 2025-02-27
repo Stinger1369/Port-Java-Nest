@@ -1,10 +1,11 @@
+// portfolio-frontend/src/pages/Profile/EditProfile/EditProfile.tsx
 import { useState, useEffect, useRef, useCallback, Suspense } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState, AppDispatch } from "../../../redux/store";
 import { useNavigate } from "react-router-dom";
 import { fetchUser, updateUser } from "../../../redux/features/userSlice";
 import { updateUserAddress, updateGeolocation } from "../../../redux/features/googleMapsSlice";
-import { uploadImage, getAllImagesByUserId, deleteImage } from "../../../redux/features/imageSlice"; // Importer getAllImagesByUserId et deleteImage
+import { uploadImage, getAllImagesByUserId, deleteImage } from "../../../redux/features/imageSlice";
 import { useTranslation } from "react-i18next";
 import PhoneInputComponent from "../../../components/PhoneInput/PhoneInputComponent";
 import { useGoogleMaps } from "../../../hooks/useGoogleMaps";
@@ -15,7 +16,7 @@ interface Image {
   userId: string;
   name: string;
   path: string;
-  isNSFW: boolean; // Correspond au backend Go et DTO
+  isNSFW: boolean;
   uploadedAt: string | null;
 }
 
@@ -68,47 +69,58 @@ const EditProfile = () => {
     sex: "",
     bio: "",
   });
-useEffect(() => {
-  if (user) {
-    const normalizedPhone = user.phone && !user.phone.startsWith("+") ? `+${user.phone}` : user.phone || "";
-    const initialData = {
-      firstName: user.firstName || "",
-      lastName: user.lastName || "",
-      phone: normalizedPhone,
-      address: address || user.address || "",
-      city: city || user.city || "",
-      country: country || user.country || "",
-      sex: user.sex || "",
-      bio: user.bio || "",
-      latitude: latitude || user.latitude || 0,
-      longitude: longitude || user.longitude || 0,
-    };
-    setInitialFormData(initialData);
-    setFormData({
-      firstName: initialData.firstName,
-      lastName: initialData.lastName,
-      phone: initialData.phone,
-      address: initialData.address,
-      city: initialData.city,
-      country: initialData.country,
-      sex: initialData.sex,
-      bio: initialData.bio,
-    });
-    setModalAddress(initialData.address);
 
-    // Vérifie si images est un tableau avant de chercher une image de profil
-    let profileImg: Image | null = null;
-    if (Array.isArray(images) && images.length > 0) {
-      profileImg = images.find((img) => img.isNSFW === false && img.name === "profile-picture.jpg") ||
-        images.reduce((latest, current) =>
-          new Date(current.uploadedAt || "1970-01-01") > new Date(latest.uploadedAt || "1970-01-01") ? current : latest,
-          images[0]
-        );
+  // useEffect initial pour charger l'utilisateur et les images
+  useEffect(() => {
+    if (userId) {
+      dispatch(fetchUser());
+      dispatch(getAllImagesByUserId(userId));
     }
-    setProfileImage(profileImg || null);
-    console.log("🔹 Profile image set to:", profileImg);
-  }
-}, [user, images, address, latitude, longitude, city, country]);
+  }, [userId, dispatch, navigate]);
+
+  // useEffect pour synchroniser les données utilisateur et les images
+  useEffect(() => {
+    if (user) {
+      const normalizedPhone = user.phone && !user.phone.startsWith("+") ? `+${user.phone}` : user.phone || "";
+      const initialData = {
+        firstName: user.firstName || "",
+        lastName: user.lastName || "",
+        phone: normalizedPhone,
+        address: address || user.address || "",
+        city: city || user.city || "",
+        country: country || user.country || "",
+        sex: user.sex || "",
+        bio: user.bio || "",
+        latitude: latitude || user.latitude || 0,
+        longitude: longitude || user.longitude || 0,
+      };
+      setInitialFormData(initialData);
+      setFormData({
+        firstName: initialData.firstName,
+        lastName: initialData.lastName,
+        phone: initialData.phone,
+        address: initialData.address,
+        city: initialData.city,
+        country: initialData.country,
+        sex: initialData.sex,
+        bio: initialData.bio,
+      });
+      setModalAddress(initialData.address);
+
+      let profileImg: Image | null = null;
+      if (Array.isArray(images) && images.length > 0) {
+        profileImg = images.find((img) => img.isNSFW === false && img.name === "profile-picture.jpg") ||
+          images.reduce((latest, current) =>
+            new Date(current.uploadedAt || "1970-01-01") > new Date(latest.uploadedAt || "1970-01-01") ? current : latest,
+            images[0]
+          );
+      }
+      setProfileImage(profileImg || null);
+      console.log("🔹 Profile image set to:", profileImg);
+    }
+  }, [user, images, address, latitude, longitude, city, country]);
+
+  // useEffect pour Google Maps Autocomplete
   useEffect(() => {
     if (isGoogleMapsLoaded && autocompleteRef.current && isModalOpen) {
       const autocomplete = new google.maps.places.Autocomplete(autocompleteRef.current, {
@@ -147,6 +159,7 @@ useEffect(() => {
     }
   }, [isGoogleMapsLoaded, isModalOpen, dispatch, user]);
 
+  // Fonctions de gestion des changements
   const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   }, []);
@@ -187,17 +200,16 @@ useEffect(() => {
     }
   };
 
-  // Supprimer une image
-const handleDeleteImage = async (image: Image) => {
+  const handleDeleteImage = async (image: Image) => {
     if (!user || !image.name) return;
 
     try {
-        await dispatch(deleteImage({ userId: user.id, name: image.name })).unwrap();
-        dispatch(getAllImagesByUserId(user.id)); // Rafraîchir les images après suppression
+      await dispatch(deleteImage({ userId: user.id, name: image.name })).unwrap();
+      dispatch(getAllImagesByUserId(user.id)); // Rafraîchir les images après suppression
     } catch (error) {
-        console.error("❌ Échec de la suppression de l'image :", error);
+      console.error("❌ Échec de la suppression de l'image :", error);
     }
-};
+  };
 
   const hasChanges = useCallback(() => {
     return (
@@ -366,7 +378,6 @@ const handleDeleteImage = async (image: Image) => {
               </button>
             </div>
           )}
-          {/* Affichage des images existantes avec icône de suppression */}
           {images.length > 0 && (
             <div className="existing-images">
               <h3>{t("editProfile.existingImages", "Your Images")}</h3>

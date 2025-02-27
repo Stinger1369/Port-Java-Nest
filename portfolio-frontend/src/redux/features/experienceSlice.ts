@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import axios from "axios";
+import { BASE_URL } from "../../config/hostname"; // Import de la configuration de l'URL
 
 // ✅ **Interface Experience**
 interface Experience {
@@ -39,14 +40,13 @@ export const fetchExperiencesByUser = createAsyncThunk(
         return rejectWithValue("Token non trouvé, veuillez vous reconnecter.");
       }
 
-      const response = await axios.get(`http://localhost:8080/api/experiences/user/${userId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await axios.get<Experience[]>(
+        `${BASE_URL}/api/experiences/user/${userId}`,
+        { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } }
+      );
 
-      console.log("✅ Réponse du backend :", response.data);
       return response.data;
     } catch (error: any) {
-      console.error("❌ Erreur API :", error.response?.data || error.message);
       return rejectWithValue(error.response?.data?.error || "Échec du chargement des expériences.");
     }
   }
@@ -67,16 +67,14 @@ export const addExperience = createAsyncThunk(
         return rejectWithValue("ID utilisateur manquant, veuillez vous reconnecter.");
       }
 
-      const response = await axios.post(
-        "http://localhost:8080/api/experiences",
+      const response = await axios.post<Experience>(
+        `${BASE_URL}/api/experiences`,
         { ...experienceData, userId },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } }
       );
 
-      console.log("✅ Expérience ajoutée :", response.data);
       return response.data;
     } catch (error: any) {
-      console.error("❌ Erreur lors de l'ajout :", error.response?.data);
       return rejectWithValue(error.response?.data?.error || "Échec de l'ajout de l'expérience.");
     }
   }
@@ -85,21 +83,21 @@ export const addExperience = createAsyncThunk(
 // ✅ **Mettre à jour une expérience avec le token**
 export const updateExperience = createAsyncThunk(
   "experience/update",
-  async ({ id, experienceData }: { id: string; experienceData: Experience }, { rejectWithValue }) => {
+  async ({ id, experienceData }: { id: string; experienceData: Partial<Experience> }, { rejectWithValue }) => {
     try {
       const token = getAuthToken();
       if (!token) {
         return rejectWithValue("Token non trouvé, veuillez vous reconnecter.");
       }
 
-      const response = await axios.put(`http://localhost:8080/api/experiences/${id}`, experienceData, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await axios.put<Experience>(
+        `${BASE_URL}/api/experiences/${id}`,
+        experienceData,
+        { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } }
+      );
 
-      console.log("✅ Expérience mise à jour :", response.data);
       return response.data;
     } catch (error: any) {
-      console.error("❌ Erreur lors de la mise à jour :", error.response?.data);
       return rejectWithValue(error.response?.data?.error || "Échec de la mise à jour de l'expérience.");
     }
   }
@@ -115,14 +113,13 @@ export const deleteExperience = createAsyncThunk(
         return rejectWithValue("Token non trouvé, veuillez vous reconnecter.");
       }
 
-      await axios.delete(`http://localhost:8080/api/experiences/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await axios.delete(
+        `${BASE_URL}/api/experiences/${id}`,
+        { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } }
+      );
 
-      console.log(`✅ Expérience supprimée : ID ${id}`);
       return id;
     } catch (error: any) {
-      console.error("❌ Erreur lors de la suppression :", error.response?.data);
       return rejectWithValue(error.response?.data?.error || "Échec de la suppression de l'expérience.");
     }
   }
@@ -139,17 +136,14 @@ const experienceSlice = createSlice({
       .addCase(fetchExperiencesByUser.pending, (state) => {
         state.status = "loading";
         state.error = null;
-        console.log("⏳ Chargement des expériences...");
       })
       .addCase(fetchExperiencesByUser.fulfilled, (state, action: PayloadAction<Experience[]>) => {
         state.status = "succeeded";
-        console.log("✅ Expériences reçues :", action.payload);
-        state.experiences = Array.isArray(action.payload) ? action.payload : [];
+        state.experiences = action.payload;
       })
       .addCase(fetchExperiencesByUser.rejected, (state, action) => {
         state.status = "failed";
         state.error = action.payload as string;
-        console.error("❌ Erreur lors de la récupération des expériences :", state.error);
       })
 
       // **Ajouter une expérience**

@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import axios from "axios";
-import { BASE_URL } from "../../config/hostname"; // ✅ Import de l'URL centralisée
+import { BASE_URL } from "../../config/hostname"; // Import de la configuration de l'URL
 
 interface Skill {
   id?: string;
@@ -32,16 +32,15 @@ export const fetchSkillsByUser = createAsyncThunk(
   async (userId: string, { rejectWithValue }) => {
     try {
       const token = getAuthToken();
-      if (!token) return rejectWithValue("⚠️ Token non trouvé, veuillez vous reconnecter.");
+      if (!token) return rejectWithValue("Token non trouvé, veuillez vous reconnecter.");
 
-      const response = await axios.get(`${BASE_URL}/api/skills/user/${userId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await axios.get<Skill[]>(
+        `${BASE_URL}/api/skills/user/${userId}`,
+        { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } }
+      );
 
-      console.log("✅ Skills reçus :", response.data);
       return response.data;
     } catch (error: any) {
-      console.error("❌ Erreur API :", error.response?.data || error.message);
       return rejectWithValue(error.response?.data?.error || "Échec du chargement des skills.");
     }
   }
@@ -55,19 +54,17 @@ export const addSkill = createAsyncThunk(
       const token = getAuthToken();
       const userId = localStorage.getItem("userId");
 
-      if (!token) return rejectWithValue("⚠️ Token non trouvé, veuillez vous reconnecter.");
-      if (!userId) return rejectWithValue("⚠️ ID utilisateur manquant, veuillez vous reconnecter.");
+      if (!token) return rejectWithValue("Token non trouvé, veuillez vous reconnecter.");
+      if (!userId) return rejectWithValue("ID utilisateur manquant, veuillez vous reconnecter.");
 
-      const response = await axios.post(
+      const response = await axios.post<Skill>(
         `${BASE_URL}/api/skills`,
-        { ...skillData, userId }, // ✅ Ajout du userId
-        { headers: { Authorization: `Bearer ${token}` } }
+        { ...skillData, userId },
+        { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } }
       );
 
-      console.log("✅ Skill ajouté :", response.data);
       return response.data;
     } catch (error: any) {
-      console.error("❌ Erreur lors de l'ajout :", error.response?.data);
       return rejectWithValue(error.response?.data?.error || "Échec de l'ajout du skill.");
     }
   }
@@ -76,19 +73,19 @@ export const addSkill = createAsyncThunk(
 // ✅ **Mettre à jour un skill**
 export const updateSkill = createAsyncThunk(
   "skill/update",
-  async ({ id, skillData }: { id: string; skillData: Skill }, { rejectWithValue }) => {
+  async ({ id, skillData }: { id: string; skillData: Partial<Skill> }, { rejectWithValue }) => {
     try {
       const token = getAuthToken();
-      if (!token) return rejectWithValue("⚠️ Token non trouvé, veuillez vous reconnecter.");
+      if (!token) return rejectWithValue("Token non trouvé, veuillez vous reconnecter.");
 
-      const response = await axios.put(`${BASE_URL}/api/skills/${id}`, skillData, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await axios.put<Skill>(
+        `${BASE_URL}/api/skills/${id}`,
+        skillData,
+        { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } }
+      );
 
-      console.log("✅ Skill mis à jour :", response.data);
       return response.data;
     } catch (error: any) {
-      console.error("❌ Erreur lors de la mise à jour :", error.response?.data);
       return rejectWithValue(error.response?.data?.error || "Échec de la mise à jour du skill.");
     }
   }
@@ -100,16 +97,15 @@ export const deleteSkill = createAsyncThunk(
   async (id: string, { rejectWithValue }) => {
     try {
       const token = getAuthToken();
-      if (!token) return rejectWithValue("⚠️ Token non trouvé, veuillez vous reconnecter.");
+      if (!token) return rejectWithValue("Token non trouvé, veuillez vous reconnecter.");
 
-      await axios.delete(`${BASE_URL}/api/skills/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await axios.delete(
+        `${BASE_URL}/api/skills/${id}`,
+        { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } }
+      );
 
-      console.log(`✅ Skill supprimé : ID ${id}`);
       return id;
     } catch (error: any) {
-      console.error("❌ Erreur lors de la suppression :", error.response?.data);
       return rejectWithValue(error.response?.data?.error || "Échec de la suppression du skill.");
     }
   }
@@ -126,17 +122,14 @@ const skillSlice = createSlice({
       .addCase(fetchSkillsByUser.pending, (state) => {
         state.status = "loading";
         state.error = null;
-        console.log("⏳ Chargement des skills...");
       })
       .addCase(fetchSkillsByUser.fulfilled, (state, action: PayloadAction<Skill[]>) => {
         state.status = "succeeded";
-        console.log("✅ Skills reçus :", action.payload);
-        state.skills = Array.isArray(action.payload) ? action.payload : [];
+        state.skills = action.payload;
       })
       .addCase(fetchSkillsByUser.rejected, (state, action) => {
         state.status = "failed";
         state.error = action.payload as string;
-        console.error("❌ Erreur lors de la récupération des skills :", state.error);
       })
 
       // 🔹 **Ajouter un skill**

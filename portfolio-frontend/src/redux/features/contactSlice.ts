@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import axios from "axios";
+import { BASE_URL } from "../../config/hostname"; // Import de la configuration de l'URL
 
 // Définir les types pour ContactDTO basé sur ton backend
 interface Contact {
@@ -34,8 +35,8 @@ const initialState: ContactState = {
   error: null,
 };
 
-// Base URL de ton API
-const API_URL = "http://localhost:8080/api/contacts";
+// Fonction utilitaire pour récupérer le token d'authentification
+const getAuthToken = () => localStorage.getItem("token");
 
 // Thunks pour les appels API
 export const sendContactRequest = createAsyncThunk(
@@ -55,7 +56,14 @@ export const sendContactRequest = createAsyncThunk(
     { rejectWithValue }
   ) => {
     try {
-      const response = await axios.post<Contact>(`${API_URL}/request`, request);
+      const token = getAuthToken();
+      if (!token) return rejectWithValue("Token non trouvé, veuillez vous reconnecter.");
+
+      const response = await axios.post<Contact>(
+        `${BASE_URL}/api/contacts/request`,
+        request,
+        { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } }
+      );
       return response.data;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || "Erreur lors de l'envoi de la demande");
@@ -67,11 +75,13 @@ export const acceptContactRequest = createAsyncThunk(
   "contact/acceptContactRequest",
   async (contactId: string, { rejectWithValue, getState }) => {
     try {
-      const token = (getState() as any).auth.token;
+      const token = getAuthToken();
+      if (!token) return rejectWithValue("Token non trouvé, veuillez vous reconnecter.");
+
       const response = await axios.post<Contact>(
-        `${API_URL}/accept/${contactId}`,
+        `${BASE_URL}/api/contacts/accept/${contactId}`,
         {},
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } }
       );
       return response.data;
     } catch (error: any) {
@@ -84,10 +94,13 @@ export const fetchPendingContacts = createAsyncThunk(
   "contact/fetchPendingContacts",
   async (_, { rejectWithValue, getState }) => {
     try {
-      const token = (getState() as any).auth.token;
-      const response = await axios.get<Contact[]>(`${API_URL}/pending`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const token = getAuthToken();
+      if (!token) return rejectWithValue("Token non trouvé, veuillez vous reconnecter.");
+
+      const response = await axios.get<Contact[]>(
+        `${BASE_URL}/api/contacts/pending`,
+        { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } }
+      );
       return response.data;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || "Erreur lors de la récupération des demandes en attente");
@@ -99,10 +112,13 @@ export const fetchAcceptedContacts = createAsyncThunk(
   "contact/fetchAcceptedContacts",
   async (_, { rejectWithValue, getState }) => {
     try {
-      const token = (getState() as any).auth.token;
-      const response = await axios.get<Contact[]>(`${API_URL}/accepted`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const token = getAuthToken();
+      if (!token) return rejectWithValue("Token non trouvé, veuillez vous reconnecter.");
+
+      const response = await axios.get<Contact[]>(
+        `${BASE_URL}/api/contacts/accepted`,
+        { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } }
+      );
       return response.data;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || "Erreur lors de la récupération des contacts acceptés");
@@ -114,10 +130,13 @@ export const fetchDeveloperContacts = createAsyncThunk(
   "contact/fetchDeveloperContacts",
   async (_, { rejectWithValue, getState }) => {
     try {
-      const token = (getState() as any).auth.token;
-      const response = await axios.get<Contact[]>(`${API_URL}/developer`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const token = getAuthToken();
+      if (!token) return rejectWithValue("Token non trouvé, veuillez vous reconnecter.");
+
+      const response = await axios.get<Contact[]>(
+        `${BASE_URL}/api/contacts/developer`,
+        { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } }
+      );
       return response.data;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || "Erreur lors de la récupération des contacts développeur");
@@ -156,12 +175,12 @@ const contactSlice = createSlice({
       })
       .addCase(acceptContactRequest.fulfilled, (state, action: PayloadAction<Contact>) => {
         state.loading = false;
-        // Supprimer le contact de pendingContacts
+        // Supprimer le contact des demandes en attente
         state.pendingContacts = state.pendingContacts.filter(
           (contact) => contact.id !== action.payload.id
         );
-        // Ajouter à acceptedContacts uniquement s'il n'y est pas déjà
-        if (!state.acceptedContacts.some(contact => contact.id === action.payload.id)) {
+        // Ajouter aux contacts acceptés si pas déjà présent
+        if (!state.acceptedContacts.some((contact) => contact.id === action.payload.id)) {
           state.acceptedContacts.push(action.payload);
         }
       })
@@ -208,5 +227,6 @@ const contactSlice = createSlice({
   },
 });
 
+// ✅ **Exports**
 export const { clearError } = contactSlice.actions;
 export default contactSlice.reducer;

@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import axios from "axios";
+import { BASE_URL } from "../../config/hostname"; // Import de la configuration de l'URL
 
 interface Language {
   id?: string;
@@ -22,7 +23,7 @@ const initialState: LanguageState = {
 
 const getAuthToken = () => localStorage.getItem("token");
 
-// ✅ **Récupérer les langues**
+// ✅ **Récupérer les langues d'un utilisateur**
 export const fetchLanguagesByUser = createAsyncThunk(
   "language/fetchByUser",
   async (userId: string, { rejectWithValue }) => {
@@ -30,14 +31,13 @@ export const fetchLanguagesByUser = createAsyncThunk(
       const token = getAuthToken();
       if (!token) return rejectWithValue("Token non trouvé, veuillez vous reconnecter.");
 
-      const response = await axios.get(`http://localhost:8080/api/languages/user/${userId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await axios.get<Language[]>(
+        `${BASE_URL}/api/languages/user/${userId}`,
+        { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } }
+      );
 
-      console.log("✅ Langues récupérées :", response.data);
       return response.data;
     } catch (error: any) {
-      console.error("❌ Erreur API :", error.response?.data || error.message);
       return rejectWithValue(error.response?.data?.error || "Échec du chargement des langues.");
     }
   }
@@ -54,16 +54,14 @@ export const addLanguage = createAsyncThunk(
       if (!token) return rejectWithValue("Token non trouvé, veuillez vous reconnecter.");
       if (!userId) return rejectWithValue("ID utilisateur manquant, veuillez vous reconnecter.");
 
-      const response = await axios.post(
-        "http://localhost:8080/api/languages",
+      const response = await axios.post<Language>(
+        `${BASE_URL}/api/languages`,
         { ...languageData, userId },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } }
       );
 
-      console.log("✅ Langue ajoutée :", response.data);
       return response.data;
     } catch (error: any) {
-      console.error("❌ Erreur lors de l'ajout :", error.response?.data);
       return rejectWithValue(error.response?.data?.error || "Échec de l'ajout de la langue.");
     }
   }
@@ -72,21 +70,19 @@ export const addLanguage = createAsyncThunk(
 // ✅ **Mettre à jour une langue**
 export const updateLanguage = createAsyncThunk(
   "language/update",
-  async ({ id, languageData }: { id: string; languageData: Language }, { rejectWithValue }) => {
+  async ({ id, languageData }: { id: string; languageData: Partial<Language> }, { rejectWithValue }) => {
     try {
       const token = getAuthToken();
       if (!token) return rejectWithValue("Token non trouvé, veuillez vous reconnecter.");
 
-      const response = await axios.put(
-        `http://localhost:8080/api/languages/${id}`,
+      const response = await axios.put<Language>(
+        `${BASE_URL}/api/languages/${id}`,
         languageData,
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } }
       );
 
-      console.log("✅ Langue mise à jour :", response.data);
       return response.data;
     } catch (error: any) {
-      console.error("❌ Erreur lors de la mise à jour :", error.response?.data);
       return rejectWithValue(error.response?.data?.error || "Échec de la mise à jour de la langue.");
     }
   }
@@ -100,14 +96,13 @@ export const deleteLanguage = createAsyncThunk(
       const token = getAuthToken();
       if (!token) return rejectWithValue("Token non trouvé, veuillez vous reconnecter.");
 
-      await axios.delete(`http://localhost:8080/api/languages/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await axios.delete(
+        `${BASE_URL}/api/languages/${id}`,
+        { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } }
+      );
 
-      console.log(`✅ Langue supprimée : ID ${id}`);
       return id;
     } catch (error: any) {
-      console.error("❌ Erreur lors de la suppression :", error.response?.data);
       return rejectWithValue(error.response?.data?.error || "Échec de la suppression de la langue.");
     }
   }
@@ -124,17 +119,14 @@ const languageSlice = createSlice({
       .addCase(fetchLanguagesByUser.pending, (state) => {
         state.status = "loading";
         state.error = null;
-        console.log("⏳ Chargement des langues...");
       })
       .addCase(fetchLanguagesByUser.fulfilled, (state, action: PayloadAction<Language[]>) => {
         state.status = "succeeded";
-        console.log("✅ Langues reçues :", action.payload);
-        state.languages = Array.isArray(action.payload) ? action.payload : [];
+        state.languages = action.payload;
       })
       .addCase(fetchLanguagesByUser.rejected, (state, action) => {
         state.status = "failed";
         state.error = action.payload as string;
-        console.error("❌ Erreur lors de la récupération des langues :", state.error);
       })
 
       // **Ajouter une langue**

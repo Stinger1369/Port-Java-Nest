@@ -9,7 +9,7 @@ import Profile from "./pages/Profile/Profile";
 import ForgotPassword from "./pages/Profile/ForgotPassword/ForgotPassword";
 import ResetPassword from "./pages/Profile/ResetPassword/ResetPassword";
 import ProtectedRoute from "./components/ProtectedRoute";
-import EditProfile from "./pages/Profile/EditProfile/EditProfile";
+import EditProfileContainer from "./pages/Profile/EditProfile/EditProfileContainer"; // Mise à jour ici
 import Portfolio from "./pages/Portfolio/Portfolio";
 import PortfolioGlobal from "./pages/Portfolio/PortfolioGlobal/PortfolioGlobal";
 import Education from "./pages/Portfolio/Education/Education";
@@ -42,7 +42,8 @@ const App = () => {
               <Route path="/verify-account" element={<VerifyAccount />} />
               <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route path="/reset-password" element={<ResetPassword />} />
-              <Route path="/edit-profile" element={<ProtectedRoute><EditProfile /></ProtectedRoute>} />
+              {/* Mise à jour de la route pour EditProfileContainer */}
+              <Route path="/edit-profile" element={<ProtectedRoute><EditProfileContainer /></ProtectedRoute>} />
 
               {/* ✅ Routes publiques avec slug */}
               <Route path="/portfolio/:firstName/:lastName/:slug" element={<PortfolioGlobal />} />

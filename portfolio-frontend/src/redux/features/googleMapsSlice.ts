@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import axios from "axios";
-import { BASE_URL } from "../../config/hostname";
+import { BASE_URL } from "../../config/hostname"; // Import de la configuration de l'URL
 
 interface GoogleMapsState {
   address: string | null;
@@ -22,37 +22,39 @@ const initialState: GoogleMapsState = {
   error: null,
 };
 
-// Mettre à jour l'adresse via Google Maps
+// ✅ **Fonction pour récupérer le token stocké**
+const getAuthToken = () => localStorage.getItem("token");
+
+// ✅ **Mettre à jour l'adresse via Google Maps**
 export const updateUserAddress = createAsyncThunk(
   "googleMaps/updateUserAddress",
   async (userId: string, { rejectWithValue }) => {
     try {
-      const token = localStorage.getItem("token");
-      if (!token) throw new Error("No token found");
+      const token = getAuthToken();
+      if (!token) {
+        return rejectWithValue("Token non trouvé, veuillez vous reconnecter.");
+      }
 
-      console.log("🔹 Updating address for user ID:", userId);
       const response = await axios.put(
         `${BASE_URL}/api/google-maps/address/${userId}`,
         {},
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } }
       );
 
-      console.log("✅ Address updated successfully:", response.data);
       return {
         address: response.data.address,
         latitude: response.data.latitude,
         longitude: response.data.longitude,
-        city: response.data.city, // Ajouté pour inclure la ville
-        country: response.data.country, // Ajouté pour inclure le pays
+        city: response.data.city, // Inclure la ville
+        country: response.data.country, // Inclure le pays
       };
     } catch (error: any) {
-      console.error("❌ Address update failed:", error.response?.data);
-      return rejectWithValue(error.response?.data?.error || "Failed to update address");
+      return rejectWithValue(error.response?.data?.error || "Échec de la mise à jour de l'adresse.");
     }
   }
 );
 
-// Mettre à jour la géolocalisation
+// ✅ **Mettre à jour la géolocalisation**
 export const updateGeolocation = createAsyncThunk(
   "googleMaps/updateGeolocation",
   async (
@@ -60,27 +62,25 @@ export const updateGeolocation = createAsyncThunk(
     { rejectWithValue }
   ) => {
     try {
-      const token = localStorage.getItem("token");
-      if (!token) throw new Error("No token found");
+      const token = getAuthToken();
+      if (!token) {
+        return rejectWithValue("Token non trouvé, veuillez vous reconnecter.");
+      }
 
-      const payload = { latitude, longitude };
-      console.log("🔹 Payload envoyé à /api/users/", JSON.stringify(payload, null, 2)); // Loguer le JSON formaté
       const response = await axios.put(
         `${BASE_URL}/api/users/${userId}`,
-        payload,
-        { headers: { Authorization: `Bearer ${token}` } }
+        { latitude, longitude },
+        { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } }
       );
 
-      console.log("✅ Géolocalisation mise à jour :", response.data);
       return {
         latitude,
         longitude,
-        city: response.data.city, // Ajouté pour inclure la ville
-        country: response.data.country, // Ajouté pour inclure le pays
+        city: response.data.city, // Inclure la ville
+        country: response.data.country, // Inclure le pays
       };
     } catch (error: any) {
-      console.error("❌ Update geolocation failed:", error.response?.data);
-      return rejectWithValue(error.response?.data?.error || "Failed to update geolocation");
+      return rejectWithValue(error.response?.data?.error || "Échec de la mise à jour de la géolocalisation.");
     }
   }
 );
@@ -93,8 +93,8 @@ const googleMapsSlice = createSlice({
       state.address = null;
       state.latitude = null;
       state.longitude = null;
-      state.city = null; // Réinitialisé
-      state.country = null; // Réinitialisé
+      state.city = null;
+      state.country = null;
       state.status = "idle";
       state.error = null;
     },
@@ -103,14 +103,21 @@ const googleMapsSlice = createSlice({
     builder
       .addCase(updateUserAddress.pending, (state) => {
         state.status = "loading";
+        state.error = null;
       })
-      .addCase(updateUserAddress.fulfilled, (state, action: PayloadAction<{ address: string; latitude: number; longitude: number; city: string; country: string }>) => {
+      .addCase(updateUserAddress.fulfilled, (state, action: PayloadAction<{
+        address: string;
+        latitude: number;
+        longitude: number;
+        city: string;
+        country: string;
+      }>) => {
         state.status = "succeeded";
         state.address = action.payload.address;
         state.latitude = action.payload.latitude;
         state.longitude = action.payload.longitude;
-        state.city = action.payload.city; // Mettre à jour la ville
-        state.country = action.payload.country; // Mettre à jour le pays
+        state.city = action.payload.city;
+        state.country = action.payload.country;
       })
       .addCase(updateUserAddress.rejected, (state, action) => {
         state.status = "failed";
@@ -118,13 +125,19 @@ const googleMapsSlice = createSlice({
       })
       .addCase(updateGeolocation.pending, (state) => {
         state.status = "loading";
+        state.error = null;
       })
-      .addCase(updateGeolocation.fulfilled, (state, action: PayloadAction<{ latitude: number; longitude: number; city: string; country: string }>) => {
+      .addCase(updateGeolocation.fulfilled, (state, action: PayloadAction<{
+        latitude: number;
+        longitude: number;
+        city: string;
+        country: string;
+      }>) => {
         state.status = "succeeded";
         state.latitude = action.payload.latitude;
         state.longitude = action.payload.longitude;
-        state.city = action.payload.city; // Mettre à jour la ville
-        state.country = action.payload.country; // Mettre à jour le pays
+        state.city = action.payload.city;
+        state.country = action.payload.country;
       })
       .addCase(updateGeolocation.rejected, (state, action) => {
         state.status = "failed";

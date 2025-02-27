@@ -107,8 +107,22 @@ portfolio-frontend/
 │   │   │       └── UpdateSocialLink.tsx
 │   │   ├── Profile/
 │   │   │   ├── EditProfile/
+│   │   │   │   ├── AddressScreen/
+│   │   │   │   │   ├── AddressScreen.css
+│   │   │   │   │   └── AddressScreen.tsx
+│   │   │   │   ├── ConfirmationScreen/
+│   │   │   │   │   ├── ConfirmationScreen.css
+│   │   │   │   │   └── ConfirmationScreen.tsx
 │   │   │   │   ├── EditProfile.css
-│   │   │   │   └── EditProfile.tsx
+│   │   │   │   ├── EditProfile.tsx
+│   │   │   │   ├── EditProfileContainer.css
+│   │   │   │   ├── EditProfileContainer.tsx
+│   │   │   │   ├── ImagesScreen/
+│   │   │   │   │   ├── ImagesScreen.css
+│   │   │   │   │   └── ImagesScreen.tsx
+│   │   │   │   └── PersonalInfoScreen/
+│   │   │   │       ├── PersonalInfoScreen.css
+│   │   │   │       └── PersonalInfoScreen.tsx
 │   │   │   ├── ForgotPassword/
 │   │   │   │   ├── ForgotPassword.css
 │   │   │   │   └── ForgotPassword.tsx
@@ -146,6 +160,7 @@ portfolio-frontend/
 │   │   │   ├── educationSlice.ts
 │   │   │   ├── experienceSlice.ts
 │   │   │   ├── googleMapsSlice.ts
+│   │   │   ├── imageSlice.ts
 │   │   │   ├── interestSlice.ts
 │   │   │   ├── languageSlice.ts
 │   │   │   ├── portfolioSlice.ts

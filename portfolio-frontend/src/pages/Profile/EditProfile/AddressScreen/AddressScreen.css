@@ -1,0 +1,250 @@
+/* Variables globales pour cohérence */
+:root {
+  --primary-color: #5e43ff; /* Violet profond */
+  --secondary-color: #00e7ff; /* Cyan lumineux */
+  --background-color: #eef2f7; /* Fond gris clair */
+  --text-color: #0f172a; /* Bleu-noir */
+  --button-bg: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+  --button-hover: linear-gradient(135deg, #4835d4, #00b8d4);
+  --shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+  --border-radius: 12px;
+  --transition: all 0.3s ease;
+}
+
+/* Conteneur principal */
+.address-screen {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 2rem;
+  background: var(--background-color);
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow);
+  animation: fadeIn 0.5s ease-out;
+}
+
+/* Titre */
+.address-screen h3 {
+  font-size: 1.75rem;
+  font-weight: 600;
+  color: var(--text-color);
+  margin-bottom: 2rem;
+  text-align: center;
+  background: var(--button-bg);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Labels */
+.address-screen label {
+  display: block;
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--text-color);
+  margin-bottom: 0.5rem;
+}
+
+/* Champ d'entrée */
+.address-screen input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  margin-bottom: 1.5rem;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(94, 67, 255, 0.2);
+  border-radius: var(--border-radius);
+  font-size: 1rem;
+  color: var(--text-color);
+  outline: none;
+  transition: var(--transition);
+}
+
+.address-screen input:disabled {
+  background: rgba(229, 231, 235, 0.8);
+  color: rgba(15, 23, 42, 0.5);
+  cursor: not-allowed;
+}
+
+/* Boutons */
+.address-screen button {
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: white;
+  background: var(--button-bg);
+  border: none;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  transition: var(--transition);
+  box-shadow: var(--shadow);
+  margin-right: 1rem;
+}
+
+.address-screen button:hover:not(:disabled) {
+  background: var(--button-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+}
+
+.address-screen button:disabled {
+  background: linear-gradient(135deg, #6b7280, #4b5563);
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+/* Modale */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  animation: fadeInOverlay 0.3s ease-in;
+}
+
+.modal-content {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(12px); /* Glassmorphism */
+  border-radius: var(--border-radius);
+  padding: 2rem;
+  width: 100%;
+  max-width: 500px;
+  box-shadow: var(--shadow);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  animation: slideUp 0.4s ease-out;
+}
+
+.modal-content h3 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--text-color);
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.modal-content input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  margin-bottom: 1.5rem;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(94, 67, 255, 0.2);
+  border-radius: var(--border-radius);
+  font-size: 1rem;
+  color: var(--text-color);
+  outline: none;
+  transition: var(--transition);
+}
+
+.modal-content input:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 8px rgba(94, 67, 255, 0.3);
+}
+
+.modal-content input:disabled {
+  background: rgba(229, 231, 235, 0.8);
+  color: rgba(15, 23, 42, 0.5);
+  cursor: not-allowed;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: space-between;
+}
+
+.modal-actions button {
+  padding: 0.6rem 1.2rem;
+  font-size: 0.95rem;
+}
+
+.modal-actions button:first-child {
+  background: var(--button-bg);
+}
+
+.modal-actions button:last-child {
+  background: linear-gradient(135deg, #6b7280, #4b5563); /* Gris pour Cancel */
+}
+
+.modal-actions button:last-child:hover:not(:disabled) {
+  background: linear-gradient(135deg, #4b5563, #374151);
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInOverlay {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(50px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .address-screen {
+    padding: 1.5rem;
+    margin: 1rem;
+  }
+
+  .address-screen h3 {
+    font-size: 1.5rem;
+  }
+
+  .address-screen button {
+    width: 100%;
+    margin: 0.5rem 0;
+  }
+
+  .modal-content {
+    padding: 1.5rem;
+    max-width: 90%;
+  }
+}
+
+@media (max-width: 480px) {
+  .address-screen {
+    padding: 1rem;
+  }
+
+  .address-screen h3 {
+    font-size: 1.25rem;
+  }
+
+  .modal-content h3 {
+    font-size: 1.25rem;
+  }
+
+  .modal-actions {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .modal-actions button {
+    width: 100%;
+  }
+}

@@ -1,14 +1,14 @@
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import axios from "axios";
-import { BASE_URL } from "../../config/hostname";
+import { BASE_URL } from "../../config/hostname"; // Import de la configuration de l'URL
 
 interface Image {
-  id: string | null; // Peut être null si non fourni par Go
+  id: string | null;
   userId: string;
   name: string;
   path: string;
-  isNSFW: boolean; // Correspond à `isNSFW` dans ImageDTO et Go
-  uploadedAt: string | null; // Peut être null si non fourni
+  isNSFW: boolean;
+  uploadedAt: string | null;
 }
 
 interface ImageState {
@@ -25,7 +25,10 @@ const initialState: ImageState = {
   message: null,
 };
 
-// Uploader une image
+// ✅ **Fonction pour récupérer le token stocké**
+const getAuthToken = () => localStorage.getItem("token");
+
+// ✅ **Uploader une image**
 export const uploadImage = createAsyncThunk(
   "image/uploadImage",
   async (
@@ -33,20 +36,17 @@ export const uploadImage = createAsyncThunk(
     { rejectWithValue }
   ) => {
     try {
-      const token = localStorage.getItem("token");
+      const token = getAuthToken();
       if (!token) {
-        throw new Error("No token found in localStorage");
+        return rejectWithValue("Token non trouvé, veuillez vous reconnecter.");
       }
-
-      console.log("🔹 Uploading image for user ID:", userId, "with name:", name);
-      console.log("Payload envoyé:", { userId, name, file });
 
       const formData = new FormData();
       formData.append("userId", userId);
       formData.append("name", name);
       formData.append("file", file);
 
-      const response = await axios.post(
+      const response = await axios.post<Image>(
         `${BASE_URL}/api/images/upload`,
         formData,
         {
@@ -57,43 +57,36 @@ export const uploadImage = createAsyncThunk(
         }
       );
 
-      console.log("✅ Image uploaded successfully:", response.data);
       return response.data;
     } catch (error: any) {
-      console.error("❌ Image upload failed:", error.response?.data || error.message);
-      return rejectWithValue(error.response?.data?.error || "Failed to upload image");
+      return rejectWithValue(error.response?.data?.error || "Échec du téléversement de l'image.");
     }
   }
 );
 
-// Récupérer les images d'un utilisateur (endpoint existant)
+// ✅ **Récupérer les images d'un utilisateur**
 export const getUserImages = createAsyncThunk(
   "image/getUserImages",
   async (userId: string, { rejectWithValue }) => {
     try {
-      const token = localStorage.getItem("token");
+      const token = getAuthToken();
       if (!token) {
-        throw new Error("No token found in localStorage");
+        return rejectWithValue("Token non trouvé, veuillez vous reconnecter.");
       }
 
-      console.log("🔹 Fetching images for user ID:", userId);
+      const response = await axios.get<Image[]>(
+        `${BASE_URL}/api/images/user/${userId}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
 
-      const response = await axios.get(`${BASE_URL}/api/images/user/${userId}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      console.log("✅ User images retrieved:", response.data);
-      return response.data as Image[];
+      return response.data;
     } catch (error: any) {
-      console.error("❌ Fetch user images failed:", error.response?.data || error.message);
-      return rejectWithValue(error.response?.data?.error || "Failed to fetch user images");
+      return rejectWithValue(error.response?.data?.error || "Échec de la récupération des images utilisateur.");
     }
   }
 );
 
-// Supprimer une image
+// ✅ **Supprimer une image**
 export const deleteImage = createAsyncThunk(
   "image/deleteImage",
   async (
@@ -101,50 +94,41 @@ export const deleteImage = createAsyncThunk(
     { rejectWithValue }
   ) => {
     try {
-      const token = localStorage.getItem("token");
+      const token = getAuthToken();
       if (!token) {
-        throw new Error("No token found in localStorage");
+        return rejectWithValue("Token non trouvé, veuillez vous reconnecter.");
       }
 
-      console.log("🔹 Deleting image for user ID:", userId, "with name:", name);
+      await axios.delete(
+        `${BASE_URL}/api/images/delete/${userId}/${name}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
 
-      await axios.delete(`${BASE_URL}/api/images/delete/${userId}/${name}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      console.log("✅ Image deleted successfully");
       return { userId, name };
     } catch (error: any) {
-      console.error("❌ Image deletion failed:", error.response?.data || error.message);
-      return rejectWithValue(error.response?.data?.error || "Failed to delete image");
+      return rejectWithValue(error.response?.data?.error || "Échec de la suppression de l'image.");
     }
   }
 );
 
-// Nouvelle action pour récupérer toutes les images d'un utilisateur via GET /api/images/all/{userId}
+// ✅ **Récupérer toutes les images d'un utilisateur**
 export const getAllImagesByUserId = createAsyncThunk(
   "image/getAllImagesByUserId",
   async (userId: string, { rejectWithValue }) => {
     try {
-      const token = localStorage.getItem("token");
+      const token = getAuthToken();
       if (!token) {
-        throw new Error("No token found in localStorage");
+        return rejectWithValue("Token non trouvé, veuillez vous reconnecter.");
       }
 
-      console.log("🔹 Fetching all images for user ID:", userId);
-      const response = await axios.get(`${BASE_URL}/api/images/all/${userId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await axios.get<Image[]>(
+        `${BASE_URL}/api/images/all/${userId}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
 
-      // Vérifie que la réponse est un tableau, sinon retourne un tableau vide
-      const data = Array.isArray(response.data) ? response.data : [];
-      console.log("✅ All images retrieved for user:", data);
-      return data as Image[];
+      return response.data;
     } catch (error: any) {
-      console.error("❌ Fetch all images failed:", error.response?.data || error.message);
-      return rejectWithValue(error.response?.data?.error || error.message || "Failed to fetch all images");
+      return rejectWithValue(error.response?.data?.error || "Échec de la récupération de toutes les images.");
     }
   }
 );
@@ -159,16 +143,22 @@ const imageSlice = createSlice({
       state.error = null;
       state.message = null;
     },
+    clearImageMessages: (state) => {
+      state.error = null;
+      state.message = null;
+    },
   },
   extraReducers: (builder) => {
     builder
       .addCase(uploadImage.pending, (state) => {
         state.status = "loading";
+        state.error = null;
+        state.message = null;
       })
       .addCase(uploadImage.fulfilled, (state, action: PayloadAction<Image>) => {
         state.status = "succeeded";
         state.images.push(action.payload);
-        state.message = "Image uploaded successfully!";
+        state.message = "Image téléversée avec succès !";
       })
       .addCase(uploadImage.rejected, (state, action) => {
         state.status = "failed";
@@ -176,6 +166,8 @@ const imageSlice = createSlice({
       })
       .addCase(getUserImages.pending, (state) => {
         state.status = "loading";
+        state.error = null;
+        state.message = null;
       })
       .addCase(getUserImages.fulfilled, (state, action: PayloadAction<Image[]>) => {
         state.status = "succeeded";
@@ -187,21 +179,24 @@ const imageSlice = createSlice({
       })
       .addCase(deleteImage.pending, (state) => {
         state.status = "loading";
+        state.error = null;
+        state.message = null;
       })
       .addCase(deleteImage.fulfilled, (state, action: PayloadAction<{ userId: string; name: string }>) => {
         state.status = "succeeded";
         state.images = state.images.filter(
           (image) => !(image.userId === action.payload.userId && image.name === action.payload.name)
         );
-        state.message = "Image deleted successfully!";
+        state.message = "Image supprimée avec succès !";
       })
       .addCase(deleteImage.rejected, (state, action) => {
         state.status = "failed";
         state.error = action.payload as string;
       })
-      // Ajout des reducers pour getAllImagesByUserId
       .addCase(getAllImagesByUserId.pending, (state) => {
         state.status = "loading";
+        state.error = null;
+        state.message = null;
       })
       .addCase(getAllImagesByUserId.fulfilled, (state, action: PayloadAction<Image[]>) => {
         state.status = "succeeded";
@@ -214,5 +209,5 @@ const imageSlice = createSlice({
   },
 });
 
-export const { clearImageState } = imageSlice.actions;
+export const { clearImageState, clearImageMessages } = imageSlice.actions;
 export default imageSlice.reducer;

@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import axios from "axios";
+import { BASE_URL } from "../../config/hostname"; // Import de la configuration de l'URL
 
 interface Certification {
   id?: string;
@@ -35,13 +36,10 @@ export const fetchCertificationsByUser = createAsyncThunk(
       const token = getAuthToken();
       if (!token) return rejectWithValue("Token non trouvé, veuillez vous reconnecter.");
 
-      const response = await axios.get(`http://localhost:8080/api/certifications/user/${userId}`, {
+      const response = await axios.get(`${BASE_URL}/api/certifications/user/${userId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      console.log("✅ Certifications récupérées :", response.data);
-
-      // 🔄 Adapter la structure pour correspondre au frontend
       return response.data.map((cert: any) => ({
         id: cert._id?.$oid || cert.id || "",
         userId: cert.userId || "",
@@ -54,7 +52,6 @@ export const fetchCertificationsByUser = createAsyncThunk(
         credentialUrl: cert.credentialUrl || "",
       }));
     } catch (error: any) {
-      console.error("❌ Erreur API :", error.response?.data || error.message);
       return rejectWithValue(error.response?.data?.error || "Échec du chargement des certifications.");
     }
   }
@@ -63,7 +60,7 @@ export const fetchCertificationsByUser = createAsyncThunk(
 // ✅ **Ajouter une certification**
 export const addCertification = createAsyncThunk(
   "certification/add",
-  async (certificationData: Omit<Certification, "id" | "userId">, { rejectWithValue }) => {
+  async (certificationData: Omit<Certification, "id" | "userId">, { rejectWithValue, getState }) => {
     try {
       const token = getAuthToken();
       const userId = localStorage.getItem("userId");
@@ -72,12 +69,10 @@ export const addCertification = createAsyncThunk(
       if (!userId) return rejectWithValue("ID utilisateur manquant, veuillez vous reconnecter.");
 
       const response = await axios.post(
-        "http://localhost:8080/api/certifications",
+        `${BASE_URL}/api/certifications`,
         { ...certificationData, userId },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-
-      console.log("✅ Certification ajoutée :", response.data);
 
       return {
         id: response.data._id?.$oid || response.data.id || "",
@@ -91,7 +86,6 @@ export const addCertification = createAsyncThunk(
         credentialUrl: response.data.credentialUrl || "",
       };
     } catch (error: any) {
-      console.error("❌ Erreur lors de l'ajout :", error.response?.data);
       return rejectWithValue(error.response?.data?.error || "Échec de l'ajout de la certification.");
     }
   }
@@ -100,18 +94,16 @@ export const addCertification = createAsyncThunk(
 // ✅ **Mettre à jour une certification**
 export const updateCertification = createAsyncThunk(
   "certification/update",
-  async ({ id, certificationData }: { id: string; certificationData: Certification }, { rejectWithValue }) => {
+  async ({ id, certificationData }: { id: string; certificationData: Partial<Certification> }, { rejectWithValue }) => {
     try {
       const token = getAuthToken();
       if (!token) return rejectWithValue("Token non trouvé, veuillez vous reconnecter.");
 
       const response = await axios.put(
-        `http://localhost:8080/api/certifications/${id}`,
+        `${BASE_URL}/api/certifications/${id}`,
         certificationData,
         { headers: { Authorization: `Bearer ${token}` } }
       );
-
-      console.log("✅ Certification mise à jour :", response.data);
 
       return {
         id: response.data._id?.$oid || response.data.id || "",
@@ -125,7 +117,6 @@ export const updateCertification = createAsyncThunk(
         credentialUrl: response.data.credentialUrl || "",
       };
     } catch (error: any) {
-      console.error("❌ Erreur lors de la mise à jour :", error.response?.data);
       return rejectWithValue(error.response?.data?.error || "Échec de la mise à jour de la certification.");
     }
   }
@@ -139,14 +130,12 @@ export const deleteCertification = createAsyncThunk(
       const token = getAuthToken();
       if (!token) return rejectWithValue("Token non trouvé, veuillez vous reconnecter.");
 
-      await axios.delete(`http://localhost:8080/api/certifications/${id}`, {
+      await axios.delete(`${BASE_URL}/api/certifications/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      console.log(`✅ Certification supprimée : ID ${id}`);
       return id;
     } catch (error: any) {
-      console.error("❌ Erreur lors de la suppression :", error.response?.data);
       return rejectWithValue(error.response?.data?.error || "Échec de la suppression de la certification.");
     }
   }
@@ -163,17 +152,14 @@ const certificationSlice = createSlice({
       .addCase(fetchCertificationsByUser.pending, (state) => {
         state.status = "loading";
         state.error = null;
-        console.log("⏳ Chargement des certifications...");
       })
       .addCase(fetchCertificationsByUser.fulfilled, (state, action: PayloadAction<Certification[]>) => {
         state.status = "succeeded";
-        console.log("✅ Certifications reçues :", action.payload);
         state.certifications = action.payload;
       })
       .addCase(fetchCertificationsByUser.rejected, (state, action) => {
         state.status = "failed";
         state.error = action.payload as string;
-        console.error("❌ Erreur lors de la récupération des certifications :", state.error);
       })
 
       // **Ajouter une certification**
@@ -200,6 +186,19 @@ const certificationSlice = createSlice({
         );
       })
       .addCase(updateCertification.rejected, (state, action) => {
+        state.status = "failed";
+        state.error = action.payload as string;
+      })
+
+      // **Supprimer une certification**
+      .addCase(deleteCertification.pending, (state) => {
+        state.status = "loading";
+      })
+      .addCase(deleteCertification.fulfilled, (state, action: PayloadAction<string>) => {
+        state.status = "succeeded";
+        state.certifications = state.certifications.filter((cert) => cert.id !== action.payload);
+      })
+      .addCase(deleteCertification.rejected, (state, action) => {
         state.status = "failed";
         state.error = action.payload as string;
       });
