@@ -25,6 +25,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 
 @RestController
@@ -141,6 +142,8 @@ public class ImageController {
             );
 
             if (goResponse.getStatusCode().is2xxSuccessful()) {
+                // Appeler ImageService pour supprimer l'image dans MongoDB et mettre à jour l'utilisateur
+                imageService.deleteImage(userId, name);
                 return ResponseEntity.noContent().build();
             } else {
                 ErrorResponse errorResponse = parseErrorResponse(goResponse.getBody());
@@ -216,8 +219,10 @@ public class ImageController {
                         goResponse.getBody(),
                         objectMapper.getTypeFactory().constructCollectionType(List.class, ImageDTO.class)
                 );
-                System.out.println("✅ Toutes les images récupérées avec succès pour userId: " + userId);
-                return ResponseEntity.ok(images);
+                // Garantir que images n'est jamais null
+                List<ImageDTO> result = (images != null) ? images : Collections.emptyList();
+                System.out.println("✅ Toutes les images récupérées avec succès pour userId: " + userId + " - " + result);
+                return ResponseEntity.ok(result);
             } else {
                 ErrorResponse errorResponse = parseErrorResponse(goResponse.getBody());
                 throw new GoApiException(HttpStatus.valueOf(goResponse.getStatusCode().value()), errorResponse);
@@ -227,10 +232,10 @@ public class ImageController {
             throw new GoApiException(HttpStatus.valueOf(e.getStatusCode().value()), errorResponse);
         } catch (JsonProcessingException e) {
             System.out.println("❌ Erreur lors du parsing des images: " + e.getMessage());
-            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+            return ResponseEntity.ok(Collections.emptyList()); // Retourne [] en cas d'erreur de parsing
         } catch (Exception e) {
             System.out.println("❌ Erreur lors de la récupération de toutes les images: " + e.getMessage());
-            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+            return ResponseEntity.ok(Collections.emptyList()); // Retourne [] en cas d'erreur générale
         }
     }
 

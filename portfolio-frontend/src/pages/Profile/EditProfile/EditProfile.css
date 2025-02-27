@@ -1,242 +1,170 @@
-/* Conteneur principal avec un style moderne */
+/* src/pages/EditProfile/EditProfile.css */
 .edit-profile-container {
-  max-width: 720px;
-  margin: 40px auto;
-  padding: 32px;
-  background: #ffffff; /* Fond blanc pur pour un look épuré */
-  border-radius: 16px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08); /* Ombre douce et moderne */
-  font-family: "Inter", "Arial", sans-serif; /* Typographie moderne */
-  border: 1px solid rgba(229, 231, 235, 0.5); /* Bordure subtile */
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
 }
 
-/* Titre avec contraste élevé */
 h2 {
-  text-align: center;
-  color: #1f2a44; /* Bleu profond pour le texte */
-  font-size: 2.25rem;
-  font-weight: 700;
-  margin-bottom: 32px;
-  letter-spacing: -0.02em; /* Espacement subtil des lettres */
+  font-size: 2rem;
+  margin-bottom: 20px;
+  color: #333;
 }
 
-/* Formulaire avec disposition fluide */
 form {
   display: flex;
   flex-direction: column;
-  gap: 24px; /* Espacement moderne */
+  gap: 15px;
 }
 
-/* Labels stylés */
 label {
-  font-weight: 600;
-  color: #374151; /* Gris foncé pour contraste */
+  font-weight: bold;
+  margin-bottom: 5px;
+  color: #555;
+}
+
+input, textarea, select {
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
   font-size: 1rem;
-  margin-bottom: 8px;
 }
 
-/* Champs de saisie avec design moderne */
-input,
-textarea,
-select {
-  padding: 14px 16px;
-  border: 1px solid #d1d5db; /* Bordure grise claire */
-  border-radius: 8px;
-  font-size: 1rem;
-  color: #1f2a44; /* Texte bleu profond pour lisibilité */
-  background-color: #f9fafb; /* Fond légèrement gris pour contraste */
-  transition: all 0.3s ease;
-  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05); /* Ombre interne subtile */
-}
-
-/* Focus avec effet moderne */
-input:focus,
-textarea:focus,
-select:focus {
-  border-color: #6366f1; /* Indigo vibrant */
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2); /* Halo de focus */
-  outline: none;
-  background-color: #ffffff; /* Fond blanc au focus */
-}
-
-/* État désactivé */
-input:disabled {
-  background-color: #e5e7eb; /* Gris clair désactivé */
-  color: #6b7280; /* Texte gris pour désactivé */
-  cursor: not-allowed;
-  opacity: 0.8;
-}
-
-/* Textarea avec hauteur ajustable */
 textarea {
-  min-height: 120px;
-  resize: vertical;
-  line-height: 1.5; /* Meilleure lisibilité */
+  min-height: 100px;
 }
 
-/* Boutons avec design moderne */
-button[type="submit"],
-button[type="button"] {
-  padding: 12px 24px;
-  background-color: #4f46e5; /* Indigo moderne */
-  color: #ffffff;
+button {
+  padding: 10px;
+  background-color: #007bff;
+  color: white;
   border: none;
-  border-radius: 8px;
+  border-radius: 5px;
   cursor: pointer;
   font-size: 1rem;
-  font-weight: 600;
-  transition: all 0.3s ease;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Ombre légère */
 }
 
-/* Effet hover pour les boutons */
-button[type="submit"]:hover:not(:disabled),
-button[type="button"]:hover:not(:disabled) {
-  background-color: #4338ca; /* Indigo plus foncé */
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); /* Ombre accentuée */
-}
-
-/* Boutons spécifiques */
-button[type="button"]:nth-of-type(1) {
-  background-color: #10b981; /* Vert émeraude */
-}
-
-button[type="button"]:nth-of-type(1):hover:not(:disabled) {
-  background-color: #059669; /* Vert plus foncé */
-}
-
-button[type="button"]:nth-of-type(2) {
-  background-color: #f59e0b; /* Jaune ambre */
-}
-
-button[type="button"]:nth-of-type(2):hover:not(:disabled) {
-  background-color: #d97706; /* Ambre plus foncé */
-}
-
-/* Bouton désactivé */
 button:disabled {
-  background-color: #9ca3af; /* Gris neutre */
+  background-color: #ccc;
   cursor: not-allowed;
-  transform: none;
-  box-shadow: none;
 }
 
-/* Messages d’erreur et de succès */
+button:hover:not(:disabled) {
+  background-color: #0056b3;
+}
+
 .error {
-  color: #ef4444; /* Rouge vif */
-  text-align: center;
-  font-size: 0.875rem;
-  margin: 12px 0;
-  background: #fef2f2; /* Fond rouge clair */
-  padding: 8px;
-  border-radius: 6px;
+  color: #e63946;
+  background: #ffe6e6;
+  padding: 10px;
+  border-radius: 5px;
 }
 
 .success {
-  color: #10b981; /* Vert émeraude */
-  text-align: center;
-  font-size: 0.875rem;
-  margin: 12px 0;
-  background: #ecfdf5; /* Fond vert clair */
-  padding: 8px;
-  border-radius: 6px;
+  color: #2a9d8f;
+  background: #e6f4f1;
+  padding: 10px;
+  border-radius: 5px;
 }
 
-/* Modal moderne */
+.image-section {
+  margin-top: 20px;
+}
+
+.image-preview {
+  margin-top: 10px;
+}
+
+.existing-images {
+  margin-top: 20px;
+}
+
+.existing-images h3 {
+  font-size: 1.5rem;
+  color: #333;
+  margin-bottom: 10px;
+}
+
+.images-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 15px;
+}
+
+.image-item {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: #f9f9f9;
+  border-radius: 8px;
+  padding: 10px;
+  transition: transform 0.3s ease;
+}
+
+.image-item:hover {
+  transform: scale(1.05);
+}
+
+.existing-image {
+  width: 100%;
+  max-height: 150px;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+.delete-icon {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  color: #ff4d4f;
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: color 0.3s ease;
+}
+
+.delete-icon:hover {
+  color: #cc0000;
+}
+
+.nsfw-label {
+  position: absolute;
+  top: 5px;
+  left: 5px;
+  background: #ff4d4f;
+  color: white;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.8rem;
+}
+
 .modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(17, 24, 39, 0.6); /* Gris foncé semi-transparent */
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 1000; /* Assure que le modal est au-dessus */
 }
 
 .modal-content {
-  background: #ffffff;
-  padding: 24px;
-  border-radius: 12px;
-  width: 420px;
-  max-width: 90%;
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15); /* Ombre prononcée */
-  border: 1px solid rgba(229, 231, 235, 0.5);
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
+  width: 90%;
+  max-width: 500px;
 }
 
 .modal-content h3 {
-  margin-bottom: 20px;
-  color: #1f2a44;
-  font-size: 1.5rem;
-  font-weight: 600;
-}
-
-.modal-content input {
-  width: 100%;
-  margin-bottom: 20px;
+  margin-bottom: 15px;
 }
 
 .modal-actions {
+  margin-top: 20px;
   display: flex;
-  gap: 12px;
+  gap: 10px;
   justify-content: flex-end;
-}
-
-.modal-actions button {
-  padding: 10px 18px;
-  font-size: 0.875rem;
-}
-
-.modal-actions button:first-child {
-  background-color: #10b981; /* Vert pour "Save" */
-}
-
-.modal-actions button:first-child:hover:not(:disabled) {
-  background-color: #059669;
-}
-
-.modal-actions button:last-child {
-  background-color: #ef4444; /* Rouge pour "Cancel" */
-}
-
-.modal-actions button:last-child:hover:not(:disabled) {
-  background-color: #dc2626;
-}
-
-/* Bouton "Back to profile" */
-button:last-child {
-  margin-top: 32px;
-  background-color: #6b7280; /* Gris élégant */
-}
-
-button:last-child:hover:not(:disabled) {
-  background-color: #4b5563;
-}
-
-/* Responsive */
-@media (max-width: 480px) {
-  .edit-profile-container {
-    margin: 20px;
-    padding: 24px;
-  }
-
-  h2 {
-    font-size: 1.75rem;
-  }
-
-  input,
-  textarea,
-  select,
-  button {
-    font-size: 0.875rem;
-    padding: 12px;
-  }
-
-  .modal-content {
-    width: 90%;
-    padding: 20px;
-  }
 }

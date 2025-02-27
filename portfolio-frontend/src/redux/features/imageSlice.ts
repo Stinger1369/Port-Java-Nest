@@ -134,18 +134,17 @@ export const getAllImagesByUserId = createAsyncThunk(
       }
 
       console.log("🔹 Fetching all images for user ID:", userId);
-
       const response = await axios.get(`${BASE_URL}/api/images/all/${userId}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
       });
 
-      console.log("✅ All images retrieved for user:", response.data);
-      return response.data as Image[];
+      // Vérifie que la réponse est un tableau, sinon retourne un tableau vide
+      const data = Array.isArray(response.data) ? response.data : [];
+      console.log("✅ All images retrieved for user:", data);
+      return data as Image[];
     } catch (error: any) {
       console.error("❌ Fetch all images failed:", error.response?.data || error.message);
-      return rejectWithValue(error.response?.data?.error || "Failed to fetch all images");
+      return rejectWithValue(error.response?.data?.error || error.message || "Failed to fetch all images");
     }
   }
 );

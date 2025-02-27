@@ -46,10 +46,13 @@ public class ImageService {
     public ImageDTO uploadImage(String userId, String name, MultipartFile file, String imageUrl, boolean isNSFW) {
         try {
             System.out.println("🔹 Début de l'upload d'image pour userId: " + userId + ", name: " + name);
+            // Utiliser le nom complet tiré de l'URL renvoyée par Go
+            String fullName = imageUrl.substring(imageUrl.lastIndexOf("/") + 1); // Extrait le nom avec UUID
+
             // Enregistrer les métadonnées dans MongoDB
             Image image = Image.builder()
                     .userId(userId)
-                    .name(name)
+                    .name(fullName) // Utiliser fullName au lieu de name
                     .path(imageUrl.replace("http://localhost:7000/", ""))
                     .isNSFW(isNSFW)
                     .isProfilePicture(true)
@@ -72,9 +75,8 @@ public class ImageService {
                     .filter(Optional::isPresent)
                     .map(Optional::get)
                     .anyMatch(img -> img.isProfilePicture())) {
-                savedImage.setIsProfilePicture(true); // Utiliser savedImage ici, car il a un ID
+                savedImage.setIsProfilePicture(true);
             } else {
-                // Si une autre image est déjà marquée comme profil, désactiver l'ancienne
                 user.getImageIds().stream()
                         .map(imageRepository::findById)
                         .filter(Optional::isPresent)
@@ -84,12 +86,10 @@ public class ImageService {
                             img.setIsProfilePicture(false);
                             imageRepository.save(img);
                         });
-                savedImage.setIsProfilePicture(true); // Utiliser savedImage ici
+                savedImage.setIsProfilePicture(true);
             }
 
-            // Mettre à jour profilePictureUrl dans User si tu veux stocker l'URL directement
             userService.updateProfilePictureUrl(userId, "http://localhost:7000/" + savedImage.getPath());
-
             userRepository.save(user);
 
             System.out.println("✅ Image uploadée avec succès: " + savedImage);
@@ -109,67 +109,53 @@ public class ImageService {
     }
 
     /**
-     * Supprimer une image
+     * Supprimer une image dans MongoDB et mettre à jour l'utilisateur
      */
     public void deleteImage(String userId, String name) {
         try {
-            System.out.println("🔹 Début de la suppression d'image pour userId: " + userId + ", name: " + name);
-            // Préparer la requête pour le serveur Go (sans token JWT, car non requis)
-            String goApiUrl = IMAGE_SERVER_URL + "/delete-image/" + userId + "/" + name;
-            HttpHeaders headers = new HttpHeaders();
-            HttpEntity<?> entity = new HttpEntity<>(headers);
+            System.out.println("🔹 Début de la suppression d'image dans MongoDB pour userId: " + userId + ", name: " + name);
 
-            ResponseEntity<String> response = restTemplate.exchange(
-                    goApiUrl,
-                    HttpMethod.DELETE,
-                    entity,
-                    String.class
-            );
-
-            System.out.println("🔹 Réponse du serveur Go: Statut = " + response.getStatusCode() + ", Corps = " + response.getBody());
-            if (!response.getStatusCode().is2xxSuccessful()) {
-                throw new HttpClientErrorException(response.getStatusCode(), "Failed to delete image: " + response.getBody());
+            // 1. Trouver et supprimer l'image dans MongoDB
+            Optional<Image> imageOpt = imageRepository.findByUserIdAndName(userId, name);
+            if (imageOpt.isEmpty()) {
+                System.out.println("⚠️ Image non trouvée dans MongoDB pour userId: " + userId + ", name: " + name);
+                throw new IllegalArgumentException("Image introuvable dans la base de données: " + name);
             }
-
-            // Supprimer l'image de MongoDB
-            // Trouver l'image par userId et name manuellement, car findByUserIdAndName n'existe pas
-            Image deletedImage = imageRepository.findByUserId(userId).stream()
-                    .filter(img -> img.getName().equals(name))
-                    .findFirst()
-                    .orElseThrow(() -> new IllegalArgumentException("Image introuvable : " + name));
+            Image deletedImage = imageOpt.get();
             imageRepository.delete(deletedImage);
+            System.out.println("✅ Image supprimée de MongoDB : " + deletedImage.getId());
 
-            // Mettre à jour l'utilisateur si l'image supprimée était la photo de profil
+            // 2. Mettre à jour l'utilisateur
             User user = userRepository.findById(userId)
                     .orElseThrow(() -> new IllegalArgumentException("Utilisateur introuvable : " + userId));
+            boolean removed = user.getImageIds().remove(deletedImage.getId());
+            if (!removed) {
+                System.out.println("⚠️ L'image " + deletedImage.getId() + " n'était pas dans la liste imageIds de l'utilisateur");
+            }
+
+            // 3. Gérer la photo de profil si elle est supprimée
             if (deletedImage.isProfilePicture()) {
-                // Trouver une nouvelle image pour devenir la photo de profil (par exemple, la plus récente)
-                List<Image> userImages = imageRepository.findByUserId(userId);
-                Image newProfileImage = null; // Déclarer la variable ici pour garantir la portée
-                if (!userImages.isEmpty()) {
-                    newProfileImage = userImages.stream()
-                            .filter(img -> !img.getId().equals(deletedImage.getId()))
+                List<Image> remainingImages = imageRepository.findByUserId(userId);
+                Image newProfileImage = null;
+                if (!remainingImages.isEmpty()) {
+                    newProfileImage = remainingImages.stream()
                             .max((img1, img2) -> img1.getUploadedAt().compareTo(img2.getUploadedAt()))
                             .orElse(null);
                     if (newProfileImage != null) {
                         newProfileImage.setIsProfilePicture(true);
                         imageRepository.save(newProfileImage);
+                        System.out.println("✅ Nouvelle photo de profil définie : " + newProfileImage.getId());
                     }
                 }
-
-                // Mettre à jour profilePictureUrl dans User si nécessaire (optionnel)
                 String newProfilePictureUrl = newProfileImage != null ? "http://localhost:7000/" + newProfileImage.getPath() : null;
-                userService.updateProfilePictureUrl(userId, newProfilePictureUrl);
+                userService.updateProfilePictureUrl(userId, newProfilePictureUrl); // Correction ici : utiliser userService
             }
 
             userRepository.save(user);
-            System.out.println("✅ Image supprimée avec succès");
-        } catch (HttpClientErrorException e) {
-            System.out.println("❌ Erreur HTTP Client lors de la suppression: Statut = " + e.getStatusCode() + ", Réponse = " + e.getResponseBodyAsString());
-            throw new RuntimeException("Failed to delete image from Go server: " + e.getResponseBodyAsString(), e);
+            System.out.println("✅ Utilisateur mis à jour avec succès");
         } catch (Exception e) {
-            System.out.println("❌ Erreur inattendue lors de la suppression: " + e.getMessage() + ", Stacktrace: " + e.getStackTrace());
-            throw new RuntimeException("Failed to delete image: " + e.getMessage(), e);
+            System.out.println("❌ Erreur lors de la suppression de l'image: " + e.getMessage());
+            throw new RuntimeException("Échec de la suppression de l'image: " + e.getMessage(), e);
         }
     }
 
