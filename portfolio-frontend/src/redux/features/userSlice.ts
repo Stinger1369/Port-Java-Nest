@@ -9,13 +9,16 @@ interface User {
   lastName?: string;
   phone?: string;
   address?: string;
-  city?: string; // Ajouté pour gérer la ville
-  country?: string; // Ajouté pour gérer le pays
+  city?: string;
+  country?: string;
   sex?: "Man" | "Woman" | "Other" | "";
   bio?: string;
   slug?: string;
-  latitude?: number; // Ajouté pour gérer la latitude
-  longitude?: number; // Ajouté pour gérer la longitude
+  latitude?: number;
+  longitude?: number;
+  birthdate?: string;
+  age?: number;
+  showBirthdate?: boolean;
 }
 
 interface UserState {
@@ -32,6 +35,24 @@ const initialState: UserState = {
   status: "idle",
   error: null,
   message: null,
+};
+
+// Fonction utilitaire pour normaliser birthdate
+const normalizeBirthdate = (birthdate: any): string => {
+  if (!birthdate) return "";
+  if (typeof birthdate === "string") {
+    // Gérer les formats inattendus comme "1981,3,27"
+    if (birthdate.includes(",")) {
+      const [year, month, day] = birthdate.split(",");
+      return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
+    }
+    // Gérer le format ISO avec timestamp
+    if (birthdate.includes("T")) {
+      return birthdate.split("T")[0];
+    }
+    return birthdate; // Retourner tel quel si déjà au format "yyyy-MM-dd"
+  }
+  return ""; // Retourner vide si le format est invalide
 };
 
 // Récupérer l'utilisateur après connexion
@@ -58,9 +79,20 @@ export const fetchUser = createAsyncThunk(
         return rejectWithValue("User profile is incomplete");
       }
 
-      console.log("✅ Utilisateur récupéré :", response.data);
-      console.log("Sex et Bio reçus du backend:", { sex: response.data.sex, bio: response.data.bio });
-      return response.data;
+      const normalizedData = {
+        ...response.data,
+        birthdate: normalizeBirthdate(response.data.birthdate),
+      };
+
+      console.log("✅ Utilisateur récupéré :", normalizedData);
+      console.log("Sex, Bio, Birthdate, Age et ShowBirthdate reçus du backend:", {
+        sex: normalizedData.sex,
+        bio: normalizedData.bio,
+        birthdate: normalizedData.birthdate,
+        age: normalizedData.age,
+        showBirthdate: normalizedData.showBirthdate,
+      });
+      return normalizedData;
     } catch (error: any) {
       console.error("❌ Fetch user failed:", error.response?.data);
       return rejectWithValue(error.response?.data?.error || "Failed to fetch user");
@@ -87,7 +119,8 @@ export const fetchAllUsers = createAsyncThunk(
       console.log("✅ Liste des utilisateurs récupérée :", response.data);
       return response.data.map((user: any) => ({
         ...user,
-        id: user.id || user._id.$oid, // Normalisation de l'ID MongoDB
+        id: user.id || user._id?.$oid,
+        birthdate: normalizeBirthdate(user.birthdate),
       }));
     } catch (error: any) {
       console.error("❌ Fetch all users failed:", error.response?.data);
@@ -112,11 +145,14 @@ export const fetchUserById = createAsyncThunk(
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      console.log("✅ Utilisateur récupéré :", response.data);
-      return {
+      const normalizedData = {
         ...response.data,
-        id: response.data.id || response.data._id.$oid, // Normalisation de l'ID MongoDB
+        id: response.data.id || response.data._id?.$oid,
+        birthdate: normalizeBirthdate(response.data.birthdate),
       };
+
+      console.log("✅ Utilisateur récupéré :", normalizedData);
+      return normalizedData;
     } catch (error: any) {
       console.error("❌ Fetch user by ID failed:", error.response?.data);
       return rejectWithValue(error.response?.data?.error || "Failed to fetch user");
@@ -135,24 +171,32 @@ export const updateUser = createAsyncThunk(
       const payload = {
         ...userData,
         phone: userData.phone ? String(userData.phone) : undefined,
+        birthdate: normalizeBirthdate(userData.birthdate), // Normaliser avant envoi
+        showBirthdate: userData.showBirthdate,
       };
 
       console.log("🔹 Sending update request for user:", payload);
       console.log("Données envoyées au backend:", JSON.stringify(payload, null, 2));
 
-      const response = await axios.put(
-        `${BASE_URL}/api/users/${userData.id}`,
-        payload,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-
-      console.log("✅ Update successful:", response.data);
-      console.log("Phone, City et Country reçus du backend après update:", {
-        phone: response.data.phone,
-        city: response.data.city,
-        country: response.data.country,
+      const response = await axios.put(`${BASE_URL}/api/users/${userData.id}`, payload, {
+        headers: { Authorization: `Bearer ${token}` },
       });
-      return response.data;
+
+      const normalizedData = {
+        ...response.data,
+        birthdate: normalizeBirthdate(response.data.birthdate),
+      };
+
+      console.log("✅ Update successful:", normalizedData);
+      console.log("Phone, City, Country, Birthdate, Age et ShowBirthdate reçus du backend après update:", {
+        phone: normalizedData.phone,
+        city: normalizedData.city,
+        country: normalizedData.country,
+        birthdate: normalizedData.birthdate,
+        age: normalizedData.age,
+        showBirthdate: normalizedData.showBirthdate,
+      });
+      return normalizedData;
     } catch (error: any) {
       console.error("❌ Update failed:", error.response?.data);
       return rejectWithValue(error.response?.data?.error || "Failed to update user");
@@ -174,6 +218,7 @@ export const deleteUser = createAsyncThunk(
 
       return userId;
     } catch (error: any) {
+      console.error("❌ Delete user failed:", error.response?.data);
       return rejectWithValue(error.response?.data?.error || "Failed to delete user");
     }
   }

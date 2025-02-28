@@ -1,14 +1,19 @@
-# Utiliser une image Java 17 (ou 21 si nécessaire) comme base
-FROM openjdk:17-jdk-slim
-
-# Définir le répertoire de travail
+# Stage de build avec Maven
+FROM maven:3.9-eclipse-temurin-21 AS build
 WORKDIR /app
+COPY . .
+RUN mvn clean package -DskipTests
+# Étape de débogage : vérifier si le JAR est généré
+RUN ls -l /app/target/
 
-# Copier le fichier JAR généré (target/portfolio-backend-0.0.1-SNAPSHOT.jar)
-COPY target/portfolio-backend-0.0.1-SNAPSHOT.jar app.jar
-
-# Exposer le port 8080 (correspondant à server.port dans application.yml)
+# Stage runtime avec JDK complet
+FROM openjdk:21-jdk
+WORKDIR /app
+COPY --from=build /app/target/portfolio-backend-0.0.1-SNAPSHOT.jar app.jar
+RUN chmod 644 /app/app.jar
+RUN ls -l /app/
+RUN whoami
+# Vérifier la version de Java
+RUN java -version
 EXPOSE 8080
-
-# Commande pour lancer l'application
 CMD ["java", "-jar", "app.jar"]

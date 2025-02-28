@@ -9,6 +9,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.Period; // Ajout de cet import
 import java.util.*;
 
 @Document(collection = "users")
@@ -43,7 +44,7 @@ public class User implements UserDetails {
     @Indexed(unique = true)
     private String slug;
 
-    private String profilePictureUrl; // Tu peux garder ce champ si tu veux stocker l'URL directement, mais il sera mis à jour via UserService
+    private String profilePictureUrl;
     private Set<String> interests;
     private String bio;
 
@@ -104,6 +105,16 @@ public class User implements UserDetails {
         allIds.addAll(recommendationIds);
         allIds.addAll(interestIds);
         return allIds;
+    }
+
+    // champ pour contrôler l'affichage de la date de naissance
+    @Builder.Default
+    private boolean showBirthdate = false;
+
+    // Méthode pour calculer l'âge
+    public Integer getAge() {
+        if (birthdate == null) return null;
+        return Period.between(birthdate, LocalDate.now()).getYears();
     }
 
     @Override

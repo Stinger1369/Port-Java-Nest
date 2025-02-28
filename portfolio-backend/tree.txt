@@ -269,14 +269,12 @@
 │   │   ├── templates/
 │   │   │   └── contact-request-email.html
 │   │   └── application.yml
-│   ├── generated-sources/
-│   │   └── annotations/
-│   ├── generated-test-sources/
-│   │   └── test-annotations/
-│   └── test-classes/
+│   └── generated-sources/
+│       └── annotations/
 ├── .env
 ├── .gitattributes
 ├── .gitignore
+├── Dockerfile
 ├── HELP.md
 ├── mvnw
 ├── mvnw.cmd

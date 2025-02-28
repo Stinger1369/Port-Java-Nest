@@ -17,7 +17,7 @@ const EditProfileContainer = () => {
   const user = useSelector((state: RootState) => state.user.user);
   const { address, latitude, longitude, city, country } = useSelector((state: RootState) => state.googleMaps);
 
-  const [currentScreen, setCurrentScreen] = useState(1); // 1: Personal, 2: Address, 3: Images, 4: Confirmation
+  const [currentScreen, setCurrentScreen] = useState(1);
   const totalScreens = 4;
 
   // Données initiales de l'utilisateur
@@ -33,9 +33,12 @@ const EditProfileContainer = () => {
     country: "",
     latitude: 0,
     longitude: 0,
+    birthdate: "",
+    showBirthdate: false,
+    age: 0,
   });
 
-  // Données du formulaire centralisées (à passer aux sous-composants)
+  // Données du formulaire centralisées
   const [formData, setFormData] = useState({
     id: "",
     firstName: "",
@@ -48,6 +51,9 @@ const EditProfileContainer = () => {
     country: "",
     latitude: 0,
     longitude: 0,
+    birthdate: "",
+    showBirthdate: false,
+    age: 0,
   });
 
   // Charger les données utilisateur au montage
@@ -62,8 +68,12 @@ const EditProfileContainer = () => {
   useEffect(() => {
     if (user) {
       const normalizedPhone = user.phone && !user.phone.startsWith("+") ? `+${user.phone}` : user.phone || "";
+      // Gestion sécurisée de birthdate pour éviter split sur une valeur non-string
+      const normalizedBirthdate = typeof user.birthdate === "string" && user.birthdate.includes("T")
+        ? user.birthdate.split("T")[0]
+        : user.birthdate || "";
       const updatedFormData = {
-        id: user.id || "", // Ajout de l'ID de l'utilisateur
+        id: user.id || "",
         firstName: user.firstName || "",
         lastName: user.lastName || "",
         phone: normalizedPhone,
@@ -74,16 +84,24 @@ const EditProfileContainer = () => {
         country: country || user.country || "",
         latitude: latitude || user.latitude || 0,
         longitude: longitude || user.longitude || 0,
+        birthdate: normalizedBirthdate,
+        showBirthdate: user.showBirthdate ?? false,
+        age: user.age || 0,
       };
-      setInitialFormData(updatedFormData); // Stocker les données initiales
-      setFormData(updatedFormData); // Initialiser formData avec les données utilisateur
+      console.log("🔹 Données utilisateur synchronisées :", updatedFormData);
+      setInitialFormData(updatedFormData);
+      setFormData(updatedFormData);
     }
   }, [user, address, latitude, longitude, city, country]);
 
   // Vérifier s'il y a des changements
   const hasChanges = () => {
+    console.log("🔸 Comparaison pour détecter les changements :", {
+      initial: initialFormData,
+      current: formData,
+    });
     return (
-      formData.id === initialFormData.id && ( // Vérifier que l'ID est le même
+      formData.id === initialFormData.id && (
         formData.firstName !== initialFormData.firstName ||
         formData.lastName !== initialFormData.lastName ||
         formData.phone !== initialFormData.phone ||
@@ -93,7 +111,9 @@ const EditProfileContainer = () => {
         formData.sex !== initialFormData.sex ||
         formData.bio !== initialFormData.bio ||
         formData.latitude !== initialFormData.latitude ||
-        formData.longitude !== initialFormData.longitude
+        formData.longitude !== initialFormData.longitude ||
+        formData.birthdate !== initialFormData.birthdate ||
+        formData.showBirthdate !== initialFormData.showBirthdate
       )
     );
   };
@@ -108,7 +128,7 @@ const EditProfileContainer = () => {
   };
 
   const handleClose = () => {
-    navigate("/profile"); // Retour direct au profil
+    navigate("/profile");
   };
 
   const renderScreen = () => {
@@ -123,7 +143,7 @@ const EditProfileContainer = () => {
         return (
           <ConfirmationScreen
             formData={formData}
-            hasChanges={hasChanges} // Passer la fonction directement
+            hasChanges={hasChanges}
           />
         );
       default:

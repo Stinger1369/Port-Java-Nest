@@ -30,7 +30,7 @@ const Profile = () => {
   const imageError = useSelector((state: RootState) => state.image.error);
 
   const [profileImage, setProfileImage] = useState<Image | null>(null);
-  const [selectedImage, setSelectedImage] = useState<Image | null>(null); // État pour l'image agrandie
+  const [selectedImage, setSelectedImage] = useState<Image | null>(null);
 
   const userId = localStorage.getItem("userId");
 
@@ -69,6 +69,9 @@ const Profile = () => {
         id: user.id,
         sex: user.sex,
         bio: user.bio,
+        birthdate: user.birthdate,
+        age: user.age,
+        showBirthdate: user.showBirthdate,
       });
     }
   }, [user]);
@@ -86,12 +89,10 @@ const Profile = () => {
     }
   };
 
-  // Ouvre l'image en grand
   const handleImageClick = (image: Image) => {
     setSelectedImage(image);
   };
 
-  // Ferme la modale
   const handleCloseModal = () => {
     setSelectedImage(null);
   };
@@ -183,6 +184,18 @@ const Profile = () => {
                 <span className="label">{t("profile.sex", "Sex")}</span>
                 <span className="value">{getSexLabel(user.sex)}</span>
               </li>
+              {user.showBirthdate && user.birthdate && (
+                <li>
+                  <span className="label">{t("profile.birthdate", "Birthdate")}</span>
+                  <span className="value">{user.birthdate}</span>
+                </li>
+              )}
+              {user.showBirthdate && user.age && (
+                <li>
+                  <span className="label">{t("profile.age", "Age")}</span>
+                  <span className="value">{user.age}</span>
+                </li>
+              )}
               <li>
                 <span className="label">{t("profile.bio", "Bio")}</span>
                 <span className="value">{user.bio || t("profile.noBio", "No biography")}</span>

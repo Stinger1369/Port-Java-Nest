@@ -5,8 +5,10 @@ portfolio-frontend/
 │   └── releases/
 │       └── yarn-4.6.0.cjs
 ├── .yarnrc.yml
+├── dockerfile
 ├── eslint.config.js
 ├── index.html
+├── nginx.conf
 ├── package.json
 ├── public/
 │   └── vite.svg
@@ -65,7 +67,7 @@ portfolio-frontend/
 │   │   │   │   └── UpdateEducation/
 │   │   │   │       ├── UpdateEducation.css
 │   │   │   │       └── UpdateEducation.tsx
-│   │   │   ├── experience/
+│   │   │   ├── Experience/
 │   │   │   │   ├── AddExperience.tsx
 │   │   │   │   ├── Experience.css
 │   │   │   │   ├── Experience.tsx

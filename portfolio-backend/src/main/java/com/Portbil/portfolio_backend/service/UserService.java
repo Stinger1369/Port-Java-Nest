@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;  // Ajouté pour la validation de birthdate
 import java.time.LocalDateTime;
 import java.util.*;
 
@@ -88,7 +89,6 @@ public class UserService {
                 user.setLatitude(userDTO.getLatitudeAsDouble());
                 user.setLongitude(userDTO.getLongitudeAsDouble());
 
-                // Récupérer ville et pays à partir des coordonnées
                 Map<String, String> locationDetails = googleMapsService.getCityAndCountryFromCoordinates(
                         userDTO.getLatitudeAsDouble(), userDTO.getLongitudeAsDouble());
                 user.setCity(locationDetails.get("city"));
@@ -97,10 +97,27 @@ public class UserService {
                 throw new IllegalArgumentException("Les deux coordonnées (latitude et longitude) doivent être fournies ensemble.");
             }
 
+            // Mise à jour de la date de naissance avec validation
+            if (userDTO.getBirthdate() != null) {
+                if (userDTO.getBirthdate().isAfter(LocalDate.now())) {
+                    throw new IllegalArgumentException("La date de naissance ne peut pas être dans le futur");
+                }
+                user.setBirthdate(userDTO.getBirthdate());
+                System.out.println("🔹 Date de naissance mise à jour : " + userDTO.getBirthdate());
+            }
+
+            // Mise à jour de showBirthdate
+            user.setShowBirthdate(userDTO.isShowBirthdate()); // Ajouté pour mettre à jour showBirthdate
+            System.out.println("🔹 ShowBirthdate mis à jour : " + userDTO.isShowBirthdate()); // Log pour vérifier
+
             User savedUser = userRepository.save(user);
             System.out.println("✅ Mise à jour réussie pour l'utilisateur ID: " + id);
             System.out.println("Phone enregistré dans MongoDB : " + savedUser.getPhone());
-            System.out.println("Ville et pays enregistrés : city=" + savedUser.getCity() + ", country=" + savedUser.getCountry());
+            System.out.println("Ville et pays enregistrés : city=" + savedUser.getCity() +
+                    ", country=" + savedUser.getCountry() +
+                    ", birthdate=" + (savedUser.isShowBirthdate() ? savedUser.getBirthdate() : "hidden") +
+                    ", age=" + (savedUser.isShowBirthdate() ? savedUser.getAge() : "hidden") +
+                    ", showBirthdate=" + savedUser.isShowBirthdate());
             return savedUser;
         });
     }
@@ -119,7 +136,6 @@ public class UserService {
         String address = googleMapsService.getAddressFromCoordinates(user.getLatitude(), user.getLongitude());
         user.setAddress(address);
 
-        // Récupérer ville et pays à partir des coordonnées
         Map<String, String> locationDetails = googleMapsService.getCityAndCountryFromCoordinates(
                 user.getLatitude(), user.getLongitude());
         user.setCity(locationDetails.get("city"));
@@ -267,7 +283,6 @@ public class UserService {
         }
 
         user.setPassword(passwordEncoder.encode(newPassword));
-
         user.setResetToken(null);
         user.setResetTokenExpiration(null);
         user.setVerified(true);
@@ -322,8 +337,6 @@ public class UserService {
 
     /**
      * Envoyer une demande de contact entre utilisateurs
-     * @throws IllegalArgumentException si les ID sont invalides
-     * @throws IllegalStateException si le contact existe déjà
      */
     public void sendUserContactRequest(String senderId, String receiverId) {
         if (senderId == null || senderId.isEmpty() || receiverId == null || receiverId.isEmpty()) {
@@ -420,23 +433,20 @@ public class UserService {
                 .orElseThrow(() -> new IllegalArgumentException("Utilisateur introuvable : " + userId));
 
         if (user.getImageIds() == null || user.getImageIds().isEmpty()) {
-            return null; // Aucune image associée
+            return null;
         }
 
-        // Récupérer l’image marquée comme photo de profil par défaut (isProfilePicture = true)
         Image profileImage = imageRepository.findByUserIdAndIsProfilePicture(userId, true)
                 .orElseGet(() -> {
-                    // Si aucune image n’est marquée, prendre la plus récente
                     return imageRepository.findByUserId(userId).stream()
                             .max((img1, img2) -> img1.getUploadedAt().compareTo(img2.getUploadedAt()))
                             .orElse(null);
                 });
 
         if (profileImage == null) {
-            return null; // Aucune image trouvée
+            return null;
         }
 
-        // Retourner l’URL complète en combinant le chemin avec la base URL du serveur Go
         return "http://localhost:7000/" + profileImage.getPath();
     }
 
@@ -446,7 +456,7 @@ public class UserService {
     public void updateProfilePictureUrl(String userId, String imagePath) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("Utilisateur introuvable : " + userId));
-        user.setProfilePictureUrl(imagePath); // Stocker le chemin ou l’URL directement
+        user.setProfilePictureUrl(imagePath);
         userRepository.save(user);
     }
 }

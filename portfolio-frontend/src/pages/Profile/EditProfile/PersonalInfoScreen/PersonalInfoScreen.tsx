@@ -3,6 +3,7 @@ import { RootState } from "../../../../redux/store";
 import { useTranslation } from "react-i18next";
 import PhoneInputComponent from "../../../../components/PhoneInput/PhoneInputComponent";
 import "./PersonalInfoScreen.css";
+
 interface Props {
   formData: any;
   setFormData: (data: any) => void;
@@ -18,6 +19,12 @@ const PersonalInfoScreen = ({ formData, setFormData }: Props) => {
 
   const handlePhoneChange = (phone: string) => {
     setFormData({ ...formData, phone });
+  };
+
+  const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newValue = e.target.checked;
+    console.log("🔹 Mise à jour de showBirthdate :", newValue); // Log pour débogage
+    setFormData({ ...formData, [e.target.name]: newValue });
   };
 
   return (
@@ -49,6 +56,22 @@ const PersonalInfoScreen = ({ formData, setFormData }: Props) => {
         <option value="Woman">{t("editProfile.sexOptions.woman", "Woman")}</option>
         <option value="Other">{t("editProfile.sexOptions.other", "Other")}</option>
       </select>
+      <label>{t("editProfile.birthdate", "Birthdate")} :</label>
+      <input
+        type="date"
+        name="birthdate"
+        value={formData.birthdate || user?.birthdate || ""}
+        onChange={handleChange}
+      />
+      <label>
+        <input
+          type="checkbox"
+          name="showBirthdate"
+          checked={formData.showBirthdate ?? user?.showBirthdate ?? false}
+          onChange={handleCheckboxChange}
+        />
+        {t("editProfile.showBirthdate", "Show birthdate and age")}
+      </label>
       <label>{t("editProfile.bio", "Bio")} :</label>
       <textarea name="bio" value={formData.bio || user?.bio || ""} onChange={handleChange} />
     </div>

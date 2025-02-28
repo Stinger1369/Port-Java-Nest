@@ -2,12 +2,15 @@ package com.Portbil.portfolio_backend.dto;
 
 import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonFormat; // Ajout pour formater LocalDate
 import lombok.Builder;
 import lombok.Data;
 
+import java.time.LocalDate;
+
 @Data
 @Builder
-@JsonInclude(JsonInclude.Include.NON_NULL) // Ignorer les champs null dans le JSON
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class UserDTO {
     private String id;
     private String email;
@@ -16,20 +19,24 @@ public class UserDTO {
     private String lastName;
     private String phone;
     private String address;
-    private String city; // Ajouté pour gérer la ville
-    private String country; // Ajouté pour gérer le pays
+    private String city;
+    private String country;
     private String sex;
+
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd") // Formatage en chaîne
+    private LocalDate birthdate;
+
+    private boolean showBirthdate;
+    private Integer age;
     private String slug;
     private String bio;
 
-    // Champs pour la géolocalisation, avec noms alternatifs possibles
-    @JsonAlias({ "latitude", "lat" }) // Utilise @JsonAlias pour les noms alternatifs
-    private String latitude; // Utilise String directement
+    @JsonAlias({ "latitude", "lat" })
+    private String latitude;
 
-    @JsonAlias({ "longitude", "lon" }) // Utilise @JsonAlias pour les noms alternatifs
-    private String longitude; // Utilise String directement
+    @JsonAlias({ "longitude", "lon" })
+    private String longitude;
 
-    // Getters personnalisés pour convertir les chaînes en Double (si nécessaire pour UserService)
     public Double getLatitudeAsDouble() {
         if (latitude == null) return null;
         try {

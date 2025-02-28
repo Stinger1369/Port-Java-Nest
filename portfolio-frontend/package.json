@@ -4,7 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "set NODE_ENV=development&& vite",
     "build": "tsc -b && vite build",
     "build:prod": "NODE_ENV=production vite build",
     "start": "serve dist -p 5173 -s",

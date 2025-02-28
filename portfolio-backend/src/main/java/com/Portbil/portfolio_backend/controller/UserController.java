@@ -49,7 +49,6 @@ public class UserController {
         System.out.println("🔹 Récupération de la liste des utilisateurs pour l'utilisateur authentifié: " + authentication.getName());
         List<User> users = userService.getAllUsers();
 
-        // Convertir en DTO pour ne pas exposer toutes les données sensibles
         List<UserDTO> userDTOs = users.stream().map(user -> UserDTO.builder()
                         .id(user.getId())
                         .email(user.getEmail())
@@ -57,11 +56,14 @@ public class UserController {
                         .lastName(user.getLastName())
                         .phone(user.getPhone())
                         .address(user.getAddress())
-                        .city(user.getCity()) // Inclure la ville
-                        .country(user.getCountry()) // Inclure le pays
-                        .sex(user.getSex()) // Inclure explicitement le sex
+                        .city(user.getCity())
+                        .country(user.getCountry())
+                        .sex(user.getSex())
                         .slug(user.getSlug())
-                        .bio(user.getBio()) // Inclure explicitement le bio
+                        .bio(user.getBio())
+                        .birthdate(user.getBirthdate()) // Toujours renvoyer birthdate
+                        .age(user.getAge())             // Toujours renvoyer age
+                        .showBirthdate(user.isShowBirthdate()) // Toujours inclus
                         .build())
                 .collect(Collectors.toList());
 
@@ -82,7 +84,12 @@ public class UserController {
         }
         System.out.println("✅ Utilisateur trouvé : " + user.get().getEmail());
         System.out.println("Phone renvoyé au frontend : " + user.get().getPhone());
-        System.out.println("Sex et Bio renvoyés au frontend : sex=" + user.get().getSex() + ", bio=" + user.get().getBio()); // Log pour déboguer
+        System.out.println("Sex et Bio renvoyés au frontend : sex=" + user.get().getSex() +
+                ", bio=" + user.get().getBio() +
+                ", birthdate=" + user.get().getBirthdate() + // Toujours afficher dans les logs
+                ", age=" + user.get().getAge() +             // Toujours afficher dans les logs
+                ", showBirthdate=" + user.get().isShowBirthdate());
+
         UserDTO userDTO = UserDTO.builder()
                 .id(user.get().getId())
                 .email(user.get().getEmail())
@@ -90,11 +97,14 @@ public class UserController {
                 .lastName(user.get().getLastName())
                 .phone(user.get().getPhone())
                 .address(user.get().getAddress())
-                .city(user.get().getCity()) // Inclure la ville
-                .country(user.get().getCountry()) // Inclure le pays
-                .sex(user.get().getSex()) // Inclure explicitement le sex
+                .city(user.get().getCity())
+                .country(user.get().getCountry())
+                .sex(user.get().getSex())
                 .slug(user.get().getSlug())
-                .bio(user.get().getBio()) // Inclure explicitement le bio
+                .bio(user.get().getBio())
+                .birthdate(user.get().getBirthdate()) // Toujours renvoyer birthdate
+                .age(user.get().getAge())             // Toujours renvoyer age
+                .showBirthdate(user.get().isShowBirthdate()) // Toujours inclus
                 .build();
         return ResponseEntity.ok(userDTO);
     }
@@ -114,8 +124,12 @@ public class UserController {
 
         System.out.println("🔹 Tentative de mise à jour de l'utilisateur ID: " + id);
         System.out.println("Received phone from frontend: " + (userDTO != null ? userDTO.getPhone() : "null"));
-        System.out.println("🔹 Coordonnées reçues du frontend: latitude=" + (userDTO != null ? userDTO.getLatitude() : "null") + ", longitude=" + (userDTO != null ? userDTO.getLongitude() : "null"));
-        System.out.println("🔹 Sex et Bio reçus du frontend: sex=" + (userDTO != null ? userDTO.getSex() : "null") + ", bio=" + (userDTO != null ? userDTO.getBio() : "null")); // Log pour déboguer
+        System.out.println("🔹 Coordonnées reçues du frontend: latitude=" + (userDTO != null ? userDTO.getLatitude() : "null") +
+                ", longitude=" + (userDTO != null ? userDTO.getLongitude() : "null"));
+        System.out.println("🔹 Sex, Bio et Birthdate reçus du frontend: sex=" + (userDTO != null ? userDTO.getSex() : "null") +
+                ", bio=" + (userDTO != null ? userDTO.getBio() : "null") +
+                ", birthdate=" + (userDTO != null ? userDTO.getBirthdate() : "null") +
+                ", showBirthdate=" + (userDTO != null ? userDTO.isShowBirthdate() : "null"));
 
         if (authentication == null || authentication.getPrincipal() == null) {
             log.error("❌ Utilisateur non authentifié !");
@@ -132,13 +146,15 @@ public class UserController {
         }
 
         try {
-            log.debug("Tentative de mise à jour de l'utilisateur avec les données : latitude={}, longitude={}, city={}, country={}, sex={}, bio={}",
+            log.debug("Tentative de mise à jour de l'utilisateur avec les données : latitude={}, longitude={}, city={}, country={}, sex={}, bio={}, birthdate={}, showBirthdate={}",
                     userDTO != null ? userDTO.getLatitude() : "null",
                     userDTO != null ? userDTO.getLongitude() : "null",
                     userDTO != null ? userDTO.getCity() : "null",
                     userDTO != null ? userDTO.getCountry() : "null",
                     userDTO != null ? userDTO.getSex() : "null",
-                    userDTO != null ? userDTO.getBio() : "null");
+                    userDTO != null ? userDTO.getBio() : "null",
+                    userDTO != null ? userDTO.getBirthdate() : "null",
+                    userDTO != null ? userDTO.isShowBirthdate() : "null");
 
             Optional<User> updatedUser = userService.updateUser(id, userDTO);
             if (updatedUser.isEmpty()) {
@@ -153,22 +169,28 @@ public class UserController {
                     .lastName(updatedUser.get().getLastName())
                     .phone(updatedUser.get().getPhone())
                     .address(updatedUser.get().getAddress())
-                    .city(updatedUser.get().getCity()) // Inclure la ville
-                    .country(updatedUser.get().getCountry()) // Inclure le pays
-                    .sex(updatedUser.get().getSex()) // Inclure explicitement le sex
+                    .city(updatedUser.get().getCity())
+                    .country(updatedUser.get().getCountry())
+                    .sex(updatedUser.get().getSex())
                     .slug(updatedUser.get().getSlug())
-                    .bio(updatedUser.get().getBio()) // Inclure explicitement le bio
+                    .bio(updatedUser.get().getBio())
+                    .birthdate(updatedUser.get().getBirthdate()) // Toujours renvoyer birthdate
+                    .age(updatedUser.get().getAge())             // Toujours renvoyer age
+                    .showBirthdate(updatedUser.get().isShowBirthdate()) // Toujours inclus
                     .build();
 
             log.info("✅ Mise à jour réussie pour l'utilisateur ID: {}", id);
             System.out.println("✅ Mise à jour réussie pour l'utilisateur ID: " + id);
             System.out.println("Saved phone in DB: " + updatedUser.get().getPhone());
-            System.out.println("🔹 Nouvelles coordonnées, ville, pays, sex et bio enregistrés: latitude=" + updatedUser.get().getLatitude() +
+            System.out.println("🔹 Nouvelles coordonnées, ville, pays, sex, bio et birthdate enregistrés: latitude=" + updatedUser.get().getLatitude() +
                     ", longitude=" + updatedUser.get().getLongitude() +
                     ", city=" + updatedUser.get().getCity() +
                     ", country=" + updatedUser.get().getCountry() +
                     ", sex=" + updatedUser.get().getSex() +
-                    ", bio=" + updatedUser.get().getBio());
+                    ", bio=" + updatedUser.get().getBio() +
+                    ", birthdate=" + updatedUser.get().getBirthdate() + // Toujours afficher dans les logs
+                    ", age=" + updatedUser.get().getAge() +             // Toujours afficher dans les logs
+                    ", showBirthdate=" + updatedUser.get().isShowBirthdate());
             return ResponseEntity.ok(responseDTO);
         } catch (IllegalArgumentException e) {
             log.error("⚠️ Erreur lors de la mise à jour : {}", e.getMessage(), e);
