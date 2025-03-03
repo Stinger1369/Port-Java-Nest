@@ -28,7 +28,7 @@ const getAuthToken = () => localStorage.getItem("token");
 // Mettre à jour l'adresse via Google Maps
 export const updateUserAddress = createAsyncThunk(
   "googleMaps/updateUserAddress",
-  async (userId: string, { rejectWithValue }) => {
+  async ({ userId, latitude, longitude }: { userId: string; latitude: number; longitude: number }, { rejectWithValue }) => {
     try {
       const token = getAuthToken();
       if (!token) {
@@ -36,17 +36,16 @@ export const updateUserAddress = createAsyncThunk(
         return rejectWithValue("Token non trouvé, veuillez vous reconnecter.");
       }
 
-      console.log(`🔹 Mise à jour de l'adresse pour l'utilisateur ${userId}`);
+      console.log(`🔹 Mise à jour de l'adresse pour l'utilisateur ${userId} avec latitude: ${latitude}, longitude: ${longitude}`);
       const response = await axios.put(
         `${BASE_URL}/api/google-maps/address/${userId}`,
-        {},
+        { latitude, longitude },
         { headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" } }
       );
 
       const data = response.data;
       console.log("✅ Réponse de updateUserAddress:", data);
 
-      // S'assurer que tous les champs attendus sont présents
       if (!data.address || data.latitude == null || data.longitude == null || !data.city || !data.country) {
         console.error("⚠️ Réponse incomplète de updateUserAddress:", data);
         return rejectWithValue("Réponse incomplète du serveur pour la mise à jour de l'adresse.");

@@ -74,7 +74,7 @@ const AddressScreen = ({ formData, setFormData }: Props) => {
 
       const { latitude: newLatitude, longitude: newLongitude } = position.coords;
       await dispatch(updateGeolocation({ userId: user.id, latitude: newLatitude, longitude: newLongitude })).unwrap();
-      await handleUpdateAddress(); // Attendre que les coordonnées soient mises à jour avant de continuer
+      await handleUpdateAddress(newLatitude, newLongitude); // Passer directement les nouvelles coordonnées
     } catch (err: any) {
       setGeoError(t("address.geoError", { message: err.message }));
       console.error("Erreur de géolocalisation manuelle:", err.message);
@@ -83,23 +83,31 @@ const AddressScreen = ({ formData, setFormData }: Props) => {
     }
   };
 
-  const handleUpdateAddress = async () => {
-    if (user && (latitude || longitude)) {
-      setIsAddressLoading(true);
-      try {
-        const updatedUser = await dispatch(updateUserAddress(user.id)).unwrap();
-        setFormData({
-          ...formData,
-          address: updatedUser.address || formData.address,
-          city: updatedUser.city || formData.city,
-          country: updatedUser.country || formData.country,
-        });
-        setModalAddress(updatedUser.address || "");
-      } catch (error) {
-        console.error("❌ Erreur lors de la mise à jour de l’adresse :", error);
-      } finally {
-        setIsAddressLoading(false);
-      }
+  const handleUpdateAddress = async (lat?: number, lon?: number) => {
+    if (!user) return;
+
+    const latToUse = lat ?? latitude;
+    const lonToUse = lon ?? longitude;
+
+    if (latToUse == null || lonToUse == null) {
+      console.error("❌ Latitude ou longitude manquante pour la mise à jour de l'adresse");
+      return;
+    }
+
+    setIsAddressLoading(true);
+    try {
+      const updatedUser = await dispatch(updateUserAddress({ userId: user.id, latitude: latToUse, longitude: lonToUse })).unwrap();
+      setFormData({
+        ...formData,
+        address: updatedUser.address || formData.address,
+        city: updatedUser.city || formData.city,
+        country: updatedUser.country || formData.country,
+      });
+      setModalAddress(updatedUser.address || "");
+    } catch (error) {
+      console.error("❌ Erreur lors de la mise à jour de l’adresse :", error);
+    } finally {
+      setIsAddressLoading(false);
     }
   };
 

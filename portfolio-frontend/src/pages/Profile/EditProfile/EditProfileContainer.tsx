@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState, AppDispatch } from "../../../redux/store";
-import { fetchUser } from "../../../redux/features/userSlice";
+import { fetchUser, updateUser } from "../../../redux/features/userSlice";
 import { useTranslation } from "react-i18next";
 import PersonalInfoScreen from "./PersonalInfoScreen/PersonalInfoScreen";
 import AddressScreen from "./AddressScreen/AddressScreen";
@@ -20,7 +20,6 @@ const EditProfileContainer = () => {
   const [currentScreen, setCurrentScreen] = useState(1);
   const totalScreens = 4;
 
-  // Données initiales de l'utilisateur
   const [initialFormData, setInitialFormData] = useState({
     id: "",
     firstName: "",
@@ -38,7 +37,6 @@ const EditProfileContainer = () => {
     age: 0,
   });
 
-  // Données du formulaire centralisées
   const [formData, setFormData] = useState({
     id: "",
     firstName: "",
@@ -56,19 +54,22 @@ const EditProfileContainer = () => {
     age: 0,
   });
 
-  // Charger les données utilisateur au montage
+  const [isInitialDataSet, setIsInitialDataSet] = useState(false); // Ajout d’un drapeau pour éviter de réinitialiser initialFormData
+
   useEffect(() => {
     const userId = localStorage.getItem("userId");
     if (userId) {
       dispatch(fetchUser());
+    } else {
+      console.error("❌ Aucun userId trouvé dans localStorage, redirection vers /login");
+      navigate("/login");
     }
-  }, [dispatch]);
+  }, [dispatch, navigate]);
 
-  // Synchroniser formData avec les données de l'utilisateur
+  // Initialisation des données initiales (une seule fois)
   useEffect(() => {
-    if (user) {
+    if (user && !isInitialDataSet) {
       const normalizedPhone = user.phone && !user.phone.startsWith("+") ? `+${user.phone}` : user.phone || "";
-      // Gestion sécurisée de birthdate pour éviter split sur une valeur non-string
       const normalizedBirthdate = typeof user.birthdate === "string" && user.birthdate.includes("T")
         ? user.birthdate.split("T")[0]
         : user.birthdate || "";
@@ -79,22 +80,36 @@ const EditProfileContainer = () => {
         phone: normalizedPhone,
         sex: user.sex || "",
         bio: user.bio || "",
-        address: address || user.address || "",
-        city: city || user.city || "",
-        country: country || user.country || "",
-        latitude: latitude || user.latitude || 0,
-        longitude: longitude || user.longitude || 0,
+        address: user.address || "",
+        city: user.city || "",
+        country: user.country || "",
+        latitude: user.latitude || 0,
+        longitude: user.longitude || 0,
         birthdate: normalizedBirthdate,
         showBirthdate: user.showBirthdate ?? false,
         age: user.age || 0,
       };
-      console.log("🔹 Données utilisateur synchronisées :", updatedFormData);
+      console.log("🔹 Initialisation des données initiales :", updatedFormData);
       setInitialFormData(updatedFormData);
       setFormData(updatedFormData);
+      setIsInitialDataSet(true); // Marquer les données initiales comme définies
     }
-  }, [user, address, latitude, longitude, city, country]);
+  }, [user]);
 
-  // Vérifier s'il y a des changements
+  // Mise à jour de formData pour les champs dépendants de Google Maps (address, city, country, latitude, longitude)
+  useEffect(() => {
+    if (isInitialDataSet) {
+      setFormData((prevFormData) => ({
+        ...prevFormData,
+        address: address || prevFormData.address,
+        city: city || prevFormData.city,
+        country: country || prevFormData.country,
+        latitude: latitude || prevFormData.latitude,
+        longitude: longitude || prevFormData.longitude,
+      }));
+    }
+  }, [address, latitude, longitude, city, country, isInitialDataSet]);
+
   const hasChanges = () => {
     console.log("🔸 Comparaison pour détecter les changements :", {
       initial: initialFormData,
@@ -120,6 +135,7 @@ const EditProfileContainer = () => {
 
   const handleNext = () => {
     if (currentScreen < totalScreens) setCurrentScreen(currentScreen + 1);
+    else navigate("/profile");
   };
 
   const handleBack = () => {
@@ -173,9 +189,9 @@ const EditProfileContainer = () => {
         <button onClick={handleBack}>
           {currentScreen === 1 ? t("editProfile.backToProfile", "Back to Profile") : t("editProfile.previous", "Previous")}
         </button>
-        {currentScreen < totalScreens && (
-          <button onClick={handleNext}>{t("editProfile.next", "Next")}</button>
-        )}
+        <button onClick={handleNext}>
+          {currentScreen === totalScreens ? t("editProfile.finish", "Finish") : t("editProfile.next", "Next")}
+        </button>
       </div>
     </div>
   );

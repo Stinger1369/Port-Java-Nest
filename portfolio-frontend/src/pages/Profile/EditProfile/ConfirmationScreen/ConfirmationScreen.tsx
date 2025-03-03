@@ -3,6 +3,7 @@ import { AppDispatch, RootState } from "../../../../redux/store";
 import { updateUser } from "../../../../redux/features/userSlice";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
+import { useEffect } from "react";
 import "./ConfirmationScreen.css";
 
 interface Props {
@@ -16,27 +17,43 @@ const ConfirmationScreen = ({ formData, hasChanges }: Props) => {
   const navigate = useNavigate();
   const status = useSelector((state: RootState) => state.user.status);
 
-  const handleSubmit = async () => {
-    if (!hasChanges()) {
-      alert(t("editProfile.noChanges", "Aucun changement"));
-      return;
-    }
-    if (!formData.id) {
-      console.error("Erreur : ID de l'utilisateur manquant dans formData");
-      alert(t("editProfile.error", "Une erreur est survenue. L'ID de l'utilisateur est manquant."));
-      return;
-    }
-    console.log("🔹 Données envoyées pour mise à jour :", { ...formData, age: undefined });
-    console.log("🔹 Valeur de showBirthdate avant envoi :", formData.showBirthdate); // Log supplémentaire
+  // Sauvegarde automatique au montage de l'écran
+  useEffect(() => {
+    const autoSave = async () => {
+      // Vérifier si les champs obligatoires sont remplis
+      if (!formData.firstName || !formData.lastName) {
+        console.log("⚠️ Champs obligatoires manquants, pas de sauvegarde automatique");
+        return;
+      }
 
-    try {
-      await dispatch(updateUser({ id: formData.id, ...formData })).unwrap();
-      console.log("✅ Mise à jour réussie, redirection vers le profil");
-      navigate("/profile");
-    } catch (error) {
-      console.error("❌ Échec de la mise à jour :", error);
-      alert(t("editProfile.updateFailed", "Échec de la mise à jour : ") + error);
+      if (!formData.id) {
+        console.error("Erreur : ID de l'utilisateur manquant dans formData");
+        return;
+      }
+
+      console.log("🔹 Sauvegarde automatique des données :", { ...formData, age: undefined });
+      console.log("🔹 Valeur de showBirthdate avant envoi :", formData.showBirthdate);
+
+      try {
+        await dispatch(updateUser({ id: formData.id, ...formData })).unwrap();
+        console.log("✅ Sauvegarde automatique réussie");
+      } catch (error) {
+        console.error("❌ Échec de la sauvegarde automatique :", error);
+      }
+    };
+
+    autoSave();
+  }, [dispatch, formData]);
+
+  const handleSubmit = async () => {
+    // Vérifier si des champs obligatoires sont manquants
+    if (!formData.firstName || !formData.lastName) {
+      alert(t("editProfile.missingRequiredFields", "First Name and Last Name are required."));
+      return;
     }
+
+    // Les données ont déjà été sauvegardées automatiquement, donc on redirige simplement
+    navigate("/profile");
   };
 
   return (
@@ -103,8 +120,8 @@ const ConfirmationScreen = ({ formData, hasChanges }: Props) => {
               <span className="value">{formData.bio || "No biography"}</span>
             </li>
           </ul>
-          <button onClick={handleSubmit} disabled={!hasChanges() || status === "loading"}>
-            {t("editProfile.save", "Save Changes")}
+          <button onClick={handleSubmit} disabled={status === "loading" || (!formData.firstName || !formData.lastName)}>
+            {t("editProfile.continueToProfile", "Continue to Profile")}
           </button>
         </>
       )}
