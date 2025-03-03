@@ -13,4 +13,7 @@ public interface UserRepository extends MongoRepository<User, String> {
     List<User> findAllByFirstNameAndLastName(String firstName, String lastName);
     Optional<User> findBySlug(String slug);
     Optional<User> findByPhone(String phone);
+
+    // Ajout pour récupérer plusieurs utilisateurs par leurs IDs
+    List<User> findByIdIn(List<String> ids);
 }

@@ -15,7 +15,12 @@ public class PortfolioBackendApplication {
 				.load();
 
 		// Injecter les variables d'environnement dans les propriétés système
-		dotenv.entries().forEach(entry -> System.setProperty(entry.getKey(), entry.getValue()));
+		if (dotenv != null) {
+			dotenv.entries().forEach(entry -> System.setProperty(entry.getKey(), entry.getValue()));
+			System.out.println("✅ Variables d'environnement chargées depuis .env");
+		} else {
+			System.out.println("⚠️ Fichier .env non trouvé ou non chargé.");
+		}
 
 		// Démarrer l'application Spring Boot
 		SpringApplication.run(PortfolioBackendApplication.class, args);

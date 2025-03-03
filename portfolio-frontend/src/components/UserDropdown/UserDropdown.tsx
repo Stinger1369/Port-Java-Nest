@@ -39,9 +39,9 @@ const UserDropdown = forwardRef<HTMLDivElement, UserDropdownProps>((props, ref) 
           <i className="fas fa-gift"></i> {t("navbar.offersReceived")}
         </Link>
         <Link to="/history" onClick={handleItemClick} className={`dropdown-item ${isArabic ? "arabic" : ""}`}>
-          <i className="fas fa-history"></i> {t("navbar.contactHistory")} {/* ✅ Nouvelle entrée */}
+          <i className="fas fa-history"></i> {t("navbar.contactHistory")}
         </Link>
-        <Link to="/messages" onClick={handleItemClick} className={`dropdown-item ${isArabic ? "arabic" : ""}`}>
+        <Link to="/chat" onClick={handleItemClick} className={`dropdown-item ${isArabic ? "arabic" : ""}`}>
           <i className="fas fa-envelope"></i> {t("navbar.messagesReceived")}
         </Link>
         <Link to="/notifications" onClick={handleItemClick} className={`dropdown-item ${isArabic ? "arabic" : ""}`}>

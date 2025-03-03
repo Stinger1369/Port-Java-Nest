@@ -2,11 +2,12 @@ package com.Portbil.portfolio_backend.dto;
 
 import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonFormat; // Ajout pour formater LocalDate
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Builder;
 import lombok.Data;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Data
 @Builder
@@ -23,7 +24,11 @@ public class UserDTO {
     private String country;
     private String sex;
 
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd") // Formatage en chaîne
+    // Champs pour les "likes"
+    private List<String> likedUserIds;
+    private List<String> likerUserIds;
+
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
     private LocalDate birthdate;
 
     private boolean showBirthdate;
@@ -31,11 +36,14 @@ public class UserDTO {
     private String slug;
     private String bio;
 
-    @JsonAlias({ "latitude", "lat" })
+    @JsonAlias({"latitude", "lat"})
     private String latitude;
 
-    @JsonAlias({ "longitude", "lon" })
+    @JsonAlias({"longitude", "lon"})
     private String longitude;
+
+    // Nouveau champ pour les conversations
+    private List<String> chatIds;
 
     public Double getLatitudeAsDouble() {
         if (latitude == null) return null;

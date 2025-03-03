@@ -158,6 +158,7 @@ portfolio-frontend/
 │   │   ├── features/
 │   │   │   ├── authSlice.ts
 │   │   │   ├── certificationSlice.ts
+│   │   │   ├── chatSlice.ts
 │   │   │   ├── contactSlice.ts
 │   │   │   ├── educationSlice.ts
 │   │   │   ├── experienceSlice.ts
@@ -171,8 +172,11 @@ portfolio-frontend/
 │   │   │   ├── skillSlice.ts
 │   │   │   ├── socialLinkSlice.ts
 │   │   │   ├── userSlice.ts
-│   │   │   └── weatherSlice.ts
+│   │   │   ├── weatherSlice.ts
+│   │   │   └── websocket/
 │   │   └── store.ts
+│   ├── utils/
+│   │   └── websocketComponents/
 │   └── vite-env.d.ts
 ├── tree.js
 ├── tsconfig.app.json

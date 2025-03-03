@@ -27,10 +27,10 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        System.out.println("🔹 Configuring SecurityFilterChain for /api/images/**");
+        System.out.println("🔹 Configuring SecurityFilterChain");
         http
-                .cors(cors -> cors.configurationSource(corsConfigurationSource())) // Configuration CORS
-                .csrf(csrf -> csrf.disable()) // Désactiver CSRF
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
                                 "/api/auth/login",
@@ -39,17 +39,20 @@ public class SecurityConfig {
                                 "/api/auth/forgot-password",
                                 "/api/auth/reset-password",
                                 "/api/translations/**",
-                                "/api/contacts/request"
-                        ).permitAll() // Routes publiques
-                        .requestMatchers("/api/portfolio/public/**").permitAll() // Portfolios publics
-                        .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll() // OPTIONS autorisé
-                        .requestMatchers("/api/users/all").authenticated() // Utilisateurs authentifiés
-                        .requestMatchers("/api/users/**").authenticated() // Routes users protégées
-                        .requestMatchers("/api/images/**").authenticated() // Routes images protégées
-                        .anyRequest().authenticated() // Tout le reste protégé
+                                "/api/contacts/request",
+                                "/chat" // WebSocket endpoint
+                        ).permitAll()
+                        .requestMatchers("/api/portfolio/public/**").permitAll()
+                        .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
+                        .requestMatchers("/api/users/*/like/*", "/api/users/*/unlike/*").authenticated()
+                        .requestMatchers("/api/users/all").authenticated()
+                        .requestMatchers("/api/users/**").authenticated()
+                        .requestMatchers("/api/images/**").authenticated()
+                        .requestMatchers("/api/chat/**").authenticated() // Protège les endpoints de récupération d’historique
+                        .anyRequest().authenticated()
                 )
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // Stateless
-                .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class); // Filtre JWT
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
@@ -73,15 +76,15 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         System.out.println("Applying CORS configuration");
         CorsConfiguration corsConfig = new CorsConfiguration();
-        corsConfig.setAllowedOrigins(List.of("http://localhost:5173")); // Frontend autorisé
-        corsConfig.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS")); // Méthodes autorisées
-        corsConfig.setAllowedHeaders(List.of("Authorization", "Content-Type", "Accept")); // Headers autorisés
-        corsConfig.setExposedHeaders(List.of("Authorization")); // Exposer Authorization
-        corsConfig.setAllowCredentials(true); // Autoriser credentials
-        corsConfig.setMaxAge(3600L); // Cache preflight 1 heure
+        corsConfig.setAllowedOrigins(List.of("http://localhost:5173"));
+        corsConfig.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        corsConfig.setAllowedHeaders(List.of("Authorization", "Content-Type", "Accept"));
+        corsConfig.setExposedHeaders(List.of("Authorization"));
+        corsConfig.setAllowCredentials(true);
+        corsConfig.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", corsConfig); // Appliquer à tous les endpoints
+        source.registerCorsConfiguration("/**", corsConfig);
         return source;
     }
 }

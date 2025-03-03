@@ -5,6 +5,7 @@ import { updateUserAddress, updateGeolocation } from "../../../../redux/features
 import { useGoogleMaps } from "../../../../hooks/useGoogleMaps";
 import { useTranslation } from "react-i18next";
 import "./AddressScreen.css";
+
 interface Props {
   formData: any;
   setFormData: (data: any) => void;
@@ -20,6 +21,8 @@ const AddressScreen = ({ formData, setFormData }: Props) => {
   const [modalAddress, setModalAddress] = useState(formData.address || "");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isAddressLoading, setIsAddressLoading] = useState(false);
+  const [isGeoLoading, setIsGeoLoading] = useState(false);
+  const [geoError, setGeoError] = useState<string | null>(null);
 
   useEffect(() => {
     if (isGoogleMapsLoaded && autocompleteRef.current && isModalOpen) {
@@ -50,6 +53,44 @@ const AddressScreen = ({ formData, setFormData }: Props) => {
       });
     }
   }, [isGoogleMapsLoaded, isModalOpen, dispatch, user, formData, setFormData]);
+
+  const handleManualUpdateGeolocation = () => {
+    if (!navigator.geolocation || !user?.id) {
+      setGeoError(t("address.geoNotSupported", "Geolocation is not supported by this browser."));
+      return;
+    }
+
+    setIsGeoLoading(true);
+    setGeoError(null);
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude: newLatitude, longitude: newLongitude } = position.coords;
+        dispatch(updateGeolocation({ userId: user.id, latitude: newLatitude, longitude: newLongitude }))
+          .unwrap()
+          .then(() => {
+            handleUpdateAddress(); // Appeler la mise à jour de l'adresse après la géolocalisation
+          })
+          .catch((err: any) => {
+            setGeoError(t("address.geoError", { message: err }));
+            console.error("Erreur de géolocalisation manuelle:", err);
+          })
+          .finally(() => {
+            setIsGeoLoading(false);
+          });
+      },
+      (err) => {
+        setGeoError(t("address.geoError", { message: err.message }));
+        console.error("Erreur de géolocalisation manuelle:", err.message);
+        setIsGeoLoading(false);
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 20000,
+        maximumAge: 0,
+      }
+    );
+  };
 
   const handleUpdateAddress = async () => {
     if (user && (latitude || longitude)) {
@@ -87,14 +128,19 @@ const AddressScreen = ({ formData, setFormData }: Props) => {
       <h3>{t("editProfile.addressInfo", "Address Information")}</h3>
       <label>{t("editProfile.address", "Address")} :</label>
       <input type="text" value={formData.address} disabled />
-      <button onClick={handleUpdateAddress} disabled={isAddressLoading || (!latitude && !longitude)}>
-        {isAddressLoading
+
+      {/* Bouton pour mettre à jour manuellement les coordonnées et l'adresse */}
+      <button onClick={handleManualUpdateGeolocation} disabled={isGeoLoading || isAddressLoading}>
+        {isGeoLoading || isAddressLoading
           ? t("editProfile.updatingAddress", "Updating...")
-          : t("editProfile.updateAddress", "Update Address Automatically")}
+          : t("editProfile.updateLocationAndAddress", "Update Location and Address")}
       </button>
+
       <button onClick={() => setIsModalOpen(true)} disabled={!isGoogleMapsLoaded}>
-        {t("editProfile.changeAddress", "Change Address")}
+        {t("editProfile.changeAddress", "Change Address Manually")}
       </button>
+
+      {geoError && <p className="error">{geoError}</p>}
 
       {isModalOpen && (
         <div className="modal-overlay">

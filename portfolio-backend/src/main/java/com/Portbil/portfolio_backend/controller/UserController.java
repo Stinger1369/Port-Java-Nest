@@ -1,5 +1,6 @@
 package com.Portbil.portfolio_backend.controller;
 
+import com.Portbil.portfolio_backend.dto.UserCoordinatesDTO; // Importation manquante ajoutée
 import com.Portbil.portfolio_backend.dto.UserDTO;
 import com.Portbil.portfolio_backend.entity.User;
 import com.Portbil.portfolio_backend.service.UserService;
@@ -12,7 +13,9 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -61,9 +64,13 @@ public class UserController {
                         .sex(user.getSex())
                         .slug(user.getSlug())
                         .bio(user.getBio())
-                        .birthdate(user.getBirthdate()) // Toujours renvoyer birthdate
-                        .age(user.getAge())             // Toujours renvoyer age
-                        .showBirthdate(user.isShowBirthdate()) // Toujours inclus
+                        .birthdate(user.getBirthdate())
+                        .age(user.getAge())
+                        .showBirthdate(user.isShowBirthdate())
+                        .likedUserIds(user.getLikedUserIds())
+                        .likerUserIds(user.getLikerUserIds())
+                        .latitude(user.getLatitude() != null ? user.getLatitude().toString() : null)
+                        .longitude(user.getLongitude() != null ? user.getLongitude().toString() : null)
                         .build())
                 .collect(Collectors.toList());
 
@@ -86,9 +93,11 @@ public class UserController {
         System.out.println("Phone renvoyé au frontend : " + user.get().getPhone());
         System.out.println("Sex et Bio renvoyés au frontend : sex=" + user.get().getSex() +
                 ", bio=" + user.get().getBio() +
-                ", birthdate=" + user.get().getBirthdate() + // Toujours afficher dans les logs
-                ", age=" + user.get().getAge() +             // Toujours afficher dans les logs
-                ", showBirthdate=" + user.get().isShowBirthdate());
+                ", birthdate=" + user.get().getBirthdate() +
+                ", age=" + user.get().getAge() +
+                ", showBirthdate=" + user.get().isShowBirthdate() +
+                ", likedUserIds=" + user.get().getLikedUserIds() +
+                ", likerUserIds=" + user.get().getLikerUserIds());
 
         UserDTO userDTO = UserDTO.builder()
                 .id(user.get().getId())
@@ -102,34 +111,32 @@ public class UserController {
                 .sex(user.get().getSex())
                 .slug(user.get().getSlug())
                 .bio(user.get().getBio())
-                .birthdate(user.get().getBirthdate()) // Toujours renvoyer birthdate
-                .age(user.get().getAge())             // Toujours renvoyer age
-                .showBirthdate(user.get().isShowBirthdate()) // Toujours inclus
+                .birthdate(user.get().getBirthdate())
+                .age(user.get().getAge())
+                .showBirthdate(user.get().isShowBirthdate())
+                .likedUserIds(user.get().getLikedUserIds())
+                .likerUserIds(user.get().getLikerUserIds())
+                .latitude(user.get().getLatitude() != null ? user.get().getLatitude().toString() : null)
+                .longitude(user.get().getLongitude() != null ? user.get().getLongitude().toString() : null)
                 .build();
         return ResponseEntity.ok(userDTO);
     }
 
     /**
-     * ✅ Modifier un utilisateur
+     * ✅ Modifier un utilisateur (gérer à la fois les mises à jour complètes et les coordonnées seules)
      */
     @PutMapping("/{id}")
     @PreAuthorize("#id == authentication.principal.username")
-    public ResponseEntity<?> updateUser(@PathVariable String id, @RequestBody UserDTO userDTO) {
-        log.debug("Requête PUT reçue pour l'utilisateur ID: {}, JSON brut reçu: {}", id, userDTO != null ? userDTO.toString() : "null");
-        log.info("Début du traitement de la mise à jour pour l'utilisateur ID: {}", id);
+    public ResponseEntity<?> updateUser(
+            @PathVariable String id,
+            @RequestBody Map<String, Object> requestBody) {
+        log.debug("Requête PUT reçue pour l'utilisateur ID: {}, JSON brut reçu: {}", id, requestBody);
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
         log.debug("Authentification récupérée : {}", authentication != null ? authentication.getName() : "null");
 
         System.out.println("🔹 Tentative de mise à jour de l'utilisateur ID: " + id);
-        System.out.println("Received phone from frontend: " + (userDTO != null ? userDTO.getPhone() : "null"));
-        System.out.println("🔹 Coordonnées reçues du frontend: latitude=" + (userDTO != null ? userDTO.getLatitude() : "null") +
-                ", longitude=" + (userDTO != null ? userDTO.getLongitude() : "null"));
-        System.out.println("🔹 Sex, Bio et Birthdate reçus du frontend: sex=" + (userDTO != null ? userDTO.getSex() : "null") +
-                ", bio=" + (userDTO != null ? userDTO.getBio() : "null") +
-                ", birthdate=" + (userDTO != null ? userDTO.getBirthdate() : "null") +
-                ", showBirthdate=" + (userDTO != null ? userDTO.isShowBirthdate() : "null"));
+        System.out.println("🔹 Corps de la requête reçu : " + requestBody);
 
         if (authentication == null || authentication.getPrincipal() == null) {
             log.error("❌ Utilisateur non authentifié !");
@@ -137,7 +144,6 @@ public class UserController {
         }
 
         String authenticatedUserId = authentication.getName();
-
         log.debug("Utilisateur connecté avec ID : {}", authenticatedUserId);
 
         if (!authenticatedUserId.equals(id)) {
@@ -146,52 +152,93 @@ public class UserController {
         }
 
         try {
-            log.debug("Tentative de mise à jour de l'utilisateur avec les données : latitude={}, longitude={}, city={}, country={}, sex={}, bio={}, birthdate={}, showBirthdate={}",
-                    userDTO != null ? userDTO.getLatitude() : "null",
-                    userDTO != null ? userDTO.getLongitude() : "null",
-                    userDTO != null ? userDTO.getCity() : "null",
-                    userDTO != null ? userDTO.getCountry() : "null",
-                    userDTO != null ? userDTO.getSex() : "null",
-                    userDTO != null ? userDTO.getBio() : "null",
-                    userDTO != null ? userDTO.getBirthdate() : "null",
-                    userDTO != null ? userDTO.isShowBirthdate() : "null");
+            // Vérifier si le corps de la requête contient uniquement latitude et longitude
+            if (requestBody.containsKey("latitude") && requestBody.containsKey("longitude") && requestBody.size() == 2) {
+                // Cas où on met à jour uniquement les coordonnées
+                UserCoordinatesDTO coordinatesDTO = new UserCoordinatesDTO();
+                coordinatesDTO.setLatitude(Double.valueOf(requestBody.get("latitude").toString()));
+                coordinatesDTO.setLongitude(Double.valueOf(requestBody.get("longitude").toString()));
 
-            Optional<User> updatedUser = userService.updateUser(id, userDTO);
-            if (updatedUser.isEmpty()) {
-                log.error("❌ Mise à jour impossible, utilisateur non trouvé : {}", id);
-                return ResponseEntity.notFound().build();
+                Optional<User> updatedUserOpt = userService.updateUserCoordinates(id, coordinatesDTO);
+                if (updatedUserOpt.isEmpty()) {
+                    log.error("❌ Mise à jour des coordonnées impossible, utilisateur non trouvé : {}", id);
+                    return ResponseEntity.notFound().build();
+                }
+
+                User updatedUser = updatedUserOpt.get();
+                UserDTO responseDTO = UserDTO.builder()
+                        .id(updatedUser.getId())
+                        .email(updatedUser.getEmail())
+                        .firstName(updatedUser.getFirstName())
+                        .lastName(updatedUser.getLastName())
+                        .phone(updatedUser.getPhone())
+                        .address(updatedUser.getAddress())
+                        .city(updatedUser.getCity())
+                        .country(updatedUser.getCountry())
+                        .sex(updatedUser.getSex())
+                        .slug(updatedUser.getSlug())
+                        .bio(updatedUser.getBio())
+                        .birthdate(updatedUser.getBirthdate())
+                        .age(updatedUser.getAge())
+                        .showBirthdate(updatedUser.isShowBirthdate())
+                        .likedUserIds(updatedUser.getLikedUserIds())
+                        .likerUserIds(updatedUser.getLikerUserIds())
+                        .latitude(updatedUser.getLatitude() != null ? updatedUser.getLatitude().toString() : null)
+                        .longitude(updatedUser.getLongitude() != null ? updatedUser.getLongitude().toString() : null)
+                        .build();
+
+                log.info("✅ Mise à jour des coordonnées réussie pour l'utilisateur ID: {}", id);
+                return ResponseEntity.ok(responseDTO);
+            } else {
+                // Cas où on met à jour les autres champs de l'utilisateur (via UserDTO)
+                UserDTO userDTO = UserDTO.builder() // Utilisation de builder au lieu de new UserDTO()
+                        .email((String) requestBody.get("email"))
+                        .firstName((String) requestBody.get("firstName"))
+                        .lastName((String) requestBody.get("lastName"))
+                        .phone((String) requestBody.get("phone"))
+                        .address((String) requestBody.get("address"))
+                        .city((String) requestBody.get("city"))
+                        .country((String) requestBody.get("country"))
+                        .sex((String) requestBody.get("sex"))
+                        .slug((String) requestBody.get("slug"))
+                        .bio((String) requestBody.get("bio"))
+                        .birthdate(requestBody.get("birthdate") != null ? LocalDate.parse((String) requestBody.get("birthdate")) : null)
+                        .showBirthdate(requestBody.get("showBirthdate") != null ? Boolean.parseBoolean(String.valueOf(requestBody.get("showBirthdate"))) : false)
+                        .latitude(requestBody.get("latitude") != null ? String.valueOf(requestBody.get("latitude")) : null)
+                        .longitude(requestBody.get("longitude") != null ? String.valueOf(requestBody.get("longitude")) : null)
+                        .build();
+
+                Optional<User> updatedUserOpt = userService.updateUser(id, userDTO);
+                if (updatedUserOpt.isEmpty()) {
+                    log.error("❌ Mise à jour impossible, utilisateur non trouvé : {}", id);
+                    return ResponseEntity.notFound().build();
+                }
+
+                User updatedUser = updatedUserOpt.get();
+                UserDTO responseDTO = UserDTO.builder()
+                        .id(updatedUser.getId())
+                        .email(updatedUser.getEmail())
+                        .firstName(updatedUser.getFirstName())
+                        .lastName(updatedUser.getLastName())
+                        .phone(updatedUser.getPhone())
+                        .address(updatedUser.getAddress())
+                        .city(updatedUser.getCity())
+                        .country(updatedUser.getCountry())
+                        .sex(updatedUser.getSex())
+                        .slug(updatedUser.getSlug())
+                        .bio(updatedUser.getBio())
+                        .birthdate(updatedUser.getBirthdate())
+                        .age(updatedUser.getAge())
+                        .showBirthdate(updatedUser.isShowBirthdate())
+                        .likedUserIds(updatedUser.getLikedUserIds())
+                        .likerUserIds(updatedUser.getLikerUserIds())
+                        .latitude(updatedUser.getLatitude() != null ? updatedUser.getLatitude().toString() : null)
+                        .longitude(updatedUser.getLongitude() != null ? updatedUser.getLongitude().toString() : null)
+                        .build();
+
+                log.info("✅ Mise à jour réussie pour l'utilisateur ID: {}", id);
+                return ResponseEntity.ok(responseDTO);
             }
-
-            UserDTO responseDTO = UserDTO.builder()
-                    .id(updatedUser.get().getId())
-                    .email(updatedUser.get().getEmail())
-                    .firstName(updatedUser.get().getFirstName())
-                    .lastName(updatedUser.get().getLastName())
-                    .phone(updatedUser.get().getPhone())
-                    .address(updatedUser.get().getAddress())
-                    .city(updatedUser.get().getCity())
-                    .country(updatedUser.get().getCountry())
-                    .sex(updatedUser.get().getSex())
-                    .slug(updatedUser.get().getSlug())
-                    .bio(updatedUser.get().getBio())
-                    .birthdate(updatedUser.get().getBirthdate()) // Toujours renvoyer birthdate
-                    .age(updatedUser.get().getAge())             // Toujours renvoyer age
-                    .showBirthdate(updatedUser.get().isShowBirthdate()) // Toujours inclus
-                    .build();
-
-            log.info("✅ Mise à jour réussie pour l'utilisateur ID: {}", id);
-            System.out.println("✅ Mise à jour réussie pour l'utilisateur ID: " + id);
-            System.out.println("Saved phone in DB: " + updatedUser.get().getPhone());
-            System.out.println("🔹 Nouvelles coordonnées, ville, pays, sex, bio et birthdate enregistrés: latitude=" + updatedUser.get().getLatitude() +
-                    ", longitude=" + updatedUser.get().getLongitude() +
-                    ", city=" + updatedUser.get().getCity() +
-                    ", country=" + updatedUser.get().getCountry() +
-                    ", sex=" + updatedUser.get().getSex() +
-                    ", bio=" + updatedUser.get().getBio() +
-                    ", birthdate=" + updatedUser.get().getBirthdate() + // Toujours afficher dans les logs
-                    ", age=" + updatedUser.get().getAge() +             // Toujours afficher dans les logs
-                    ", showBirthdate=" + updatedUser.get().isShowBirthdate());
-            return ResponseEntity.ok(responseDTO);
         } catch (IllegalArgumentException e) {
             log.error("⚠️ Erreur lors de la mise à jour : {}", e.getMessage(), e);
             return ResponseEntity.badRequest().body(e.getMessage());
@@ -233,6 +280,38 @@ public class UserController {
         } catch (IllegalArgumentException e) {
             System.out.println("❌ Erreur lors de la suppression : " + e.getMessage());
             return ResponseEntity.notFound().build();
+        }
+    }
+
+    /**
+     * ✅ Ajouter un "like" à un utilisateur
+     */
+    @PostMapping("/{likerId}/like/{likedId}")
+    @PreAuthorize("#likerId == authentication.principal.username")
+    public ResponseEntity<Void> likeUser(@PathVariable String likerId, @PathVariable String likedId) {
+        System.out.println("🔹 Tentative de like de " + likedId + " par " + likerId);
+        try {
+            userService.likeUser(likerId, likedId);
+            return ResponseEntity.ok().build();
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            System.out.println("❌ Erreur lors du like : " + e.getMessage());
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    /**
+     * ✅ Retirer un "like" d'un utilisateur
+     */
+    @DeleteMapping("/{likerId}/unlike/{likedId}")
+    @PreAuthorize("#likerId == authentication.principal.username")
+    public ResponseEntity<Void> unlikeUser(@PathVariable String likerId, @PathVariable String likedId) {
+        System.out.println("🔹 Tentative de unlike de " + likedId + " par " + likerId);
+        try {
+            userService.unlikeUser(likerId, likedId);
+            return ResponseEntity.noContent().build();
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            System.out.println("❌ Erreur lors du unlike : " + e.getMessage());
+            return ResponseEntity.badRequest().build();
         }
     }
 }

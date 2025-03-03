@@ -2,7 +2,6 @@ import React, { useState, useEffect, forwardRef } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState, AppDispatch } from "../../redux/store";
 import { fetchWeather } from "../../redux/features/weatherSlice";
-import { updateGeolocation } from "../../redux/features/googleMapsSlice";
 import { useTranslation } from "react-i18next";
 import "./WeatherComponent.css";
 
@@ -17,101 +16,18 @@ const WeatherComponent = forwardRef<HTMLDivElement, WeatherComponentProps>((prop
   const dispatch = useDispatch<AppDispatch>();
   const user = useSelector((state: RootState) => state.user.user);
   const { weather, status, error } = useSelector((state: RootState) => state.weather);
-  const { latitude, longitude } = useSelector((state: RootState) => state.googleMaps);
   const token = useSelector((state: RootState) => state.auth.token);
   const isRTL = i18n.language === "ar";
   const [geoError, setGeoError] = useState<string | null>(null);
-  const [isGeoLoading, setIsGeoLoading] = useState(false);
 
   useEffect(() => {
     if (!token || !user?.id) return;
 
-    let watchId: number | undefined;
-
-    const fetchGeoAndWeather = () => {
-      if (navigator.geolocation) {
-        watchId = navigator.geolocation.watchPosition(
-          (position) => {
-            const { latitude: newLatitude, longitude: newLongitude } = position.coords;
-            if (latitude !== newLatitude || longitude !== newLongitude) {
-              dispatch(updateGeolocation({ userId: user.id, latitude: newLatitude, longitude: newLongitude })).then(() => {
-                dispatch(fetchWeather(user.id));
-              });
-            } else if (!weather) {
-              dispatch(fetchWeather(user.id));
-            }
-          },
-          (err) => {
-            setGeoError(t("weather.geoError", { message: err.message }));
-            console.error("Erreur de géolocalisation automatique:", err.message);
-            if (!weather) {
-              dispatch(fetchWeather(user.id));
-            }
-          },
-          {
-            enableHighAccuracy: true,
-            timeout: 15000,
-            maximumAge: 60000,
-          }
-        );
-      } else {
-        setGeoError(t("weather.geoNotSupported", "Geolocation is not supported by this browser."));
-        if (!weather) {
-          dispatch(fetchWeather(user.id));
-        }
-      }
-    };
-
-    fetchGeoAndWeather();
-
-    return () => {
-      if (watchId !== undefined) {
-        navigator.geolocation.clearWatch(watchId);
-      }
-    };
-  }, [dispatch, user?.id, token, latitude, longitude, weather, t]);
-
-  const handleManualUpdateGeolocation = () => {
-    if (!navigator.geolocation || !user?.id) {
-      setGeoError(t("weather.geoNotSupported", "Geolocation is not supported by this browser."));
-      if (!weather) {
-        dispatch(fetchWeather(user.id));
-      }
-      return;
+    // Récupérer les données météo uniquement si elles ne sont pas déjà présentes
+    if (!weather) {
+      dispatch(fetchWeather(user.id));
     }
-
-    setIsGeoLoading(true);
-    setGeoError(null);
-
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const { latitude: newLatitude, longitude: newLongitude } = position.coords;
-        dispatch(updateGeolocation({ userId: user.id, latitude: newLatitude, longitude: newLongitude }))
-          .unwrap()
-          .then(() => {
-            dispatch(fetchWeather(user.id));
-          })
-          .catch((err) => {
-            setGeoError(t("weather.geoErrorManual", { message: err }));
-            dispatch(fetchWeather(user.id));
-          })
-          .finally(() => {
-            setIsGeoLoading(false);
-          });
-      },
-      (err) => {
-        setGeoError(t("weather.geoErrorManual", { message: err.message }));
-        console.error("Erreur de géolocalisation manuelle:", err.message);
-        dispatch(fetchWeather(user.id));
-        setIsGeoLoading(false);
-      },
-      {
-        enableHighAccuracy: true,
-        timeout: 20000,
-        maximumAge: 0,
-      }
-    );
-  };
+  }, [dispatch, user?.id, token, weather]);
 
   const getWeatherIconClass = (description: string = "") => {
     const desc = description.toLowerCase();
@@ -137,14 +53,6 @@ const WeatherComponent = forwardRef<HTMLDivElement, WeatherComponentProps>((prop
         <div className={`weather-panel ${props.isOpen ? "active" : ""} ${isRTL ? "arabic" : ""}`}>
           <div className="weather-header">
             <h3>{t("weather.title")}</h3>
-            <button
-              className="refresh-btn"
-              onClick={handleManualUpdateGeolocation}
-              disabled={status === "loading" || isGeoLoading}
-            >
-              <i className={`fas fa-sync-alt ${isGeoLoading ? "fa-spin" : ""}`}></i>{" "}
-              {isGeoLoading ? t("weather.refreshing") : t("weather.refresh")}
-            </button>
           </div>
           {status === "loading" && !geoError && <p>{t("weather.loading")}</p>}
           {error || geoError ? (

@@ -1,6 +1,7 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 
-const GOOGLE_MAPS_API_KEY = "AIzaSyDm7CfRG_9wnCW4H0u_pEu8ZtEbkHDLi8o"; // Ta clé API Google Maps
+// Charger la clé API depuis les variables d'environnement (Vite uniquement)
+const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 const GOOGLE_MAPS_SCRIPT_ID = "google-maps-script";
 
 export const useGoogleMaps = () => {
@@ -8,8 +9,17 @@ export const useGoogleMaps = () => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    // Vérifier si la clé API est définie
+    if (!GOOGLE_MAPS_API_KEY) {
+      const errorMsg = "Clé API Google Maps manquante dans les variables d'environnement.";
+      console.error("❌", errorMsg);
+      setError(errorMsg);
+      return;
+    }
+
     // Vérifier si l’API est déjà chargée
-    if (window.google && window.google.maps) {
+    if (window.google && window.google.maps && window.google.maps.places) {
+      console.log("✅ Google Maps et Places API déjà chargés");
       setIsLoaded(true);
       return;
     }
@@ -17,7 +27,8 @@ export const useGoogleMaps = () => {
     // Vérifier si le script est déjà présent dans le DOM
     if (document.getElementById(GOOGLE_MAPS_SCRIPT_ID)) {
       const waitForLoad = setInterval(() => {
-        if (window.google && window.google.maps) {
+        if (window.google && window.google.maps && window.google.maps.places) {
+          console.log("✅ Google Maps et Places API chargés après attente");
           setIsLoaded(true);
           clearInterval(waitForLoad);
         }
@@ -31,14 +42,24 @@ export const useGoogleMaps = () => {
     script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&libraries=places`;
     script.async = true;
     script.defer = true; // Assure un chargement non bloquant
+
     script.onload = () => {
-      console.log("✅ Google Maps API loaded successfully");
-      setIsLoaded(true);
+      if (window.google && window.google.maps && window.google.maps.places) {
+        console.log("✅ Google Maps et Places API chargés avec succès");
+        setIsLoaded(true);
+        setError(null);
+      } else {
+        const errorMsg = "Échec de l'initialisation de Google Maps Places API";
+        console.error("❌", errorMsg);
+        setError(errorMsg);
+      }
     };
-    script.onerror = () => {
-      const errorMsg = "Failed to load Google Maps API";
-      console.error(errorMsg);
+
+    script.onerror = (error) => {
+      const errorMsg = "Échec du chargement de Google Maps API: " + (error instanceof Error ? error.message : "Erreur inconnue");
+      console.error("❌", errorMsg);
       setError(errorMsg);
+      setIsLoaded(false);
     };
 
     document.body.appendChild(script);
@@ -46,7 +67,6 @@ export const useGoogleMaps = () => {
     // Nettoyage (optionnel, mais conservé pour éviter les fuites)
     return () => {
       // Ne pas supprimer le script pour éviter de casser d'autres composants
-      // document.body.removeChild(script);
     };
   }, []);
 

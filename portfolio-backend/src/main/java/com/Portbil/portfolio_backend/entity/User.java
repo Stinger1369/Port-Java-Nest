@@ -9,7 +9,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.Period; // Ajout de cet import
+import java.time.Period;
 import java.util.*;
 
 @Document(collection = "users")
@@ -92,6 +92,16 @@ public class User implements UserDetails {
     @Builder.Default
     private List<String> imageIds = new ArrayList<>();
 
+    // Liste des IDs des utilisateurs likés et qui ont liké cet utilisateur
+    @Builder.Default
+    private List<String> likedUserIds = new ArrayList<>();
+    @Builder.Default
+    private List<String> likerUserIds = new ArrayList<>();
+
+    // Nouveau champ pour les conversations (chatIds)
+    @Builder.Default
+    private List<String> chatIds = new ArrayList<>(); // IDs des conversations privées ou de groupe
+
     // Méthode pour récupérer toutes les IDs des sections du portfolio
     public List<String> getAllPortfolioIds() {
         List<String> allIds = new ArrayList<>();
@@ -107,7 +117,7 @@ public class User implements UserDetails {
         return allIds;
     }
 
-    // champ pour contrôler l'affichage de la date de naissance
+    // Champ pour contrôler l'affichage de la date de naissance
     @Builder.Default
     private boolean showBirthdate = false;
 

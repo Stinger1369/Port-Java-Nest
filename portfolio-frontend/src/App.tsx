@@ -1,5 +1,8 @@
-import { Suspense } from "react";
+import { Suspense, useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { RootState, AppDispatch } from "./redux/store";
+import { fetchAllUsers } from "./redux/features/userSlice";
 import Navbar from "./components/Navbar/Navbar";
 import Home from "./pages/Home/Home";
 import Login from "./pages/Profile/Login/Login";
@@ -9,7 +12,7 @@ import Profile from "./pages/Profile/Profile";
 import ForgotPassword from "./pages/Profile/ForgotPassword/ForgotPassword";
 import ResetPassword from "./pages/Profile/ResetPassword/ResetPassword";
 import ProtectedRoute from "./components/ProtectedRoute";
-import EditProfileContainer from "./pages/Profile/EditProfile/EditProfileContainer"; // Mise à jour ici
+import EditProfileContainer from "./pages/Profile/EditProfile/EditProfileContainer";
 import Portfolio from "./pages/Portfolio/Portfolio";
 import PortfolioGlobal from "./pages/Portfolio/PortfolioGlobal/PortfolioGlobal";
 import Education from "./pages/Portfolio/Education/Education";
@@ -26,9 +29,24 @@ import Notifications from "./pages/UserMenuDropdown/Notification/Notifications";
 import OffersReceived from "./pages/UserMenuDropdown/OffersReceived/OffersReceived";
 import ContactHistory from "./pages/UserMenuDropdown/ContactHistory/ContactHistory";
 import MembersList from "./pages/UserMenuDropdown/MembersList/MembersList";
+import ChatPage from "./pages/Chat/ChatPage";
+import Settings from "./pages/Settings/Settings";
+import ErrorBoundary from "./components/ErrorBoundary"; // Ajout de l’ErrorBoundary
 import "./App.css";
 
 const App = () => {
+  const dispatch = useDispatch<AppDispatch>();
+  const { token } = useSelector((state: RootState) => state.auth);
+
+  useEffect(() => {
+    if (token) {
+      console.log("🔍 Utilisateur authentifié, récupération de tous les utilisateurs...");
+      dispatch(fetchAllUsers());
+    } else {
+      console.log("🔍 Aucun token trouvé, l'utilisateur n'est pas authentifié.");
+    }
+  }, [token, dispatch]);
+
   return (
     <Router>
       <div className="app-container">
@@ -36,20 +54,15 @@ const App = () => {
           <Navbar />
           <main className="main-content">
             <Routes>
-              <Route path="/" element={<Home />} /> {/* ✅ Route pour la page d'accueil */}
+              <Route path="/" element={<Home />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
               <Route path="/verify-account" element={<VerifyAccount />} />
               <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route path="/reset-password" element={<ResetPassword />} />
-              {/* Mise à jour de la route pour EditProfileContainer */}
               <Route path="/edit-profile" element={<ProtectedRoute><EditProfileContainer /></ProtectedRoute>} />
-
-              {/* ✅ Routes publiques avec slug */}
               <Route path="/portfolio/:firstName/:lastName/:slug" element={<PortfolioGlobal />} />
               <Route path="/portfolio/:firstName/:lastName/:slug/contact" element={<ContactScreen />} />
-
-              {/* ✅ Routes protégées pour l'utilisateur authentifié */}
               <Route path="/portfolio" element={<ProtectedRoute><Portfolio /></ProtectedRoute>}>
                 <Route path="global" element={<PortfolioGlobal />} />
                 <Route path="education" element={<Education />} />
@@ -62,11 +75,13 @@ const App = () => {
                 <Route path="recommendations" element={<Recommendations />} />
                 <Route path="interests" element={<Interests />} />
               </Route>
-
               <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
               <Route path="/offers" element={<ProtectedRoute><OffersReceived /></ProtectedRoute>} />
               <Route path="/history" element={<ProtectedRoute><ContactHistory /></ProtectedRoute>} />
-              <Route path="/member" element={<ProtectedRoute><MembersList /></ProtectedRoute>} /> {/* ✅ Nouvelle route */}
+              <Route path="/member" element={<ProtectedRoute><MembersList /></ProtectedRoute>} />
+              <Route path="/chat" element={<ErrorBoundary><ChatPage /></ErrorBoundary>} />
+              <Route path="/chat/:type/:id" element={<ErrorBoundary><ChatPage /></ErrorBoundary>} />
+              <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
               {/* <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} /> */}
             </Routes>
           </main>

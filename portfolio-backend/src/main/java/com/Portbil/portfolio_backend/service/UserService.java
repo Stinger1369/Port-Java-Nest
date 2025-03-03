@@ -1,5 +1,6 @@
 package com.Portbil.portfolio_backend.service;
 
+import com.Portbil.portfolio_backend.dto.UserCoordinatesDTO; // Ajout de l'importation
 import com.Portbil.portfolio_backend.dto.UserDTO;
 import com.Portbil.portfolio_backend.dto.WeatherDTO;
 import com.Portbil.portfolio_backend.entity.User;
@@ -10,7 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;  // Ajouté pour la validation de birthdate
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
 
@@ -97,7 +98,6 @@ public class UserService {
                 throw new IllegalArgumentException("Les deux coordonnées (latitude et longitude) doivent être fournies ensemble.");
             }
 
-            // Mise à jour de la date de naissance avec validation
             if (userDTO.getBirthdate() != null) {
                 if (userDTO.getBirthdate().isAfter(LocalDate.now())) {
                     throw new IllegalArgumentException("La date de naissance ne peut pas être dans le futur");
@@ -106,9 +106,8 @@ public class UserService {
                 System.out.println("🔹 Date de naissance mise à jour : " + userDTO.getBirthdate());
             }
 
-            // Mise à jour de showBirthdate
-            user.setShowBirthdate(userDTO.isShowBirthdate()); // Ajouté pour mettre à jour showBirthdate
-            System.out.println("🔹 ShowBirthdate mis à jour : " + userDTO.isShowBirthdate()); // Log pour vérifier
+            user.setShowBirthdate(userDTO.isShowBirthdate());
+            System.out.println("🔹 ShowBirthdate mis à jour : " + userDTO.isShowBirthdate());
 
             User savedUser = userRepository.save(user);
             System.out.println("✅ Mise à jour réussie pour l'utilisateur ID: " + id);
@@ -118,6 +117,36 @@ public class UserService {
                     ", birthdate=" + (savedUser.isShowBirthdate() ? savedUser.getBirthdate() : "hidden") +
                     ", age=" + (savedUser.isShowBirthdate() ? savedUser.getAge() : "hidden") +
                     ", showBirthdate=" + savedUser.isShowBirthdate());
+            return savedUser;
+        });
+    }
+
+    /**
+     * Mettre à jour uniquement les coordonnées d'un utilisateur
+     */
+    public Optional<User> updateUserCoordinates(String id, UserCoordinatesDTO coordinatesDTO) {
+        return userRepository.findById(id).map(user -> {
+            System.out.println("🔹 Mise à jour des coordonnées de l'utilisateur ID : " + id);
+            System.out.println("🔹 Coordonnées reçues : latitude=" + coordinatesDTO.getLatitude() +
+                    ", longitude=" + coordinatesDTO.getLongitude());
+
+            if (coordinatesDTO.getLatitude() < -90 || coordinatesDTO.getLatitude() > 90 ||
+                    coordinatesDTO.getLongitude() < -180 || coordinatesDTO.getLongitude() > 180) {
+                throw new IllegalArgumentException("Coordonnées géographiques invalides.");
+            }
+
+            user.setLatitude(coordinatesDTO.getLatitude());
+            user.setLongitude(coordinatesDTO.getLongitude());
+
+            Map<String, String> locationDetails = googleMapsService.getCityAndCountryFromCoordinates(
+                    coordinatesDTO.getLatitude(), coordinatesDTO.getLongitude());
+            user.setCity(locationDetails.get("city"));
+            user.setCountry(locationDetails.get("country"));
+
+            User savedUser = userRepository.save(user);
+            System.out.println("✅ Mise à jour des coordonnées réussie pour l'utilisateur ID: " + id);
+            System.out.println("Ville et pays enregistrés : city=" + savedUser.getCity() +
+                    ", country=" + savedUser.getCountry());
             return savedUser;
         });
     }
@@ -458,5 +487,80 @@ public class UserService {
                 .orElseThrow(() -> new IllegalArgumentException("Utilisateur introuvable : " + userId));
         user.setProfilePictureUrl(imagePath);
         userRepository.save(user);
+    }
+
+    /**
+     * Permettre à un utilisateur de "liker" un autre utilisateur
+     */
+    public void likeUser(String likerId, String likedId) {
+        if (likerId == null || likedId == null || likerId.trim().isEmpty() || likedId.trim().isEmpty()) {
+            throw new IllegalArgumentException("Les identifiants des utilisateurs ne peuvent pas être nuls ou vides.");
+        }
+        if (likerId.equals(likedId)) {
+            throw new IllegalArgumentException("Un utilisateur ne peut pas se liker lui-même.");
+        }
+
+        User liker = userRepository.findById(likerId)
+                .orElseThrow(() -> new IllegalArgumentException("Utilisateur liker introuvable : " + likerId));
+        User liked = userRepository.findById(likedId)
+                .orElseThrow(() -> new IllegalArgumentException("Utilisateur liké introuvable : " + likedId));
+
+        // Vérifier si la liste est initialisée
+        if (liker.getLikedUserIds() == null) {
+            liker.setLikedUserIds(new ArrayList<>());
+        }
+        if (liked.getLikerUserIds() == null) {
+            liked.setLikerUserIds(new ArrayList<>());
+        }
+
+        if (liker.getLikedUserIds().contains(likedId)) {
+            throw new IllegalStateException("Cet utilisateur a déjà été liké.");
+        }
+
+        liker.getLikedUserIds().add(likedId);
+        liked.getLikerUserIds().add(likerId);
+
+        userRepository.save(liker);
+        userRepository.save(liked);
+        System.out.println("✅ Utilisateur " + likerId + " a liké " + likedId);
+    }
+
+    /**
+     * Permettre à un utilisateur de retirer son "like" d'un autre utilisateur
+     */
+    public void unlikeUser(String likerId, String likedId) {
+        if (likerId == null || likedId == null || likerId.trim().isEmpty() || likedId.trim().isEmpty()) {
+            throw new IllegalArgumentException("Les identifiants des utilisateurs ne peuvent pas être nuls ou vides.");
+        }
+
+        User liker = userRepository.findById(likerId)
+                .orElseThrow(() -> new IllegalArgumentException("Utilisateur liker introuvable : " + likerId));
+        User liked = userRepository.findById(likedId)
+                .orElseThrow(() -> new IllegalArgumentException("Utilisateur liké introuvable : " + likedId));
+
+        // Vérifier si la liste est initialisée
+        if (liker.getLikedUserIds() == null || liked.getLikerUserIds() == null) {
+            throw new IllegalStateException("Les données de like sont incohérentes pour cet utilisateur.");
+        }
+
+        if (!liker.getLikedUserIds().contains(likedId)) {
+            throw new IllegalStateException("Cet utilisateur n'a pas été liké.");
+        }
+
+        liker.getLikedUserIds().remove(likedId);
+        liked.getLikerUserIds().remove(likedId);
+
+        userRepository.save(liker);
+        userRepository.save(liked);
+        System.out.println("✅ Utilisateur " + likerId + " a retiré son like de " + likedId);
+    }
+
+    /**
+     * Récupérer les chatIds d’un utilisateur
+     */
+    public List<String> getUserChatIds(String userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("Utilisateur introuvable : " + userId));
+        return user.getChatIds();
     }
 }

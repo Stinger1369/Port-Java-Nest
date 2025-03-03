@@ -2,13 +2,13 @@ import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState, AppDispatch } from "../../../redux/store";
 import { fetchAllUsers, fetchUserById, User } from "../../../redux/features/userSlice";
-import { useNavigate } from "react-router-dom"; // Ajout pour navigation
+import { useNavigate } from "react-router-dom";
 import MemberCard from "../../../components/MemberCard/MemberCard";
 import "./MembersList.css";
 
 const MembersList: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
-  const navigate = useNavigate(); // Ajouté pour redirection
+  const navigate = useNavigate();
   const { user, members, status, error } = useSelector((state: RootState) => state.user);
   const [selectedMember, setSelectedMember] = useState<User | null>(null);
 
@@ -18,7 +18,7 @@ const MembersList: React.FC = () => {
 
   const openModal = async (member: User) => {
     setSelectedMember(member);
-    await dispatch(fetchUserById(member.id)); // Charger les données complètes
+    await dispatch(fetchUserById(member.id));
   };
 
   const closeModal = () => {
@@ -26,10 +26,13 @@ const MembersList: React.FC = () => {
   };
 
   const handleEditProfile = () => {
-    navigate("/edit-profile"); // Rediriger vers EditProfile
+    navigate("/edit-profile");
   };
 
-  const formatValue = (value: string | number | undefined) => value || "Non renseigné";
+  const formatValue = (value: string | number | undefined | string[]) => {
+    if (Array.isArray(value)) return value.length > 0 ? value.join(", ") : "Aucun";
+    return value || "Non renseigné";
+  };
 
   const getUpdatedMember = () => {
     if (!selectedMember) return null;
@@ -37,7 +40,7 @@ const MembersList: React.FC = () => {
   };
 
   const displayedMember = getUpdatedMember();
-  const currentUserId = user?.id || localStorage.getItem("userId"); // ID de l'utilisateur connecté
+  const currentUserId = user?.id || localStorage.getItem("userId");
   const isCurrentUser = displayedMember && currentUserId === displayedMember.id;
 
   if (status === "loading") {
@@ -81,6 +84,8 @@ const MembersList: React.FC = () => {
             <p><strong>Bio :</strong> {formatValue(displayedMember.bio)}</p>
             <p><strong>Latitude :</strong> {formatValue(displayedMember.latitude)}</p>
             <p><strong>Longitude :</strong> {formatValue(displayedMember.longitude)}</p>
+            <p><strong>Liké par :</strong> {formatValue(displayedMember.likerUserIds)}</p>
+            <p><strong>A liké :</strong> {formatValue(displayedMember.likedUserIds)}</p>
 
             <div className="modal-actions">
               {isCurrentUser && (
