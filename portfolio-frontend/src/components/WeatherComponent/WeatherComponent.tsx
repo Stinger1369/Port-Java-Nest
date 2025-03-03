@@ -17,17 +17,21 @@ const WeatherComponent = forwardRef<HTMLDivElement, WeatherComponentProps>((prop
   const user = useSelector((state: RootState) => state.user.user);
   const { weather, status, error } = useSelector((state: RootState) => state.weather);
   const token = useSelector((state: RootState) => state.auth.token);
-  const isRTL = i18n.language === "ar";
+  const isRTL = i18n.language === "ar"; // Corrigé ici
   const [geoError, setGeoError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!token || !user?.id) return;
 
-    // Récupérer les données météo uniquement si elles ne sont pas déjà présentes
-    if (!weather) {
+    // Vérifier si les coordonnées géographiques existent avant d'appeler fetchWeather
+    if (user.latitude && user.longitude && !weather) {
+      console.log("🔍 Récupération des données météo pour l'utilisateur:", user.id);
       dispatch(fetchWeather(user.id));
+    } else if (!user.latitude || !user.longitude) {
+      // Si les coordonnées manquent, définir un message d'erreur personnalisé
+      setGeoError(t("weather.noGeolocation", "Please set your location in your profile to view weather."));
     }
-  }, [dispatch, user?.id, token, weather]);
+  }, [dispatch, user, token, weather]);
 
   const getWeatherIconClass = (description: string = "") => {
     const desc = description.toLowerCase();
@@ -55,9 +59,10 @@ const WeatherComponent = forwardRef<HTMLDivElement, WeatherComponentProps>((prop
             <h3>{t("weather.title")}</h3>
           </div>
           {status === "loading" && !geoError && <p>{t("weather.loading")}</p>}
-          {error || geoError ? (
+          {(error || geoError) && (
             <p className="error">{error || geoError}</p>
-          ) : weather ? (
+          )}
+          {weather ? (
             <ul className="weather-details">
               <div className="weather-section">
                 <h4>{t("weather.currentConditions")}</h4>
@@ -121,7 +126,7 @@ const WeatherComponent = forwardRef<HTMLDivElement, WeatherComponentProps>((prop
               </div>
             </ul>
           ) : (
-            <p className="no-data">{t("weather.noData")}</p>
+            !error && !geoError && <p className="no-data">{t("weather.noData")}</p>
           )}
         </div>
       </div>

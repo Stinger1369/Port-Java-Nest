@@ -68,7 +68,8 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
             case "private":
                 String toUserId = data.get("toUserId");
                 String content = data.get("content");
-                sendPrivateMessage(fromUserId, toUserId, content, session);
+                String receivedChatId = data.get("chatId");
+                sendPrivateMessage(fromUserId, toUserId, content, receivedChatId, session);
                 break;
 
             case "group_invite":
@@ -98,7 +99,7 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
         }
     }
 
-    private void sendPrivateMessage(String fromUserId, String toUserId, String content, WebSocketSession fromSession) throws IOException {
+    private void sendPrivateMessage(String fromUserId, String toUserId, String content, String receivedChatId, WebSocketSession fromSession) throws IOException {
         Optional<User> toUserOpt = userRepository.findById(toUserId);
         if (!toUserOpt.isPresent()) {
             fromSession.sendMessage(new TextMessage("{\"error\":\"Destinataire introuvable\"}"));
@@ -106,7 +107,7 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
             return;
         }
 
-        String chatId = getOrCreatePrivateChatId(fromUserId, toUserId);
+        String chatId = receivedChatId != null && !receivedChatId.startsWith("temp-") ? receivedChatId : getOrCreatePrivateChatId(fromUserId, toUserId);
 
         Message msg = Message.builder()
                 .type("private")
@@ -119,18 +120,18 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
         messageRepository.save(msg);
 
         Map<String, String> messageMap = new HashMap<>();
-        messageMap.put("id", msg.getId()); // Ajouter l’ID du message
+        messageMap.put("id", msg.getId());
         messageMap.put("type", "private");
         messageMap.put("fromUserId", fromUserId);
         messageMap.put("toUserId", toUserId);
         messageMap.put("chatId", chatId);
         messageMap.put("content", content);
-        messageMap.put("timestamp", msg.getTimestamp().toString()); // Toujours ISO
+        messageMap.put("timestamp", msg.getTimestamp().toString());
         String messageJson = objectMapper.writeValueAsString(messageMap);
 
         WebSocketSession toSession = sessions.get(toUserId);
         if (toSession != null && toSession.isOpen()) {
-            toSession.sendMessage(new TextMessage(messageJson)); // Envoyer uniquement au destinataire
+            toSession.sendMessage(new TextMessage(messageJson));
         } else {
             Map<String, String> sentMessageMap = new HashMap<>();
             sentMessageMap.put("type", "message_sent");
@@ -252,18 +253,32 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
         User fromUser = userRepository.findById(fromUserId).orElseThrow(() -> new IllegalArgumentException("Utilisateur introuvable: " + fromUserId));
         User toUser = userRepository.findById(toUserId).orElseThrow(() -> new IllegalArgumentException("Utilisateur introuvable: " + toUserId));
 
+        // Vérifier les messages existants entre les deux utilisateurs pour réutiliser un chatId
+        List<Message> existingMessages = messageRepository.findByTypeAndFromUserIdAndToUserId("private", fromUserId, toUserId);
+        existingMessages.addAll(messageRepository.findByTypeAndFromUserIdAndToUserId("private", toUserId, fromUserId));
+        if (!existingMessages.isEmpty()) {
+            String existingChatId = existingMessages.get(0).getChatId();
+            System.out.println("🔍 ChatId existant trouvé dans les messages: " + existingChatId);
+            if (!fromUser.getChatIds().contains(existingChatId)) {
+                fromUser.getChatIds().add(existingChatId);
+                userRepository.save(fromUser);
+            }
+            if (!toUser.getChatIds().contains(existingChatId)) {
+                toUser.getChatIds().add(existingChatId);
+                userRepository.save(toUser);
+            }
+            return existingChatId;
+        }
+
+        // Si aucun message existant, vérifier les chatIds communs
         for (String chatId : fromUser.getChatIds()) {
             if (toUser.getChatIds().contains(chatId)) {
-                List<Message> messages = messageRepository.findByChatId(chatId);
-                if (messages.stream().anyMatch(msg ->
-                        (msg.getFromUserId().equals(fromUserId) && msg.getToUserId().equals(toUserId)) ||
-                                (msg.getFromUserId().equals(toUserId) && msg.getToUserId().equals(fromUserId)))) {
-                    System.out.println("🔍 ChatId existant trouvé: " + chatId);
-                    return chatId;
-                }
+                System.out.println("🔍 ChatId commun existant trouvé: " + chatId);
+                return chatId;
             }
         }
 
+        // Créer un nouveau chatId uniquement si aucune conversation n’existe
         String newChatId = UUID.randomUUID().toString();
         addChatIdToUser(fromUserId, newChatId);
         addChatIdToUser(toUserId, newChatId);

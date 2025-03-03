@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState, AppDispatch } from "../../../redux/store";
 import { fetchAllUsers, fetchUserById, User } from "../../../redux/features/userSlice";
+import { getAllImagesByUserId } from "../../../redux/features/imageSlice";
 import { useNavigate } from "react-router-dom";
 import MemberCard from "../../../components/MemberCard/MemberCard";
 import "./MembersList.css";
@@ -10,11 +11,26 @@ const MembersList: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
   const { user, members, status, error } = useSelector((state: RootState) => state.user);
+  const { images } = useSelector((state: RootState) => state.image);
   const [selectedMember, setSelectedMember] = useState<User | null>(null);
 
   useEffect(() => {
-    dispatch(fetchAllUsers());
+    dispatch(fetchAllUsers()).then((result) => {
+      if (result.meta.requestStatus === "fulfilled" && result.payload) {
+        // Récupérer les images pour chaque utilisateur
+        result.payload.forEach((member: User) => {
+          dispatch(getAllImagesByUserId(member.id)).then((imageResult) => {
+            console.log(`🔍 Images récupérées pour l'utilisateur ${member.id}:`, imageResult.payload);
+          });
+        });
+      }
+    });
   }, [dispatch]);
+
+  useEffect(() => {
+    // Vérifier les images dans le state après chaque mise à jour
+    console.log("🔍 Toutes les images dans state.image.images:", images);
+  }, [images]);
 
   const openModal = async (member: User) => {
     setSelectedMember(member);
@@ -37,6 +53,15 @@ const MembersList: React.FC = () => {
   const getUpdatedMember = () => {
     if (!selectedMember) return null;
     return members.find((m) => m.id === selectedMember.id) || selectedMember;
+  };
+
+  const getProfileImage = (userId: string) => {
+    const userImages = images.filter((img) => img.userId === userId);
+    if (userImages.length > 0) {
+      const profileImg = userImages.find((img) => img.name === "profile-picture.jpg" && !img.isNSFW) || userImages[0];
+      return profileImg.path;
+    }
+    return null;
   };
 
   const displayedMember = getUpdatedMember();
@@ -65,7 +90,12 @@ const MembersList: React.FC = () => {
       <h1>Liste des membres</h1>
       <div className="members-grid">
         {members.map((member) => (
-          <MemberCard key={member.id} member={member} onClick={() => openModal(member)} />
+          <MemberCard
+            key={member.id}
+            member={member}
+            profileImage={getProfileImage(member.id)}
+            onClick={() => openModal(member)}
+          />
         ))}
       </div>
 
@@ -73,6 +103,19 @@ const MembersList: React.FC = () => {
         <div className="modal-overlay">
           <div className="modal-content">
             <h2>Détails du membre</h2>
+            <div className="modal-avatar">
+              {getProfileImage(displayedMember.id) ? (
+                <img
+                  src={`http://localhost:7000/${getProfileImage(displayedMember.id)}`}
+                  alt="Profile"
+                  className="modal-avatar-img"
+                />
+              ) : (
+                <div className="modal-avatar-placeholder">
+                  <i className="fas fa-user-circle"></i>
+                </div>
+              )}
+            </div>
             <p><strong>ID :</strong> {formatValue(displayedMember.id)}</p>
             <p><strong>Email :</strong> {formatValue(displayedMember.email)}</p>
             <p><strong>Prénom :</strong> {formatValue(displayedMember.firstName)}</p>

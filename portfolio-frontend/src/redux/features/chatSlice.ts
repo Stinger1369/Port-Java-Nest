@@ -8,7 +8,7 @@ interface Message {
   fromUserId: string;
   toUserId?: string;
   groupId?: string;
-  chatId?: string;
+  chatId: string;
   content: string;
   timestamp: string;
 }
@@ -29,19 +29,14 @@ const initialState: ChatState = {
   webSocket: null,
 };
 
-// Fonction pour normaliser les timestamps des messages
-// Maintenant que le backend renvoie des chaînes ISO, cette fonction est simplifiée
 const normalizeTimestamp = (timestamp: any): string => {
-  // Vérifie si timestamp est une chaîne ISO valide (contenant "Z")
   if (typeof timestamp === "string" && timestamp.includes("Z")) {
-    return timestamp; // Format ISO, déjà correct
+    return timestamp;
   }
-  // Fallback à la date actuelle si le timestamp est invalide
   console.warn("⚠️ Timestamp invalide reçu:", timestamp);
   return new Date().toISOString();
 };
 
-// Récupérer toutes les conversations
 export const fetchAllConversations = createAsyncThunk(
   "chat/fetchAllConversations",
   async (_, { getState, rejectWithValue }) => {
@@ -51,11 +46,10 @@ export const fetchAllConversations = createAsyncThunk(
         headers: { Authorization: `Bearer ${token}` },
       });
       console.log("📥 Fetched all conversations (raw):", response.data);
-      // Log des timestamps bruts pour inspection
       console.log("🔍 Timestamps bruts dans fetchAllConversations:", response.data.map((msg: any) => msg.timestamp));
-      // Normaliser les timestamps avant de retourner les messages
       const normalizedMessages = response.data.map((msg: Message) => ({
         ...msg,
+        chatId: msg.chatId || `temp-${msg.fromUserId}-${msg.toUserId}`,
         timestamp: normalizeTimestamp(msg.timestamp),
       }));
       console.log("🔍 Messages normalisés dans fetchAllConversations:", normalizedMessages);
@@ -66,7 +60,6 @@ export const fetchAllConversations = createAsyncThunk(
   }
 );
 
-// Récupérer les messages privés avec un utilisateur
 export const fetchPrivateMessages = createAsyncThunk(
   "chat/fetchPrivateMessages",
   async (otherUserId: string, { getState, rejectWithValue }) => {
@@ -76,11 +69,10 @@ export const fetchPrivateMessages = createAsyncThunk(
         headers: { Authorization: `Bearer ${token}` },
       });
       console.log("📥 Fetched private messages for user", otherUserId, " (raw):", response.data);
-      // Log des timestamps bruts
       console.log("🔍 Timestamps bruts dans fetchPrivateMessages:", response.data.map((msg: any) => msg.timestamp));
-      // Normaliser les timestamps
       const normalizedMessages = response.data.map((msg: Message) => ({
         ...msg,
+        chatId: msg.chatId,
         timestamp: normalizeTimestamp(msg.timestamp),
       }));
       console.log("🔍 Messages normalisés dans fetchPrivateMessages:", normalizedMessages);
@@ -91,7 +83,6 @@ export const fetchPrivateMessages = createAsyncThunk(
   }
 );
 
-// Récupérer les messages d’un groupe
 export const fetchGroupMessages = createAsyncThunk(
   "chat/fetchGroupMessages",
   async (groupId: string, { getState, rejectWithValue }) => {
@@ -101,11 +92,10 @@ export const fetchGroupMessages = createAsyncThunk(
         headers: { Authorization: `Bearer ${token}` },
       });
       console.log("📥 Fetched group messages for group", groupId, " (raw):", response.data);
-      // Log des timestamps bruts
       console.log("🔍 Timestamps bruts dans fetchGroupMessages:", response.data.map((msg: any) => msg.timestamp));
-      // Normaliser les timestamps
       const normalizedMessages = response.data.map((msg: Message) => ({
         ...msg,
+        chatId: msg.chatId || groupId,
         timestamp: normalizeTimestamp(msg.timestamp),
       }));
       console.log("🔍 Messages normalisés dans fetchGroupMessages:", normalizedMessages);
@@ -116,7 +106,6 @@ export const fetchGroupMessages = createAsyncThunk(
   }
 );
 
-// Modifier un message
 export const updateMessage = createAsyncThunk(
   "chat/updateMessage",
   async ({ id, content }: { id: string; content: string }, { getState, rejectWithValue }) => {
@@ -127,7 +116,6 @@ export const updateMessage = createAsyncThunk(
         { content },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      // Normaliser le timestamp du message modifié
       return {
         ...response.data,
         timestamp: normalizeTimestamp(response.data.timestamp),
@@ -138,7 +126,6 @@ export const updateMessage = createAsyncThunk(
   }
 );
 
-// Supprimer un message
 export const deleteMessage = createAsyncThunk(
   "chat/deleteMessage",
   async (id: string, { getState, rejectWithValue }) => {
@@ -162,7 +149,12 @@ const chatSlice = createSlice({
       state.webSocket = action.payload;
     },
     addMessage: (state, action: PayloadAction<Message>) => {
-      state.messages.push(action.payload);
+      const existingIndex = state.messages.findIndex(msg => msg.id === action.payload.id);
+      if (existingIndex === -1) {
+        state.messages.push(action.payload);
+      } else {
+        state.messages[existingIndex] = action.payload;
+      }
     },
     updateMessageInState: (state, action: PayloadAction<Message>) => {
       const index = state.messages.findIndex((msg) => msg.id === action.payload.id);
@@ -208,7 +200,16 @@ const chatSlice = createSlice({
       })
       .addCase(fetchPrivateMessages.fulfilled, (state, action: PayloadAction<Message[]>) => {
         state.status = "succeeded";
-        state.messages = action.payload;
+        // Fusionner les nouveaux messages avec les existants
+        const newMessages = action.payload;
+        newMessages.forEach(newMsg => {
+          const existingIndex = state.messages.findIndex(msg => msg.id === newMsg.id);
+          if (existingIndex === -1) {
+            state.messages.push(newMsg);
+          } else {
+            state.messages[existingIndex] = newMsg;
+          }
+        });
       })
       .addCase(fetchPrivateMessages.rejected, (state, action) => {
         state.status = "failed";
@@ -219,7 +220,19 @@ const chatSlice = createSlice({
       })
       .addCase(fetchGroupMessages.fulfilled, (state, action: PayloadAction<Message[]>) => {
         state.status = "succeeded";
-        state.messages = action.payload;
+        // Fusionner les nouveaux messages avec les existants
+        const newMessages = action.payload;
+        newMessages.forEach(newMsg => {
+          const existingIndex = state.messages.findIndex(msg => msg.id === newMsg.id);
+          if (existingIndex === -1) {
+            state.messages.push(newMsg);
+          } else {
+            state.messages[existingIndex] = newMsg;
+          }
+        });
+        if (!state.groups.includes(action.payload[0]?.groupId || "")) {
+          state.groups.push(action.payload[0]?.groupId || "");
+        }
       })
       .addCase(fetchGroupMessages.rejected, (state, action) => {
         state.status = "failed";

@@ -11,9 +11,10 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/chat")
@@ -39,19 +40,36 @@ public class ChatController {
         return ResponseEntity.ok(messages);
     }
 
-    // Récupérer les messages privés avec un autre utilisateur
+    // Récupérer les messages privés avec un autre utilisateur ou initialiser une conversation
     @GetMapping("/private/{otherUserId}")
     public ResponseEntity<List<Message>> getPrivateMessages(@PathVariable String otherUserId, Authentication authentication) {
         String currentUserId = authentication.getName();
-        User user = userRepository.findById(currentUserId).orElseThrow(() -> new IllegalArgumentException("Utilisateur introuvable"));
+        User currentUser = userRepository.findById(currentUserId).orElseThrow(() -> new IllegalArgumentException("Utilisateur introuvable"));
         User otherUser = userRepository.findById(otherUserId).orElseThrow(() -> new IllegalArgumentException("Utilisateur introuvable"));
 
-        // Trouver le chatId commun
-        List<String> commonChatIds = user.getChatIds().stream()
+        // Trouver le chatId commun ou en créer un nouveau
+        List<String> commonChatIds = currentUser.getChatIds().stream()
                 .filter(chatId -> otherUser.getChatIds().contains(chatId))
                 .toList();
 
-        List<Message> messages = messageRepository.findByChatIdIn(commonChatIds);
+        String chatId;
+        if (commonChatIds.isEmpty()) {
+            // Générer un nouveau chatId pour une nouvelle conversation
+            chatId = UUID.randomUUID().toString();
+            List<String> currentUserChatIds = new ArrayList<>(currentUser.getChatIds());
+            List<String> otherUserChatIds = new ArrayList<>(otherUser.getChatIds());
+            currentUserChatIds.add(chatId);
+            otherUserChatIds.add(chatId);
+            currentUser.setChatIds(currentUserChatIds);
+            otherUser.setChatIds(otherUserChatIds);
+            userRepository.save(currentUser);
+            userRepository.save(otherUser);
+            System.out.println("🆕 Nouvelle conversation créée avec chatId: " + chatId + " entre " + currentUserId + " et " + otherUserId);
+        } else {
+            chatId = commonChatIds.get(0); // Utiliser le premier chatId commun
+        }
+
+        List<Message> messages = messageRepository.findByChatId(chatId);
         System.out.println("📥 Private messages fetched between " + currentUserId + " and " + otherUserId + ": " + messages);
         return ResponseEntity.ok(messages);
     }

@@ -1,9 +1,11 @@
+// Navbar.tsx
 import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState, AppDispatch } from "../../redux/store";
 import { logout } from "../../redux/features/authSlice";
 import { fetchUser } from "../../redux/features/userSlice";
+import { fetchWeather } from "../../redux/features/weatherSlice"; // Ajout
 import { useTranslation } from "react-i18next";
 import LanguageSelector from "../LanguageSelector/LanguageSelector";
 import WeatherComponent from "../WeatherComponent/WeatherComponent";
@@ -28,8 +30,17 @@ const Navbar = () => {
   const languageRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (token && !user) {
+    const storedToken = localStorage.getItem("token");
+    if (storedToken && token && !user) {
+      console.log("🔍 Récupération des données utilisateur au montage...");
       dispatch(fetchUser());
+    }
+  }, [dispatch, token, user]);
+
+  useEffect(() => {
+    if (token && user?.id && user.latitude && user.longitude) {
+      console.log("🔍 Récupération des données météo pour l'utilisateur:", user.id);
+      dispatch(fetchWeather(user.id));
     }
   }, [dispatch, token, user]);
 

@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { RootState } from "../../redux/store";
+import { RootState, AppDispatch } from "../../redux/store";
 import { likeUser, unlikeUser, User } from "../../redux/features/userSlice";
 import { fetchPrivateMessages } from "../../redux/features/chatSlice";
 import { useNavigate } from "react-router-dom";
@@ -8,14 +8,17 @@ import "./MemberCard.css";
 
 interface MemberCardProps {
   member: User;
+  profileImage: string | null;
   onClick: () => void;
 }
 
-const MemberCard: React.FC<MemberCardProps> = ({ member, onClick }) => {
-  const dispatch = useDispatch();
+const MemberCard: React.FC<MemberCardProps> = ({ member, profileImage, onClick }) => {
+  const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
   const currentUser = useSelector((state: RootState) => state.user.user);
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  console.log(`🔍 Image de profil pour l'utilisateur ${member.id}:`, profileImage);
 
   const isCurrentUser = currentUser?.id === member.id;
   const hasLiked = currentUser?.likedUserIds?.includes(member.id);
@@ -38,8 +41,8 @@ const MemberCard: React.FC<MemberCardProps> = ({ member, onClick }) => {
   }, [currentUser, isCurrentUser, hasLiked, dispatch, member.id]);
 
   const handleChat = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation(); // Empêche la propagation au clic sur la carte
-    e.preventDefault(); // Empêche tout comportement par défaut
+    e.stopPropagation();
+    e.preventDefault();
     if (!currentUser || isCurrentUser) return;
 
     if (isProfileIncomplete()) {
@@ -59,16 +62,28 @@ const MemberCard: React.FC<MemberCardProps> = ({ member, onClick }) => {
     navigate("/edit-profile");
   }, [closeModal, navigate]);
 
-  // Gestion du clic sur la carte uniquement pour les zones hors boutons
   const handleCardClick = useCallback((e: React.MouseEvent) => {
     if (!(e.target instanceof HTMLElement) || !e.target.closest('.like-container')) {
-      onClick(); // Déclenche onClick uniquement si le clic n’est pas sur les boutons
+      onClick();
     }
   }, [onClick]);
 
   return (
     <div className={`member-card ${isModalOpen ? "modal-open" : ""}`} onClick={handleCardClick}>
       <div className="member-header">
+        <div className="member-avatar">
+          {profileImage ? (
+            <img
+              src={`http://localhost:7000/${profileImage}`}
+              alt="Profile"
+              className="member-avatar-img"
+            />
+          ) : (
+            <div className="member-avatar-placeholder">
+              <i className="fas fa-user-circle"></i>
+            </div>
+          )}
+        </div>
         <h3>
           {member.firstName} {member.lastName}
         </h3>

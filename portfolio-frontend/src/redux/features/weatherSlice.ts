@@ -1,3 +1,4 @@
+// weatherSlice.ts
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import axios from "axios";
 import { BASE_URL } from "../../config/hostname";
@@ -32,11 +33,23 @@ const initialState: WeatherState = {
 // Récupérer les données météo
 export const fetchWeather = createAsyncThunk(
   "weather/fetchWeather",
-  async (userId: string, { rejectWithValue }) => {
+  async (userId: string, { rejectWithValue, getState }) => {
     try {
       const token = localStorage.getItem("token");
-      if (!token) throw new Error("No token found");
+      if (!token) {
+        console.warn("❌ Aucun token trouvé dans localStorage");
+        return rejectWithValue("No token found");
+      }
 
+      // Vérifier les coordonnées dans le state Redux
+      const state = getState() as any;
+      const user = state.user.user;
+      if (!user?.latitude || !user?.longitude) {
+        console.warn("⚠️ Coordonnées de géolocalisation manquantes pour l'utilisateur:", userId);
+        return rejectWithValue("Missing geolocation coordinates");
+      }
+
+      console.log("🔹 Récupération des données météo pour :", userId);
       const response = await axios.get(`${BASE_URL}/api/weather/${userId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -45,7 +58,7 @@ export const fetchWeather = createAsyncThunk(
       console.log("🔹 Ville détectée :", response.data.city);
       return response.data as WeatherData;
     } catch (error: any) {
-      console.error("❌ Fetch weather failed:", error.response?.data);
+      console.error("❌ Fetch weather failed:", error.response?.data || error.message);
       return rejectWithValue(error.response?.data?.error || "Failed to fetch weather");
     }
   }

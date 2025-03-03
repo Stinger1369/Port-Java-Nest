@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import axios from "axios";
-import { BASE_URL } from "../../config/hostname"; // Import de la configuration de l'URL
+import { BASE_URL } from "../../config/hostname";
 
 interface Image {
   id: string | null;
@@ -25,10 +25,8 @@ const initialState: ImageState = {
   message: null,
 };
 
-// ✅ **Fonction pour récupérer le token stocké**
 const getAuthToken = () => localStorage.getItem("token");
 
-// ✅ **Uploader une image**
 export const uploadImage = createAsyncThunk(
   "image/uploadImage",
   async (
@@ -64,7 +62,6 @@ export const uploadImage = createAsyncThunk(
   }
 );
 
-// ✅ **Récupérer les images d'un utilisateur**
 export const getUserImages = createAsyncThunk(
   "image/getUserImages",
   async (userId: string, { rejectWithValue }) => {
@@ -86,7 +83,6 @@ export const getUserImages = createAsyncThunk(
   }
 );
 
-// ✅ **Supprimer une image**
 export const deleteImage = createAsyncThunk(
   "image/deleteImage",
   async (
@@ -111,7 +107,6 @@ export const deleteImage = createAsyncThunk(
   }
 );
 
-// ✅ **Récupérer toutes les images d'un utilisateur**
 export const getAllImagesByUserId = createAsyncThunk(
   "image/getAllImagesByUserId",
   async (userId: string, { rejectWithValue }) => {
@@ -126,7 +121,7 @@ export const getAllImagesByUserId = createAsyncThunk(
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      return response.data;
+      return { userId, images: response.data }; // Retourner l'userId avec les images pour les associer
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || "Échec de la récupération de toutes les images.");
     }
@@ -198,9 +193,12 @@ const imageSlice = createSlice({
         state.error = null;
         state.message = null;
       })
-      .addCase(getAllImagesByUserId.fulfilled, (state, action: PayloadAction<Image[]>) => {
+      .addCase(getAllImagesByUserId.fulfilled, (state, action: PayloadAction<{ userId: string; images: Image[] }>) => {
         state.status = "succeeded";
-        state.images = action.payload;
+        // Supprimer les anciennes images de cet utilisateur pour éviter les doublons
+        state.images = state.images.filter((img) => img.userId !== action.payload.userId);
+        // Ajouter les nouvelles images
+        state.images.push(...action.payload.images);
       })
       .addCase(getAllImagesByUserId.rejected, (state, action) => {
         state.status = "failed";

@@ -12,9 +12,21 @@ import {
   addGroup,
   resetMessages,
 } from "../../redux/features/chatSlice";
-import { fetchAllUsers, fetchUser } from "../../redux/features/userSlice";
-import { BASE_URL } from "../../config/hostname";
+import { fetchUser, fetchUserById } from "../../redux/features/userSlice";
+import { getAllImagesByUserId } from "../../redux/features/imageSlice";
+import { useWebSocket } from "./useWebSocket";
 import "./ChatPage.css";
+
+interface Message {
+  id: string;
+  type: "private" | "group_message";
+  fromUserId: string;
+  toUserId?: string;
+  groupId?: string;
+  chatId: string;
+  content: string;
+  timestamp: string;
+}
 
 const ChatPage: React.FC = () => {
   const { type, id } = useParams<{ type?: "private" | "group"; id?: string }>();
@@ -23,105 +35,28 @@ const ChatPage: React.FC = () => {
   const { messages, groups, status } = useSelector((state: RootState) => state.chat);
   const { token, userId } = useSelector((state: RootState) => state.auth);
   const { members, user } = useSelector((state: RootState) => state.user);
+  const { images } = useSelector((state: RootState) => state.image);
   const [messageInput, setMessageInput] = useState("");
   const [selectedChatId, setSelectedChatId] = useState<string | null>(id || null);
-  const [wsInstance, setWsInstance] = useState<WebSocket | null>(null);
   const [showActions, setShowActions] = useState<string | null>(null);
-  const wsRef = useRef<WebSocket | null>(null);
+  const { wsInstance, connectWebSocket } = useWebSocket(token);
   const messageOptionsRef = useRef<Map<string, HTMLDivElement>>(new Map());
   const messageIconRef = useRef<Map<string, HTMLElement>>(new Map());
 
-  // Fonction pour normaliser les timestamps (synchronisée avec chatSlice.ts)
-  const normalizeTimestamp = (timestamp: any): string => {
-    // Vérifie si timestamp est une chaîne ISO valide (contenant "Z")
-    if (typeof timestamp === "string" && timestamp.includes("Z")) {
-      return timestamp; // Format ISO, déjà correct
-    }
-    // Fallback à la date actuelle si le timestamp est invalide
-    console.warn("⚠️ Timestamp invalide reçu:", timestamp);
-    return new Date().toISOString();
-  };
-
-  const connectWebSocket = () => {
-    if (!token || wsRef.current?.readyState === WebSocket.OPEN) {
-      console.log("🔴 Token absent ou WebSocket déjà connecté");
-      return;
-    }
-
-    console.log("🔧 Établissement de la connexion WebSocket...");
-    const ws = new WebSocket(`${BASE_URL.replace("http", "ws")}/chat?token=${token}`);
-    wsRef.current = ws;
-    setWsInstance(ws);
-
-    ws.onopen = () => {
-      console.log("✅ WebSocket connecté avec succès");
-    };
-
-    ws.onmessage = (event) => {
-      const message = JSON.parse(event.data);
-      console.log("📥 Message WebSocket reçu:", message);
-
-      // Normalisation du timestamp
-      const normalizedTimestamp = normalizeTimestamp(message.timestamp);
-
-      const normalizedMessage = {
-        ...message,
-        timestamp: normalizedTimestamp,
-      };
-
-      if (message.type === "private" || message.type === "group_message") {
-        if (!messages.some(msg => msg.id === normalizedMessage.id)) {
-          dispatch(addMessage(normalizedMessage));
-        } else {
-          console.log("ℹ️ Message déjà présent dans le state:", normalizedMessage.id);
-        }
-      } else if (message.type === "group_invite") {
-        dispatch(addGroup(message.groupId));
-      } else if (message.type === "message_sent") {
-        const localMessage = {
-          id: message.id || Date.now().toString(),
-          type: "private",
-          fromUserId: userId!,
-          toUserId: message.toUserId,
-          chatId: message.chatId,
-          content: message.content,
-          timestamp: normalizedTimestamp,
-        };
-        console.log("📤 Ajout d’un message privé local (destinataire hors ligne):", localMessage);
-        if (!messages.some(msg => msg.id === localMessage.id)) {
-          dispatch(addMessage(localMessage));
-        }
-      } else if (message.error) {
-        console.log("⚠️ Erreur du serveur:", message.error);
-      }
-    };
-
-    ws.onclose = (event) => {
-      console.log("❌ WebSocket déconnecté:", event.reason);
-      setWsInstance(null);
-      wsRef.current = null;
-      setTimeout(() => {
-        if (token) {
-          console.log("🔄 Tentative de reconnexion WebSocket...");
-          connectWebSocket();
-        }
-      }, 2000);
-    };
-
-    ws.onerror = (error) => {
-      console.error("⚠️ Erreur WebSocket:", error);
-    };
-  };
-
   const refreshData = () => {
     if (!token) return;
-    console.log("🔍 Rafraîchissement des conversations et utilisateurs...");
-    dispatch(resetMessages());
+    console.log("🔍 Rafraîchissement des conversations et utilisateur connecté...");
     dispatch(fetchAllConversations()).then((result) => {
       console.log("🔍 Conversations après rafraîchissement:", result.payload);
-    });
-    dispatch(fetchAllUsers()).then((result) => {
-      console.log("🔍 Membres actuels après rafraîchissement:", result.payload.map(m => ({ id: m.id, firstName: m.firstName, lastName: m.lastName })));
+      if (result.payload && result.payload.length > 0) {
+        const userIds = new Set<string>();
+        result.payload.forEach((msg: Message) => {
+          userIds.add(msg.fromUserId);
+          if (msg.toUserId) userIds.add(msg.toUserId);
+        });
+        userIds.delete(userId || "");
+        userIds.forEach((uid) => dispatch(fetchUserById(uid)));
+      }
     });
     dispatch(fetchUser()).then((result) => {
       console.log("🔍 Utilisateur connecté après rafraîchissement:", result.payload);
@@ -131,7 +66,6 @@ const ChatPage: React.FC = () => {
   useEffect(() => {
     if (!token) return;
 
-    connectWebSocket();
     refreshData();
 
     const handleClickOutside = (event: MouseEvent) => {
@@ -158,64 +92,106 @@ const ChatPage: React.FC = () => {
     document.addEventListener("click", handleClickOutside);
 
     return () => {
-      if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
-        wsRef.current.close();
-      }
       document.removeEventListener("click", handleClickOutside);
     };
-  }, [token, dispatch]);
+  }, [token, dispatch, userId]);
+
+  useEffect(() => {
+    if (type && id) {
+      if (type === "private") {
+        dispatch(fetchPrivateMessages(id)).then((result) => {
+          if (result.payload && result.payload.length > 0) {
+            setSelectedChatId(result.payload[0].chatId);
+            console.log("🔍 ChatId sélectionné pour privé:", result.payload[0].chatId);
+            const otherUserId = result.payload[0].fromUserId === userId ? result.payload[0].toUserId : result.payload[0].fromUserId;
+            if (otherUserId) dispatch(fetchUserById(otherUserId));
+          } else {
+            setSelectedChatId(`temp-${id}`);
+            console.log("🔍 ChatId temporaire défini:", `temp-${id}`);
+            dispatch(fetchUserById(id));
+          }
+        });
+      } else if (type === "group") {
+        dispatch(fetchGroupMessages(id));
+        setSelectedChatId(id);
+      }
+    }
+  }, [type, id, dispatch, userId]);
+
+  // Récupérer les images de profil pour tous les utilisateurs dans la sidebar
+  useEffect(() => {
+    const userIds = new Set<string>();
+    messages.forEach((msg) => {
+      userIds.add(msg.fromUserId);
+      if (msg.toUserId) userIds.add(msg.toUserId);
+    });
+    userIds.delete(userId || "");
+    userIds.forEach((uid) => {
+      dispatch(getAllImagesByUserId(uid));
+    });
+  }, [messages, userId, dispatch]);
 
   const isRecipientDeleted = () => {
     if (!selectedChatId || groups.includes(selectedChatId)) return false;
     const otherUserId = messages.find(msg => msg.chatId === selectedChatId)?.toUserId === userId
       ? messages.find(msg => msg.chatId === selectedChatId)?.fromUserId
       : messages.find(msg => msg.chatId === selectedChatId)?.toUserId;
-    if (!otherUserId) {
-      console.log("🔍 Aucun otherUserId trouvé pour selectedChatId:", selectedChatId);
-      return false;
-    }
-    const member = members.find((m) => m.id === otherUserId);
-    console.log(`🔍 Vérification si ${otherUserId} est supprimé. Trouvé dans members:`, !!member);
-    return !member;
+    if (!otherUserId) return false;
+    return !members.find((m) => m.id === otherUserId);
   };
 
   const getOtherUserIdFromChat = () => {
     if (!selectedChatId || groups.includes(selectedChatId)) return null;
     const chat = messages.find(msg => msg.chatId === selectedChatId);
-    return chat ? (chat.toUserId === userId ? chat.fromUserId : chat.toUserId) : null;
+    return chat ? (chat.toUserId === userId ? chat.fromUserId : chat.toUserId) : (type === "private" && id ? id : null);
+  };
+
+  const getExistingChatId = (toUserId: string) => {
+    const existingMessage = messages.find(
+      msg => (msg.fromUserId === userId && msg.toUserId === toUserId) || (msg.fromUserId === toUserId && msg.toUserId === userId)
+    );
+    return existingMessage ? existingMessage.chatId : `temp-${toUserId}`;
   };
 
   const sendMessage = () => {
-    console.log("🔍 Tentative d’envoi de message...");
-    console.log("🔍 Utilisateur actuel:", userId);
-    console.log("🔍 Instance WebSocket:", wsInstance);
-    console.log("🔍 État WebSocket:", wsInstance?.readyState);
-    console.log("🔍 Contenu du message:", messageInput);
-    console.log("🔍 ChatId sélectionné:", selectedChatId);
-    console.log("🔍 État actuel de members:", members.map(m => ({ id: m.id, firstName: m.firstName, lastName: m.lastName })));
-
     if (isRecipientDeleted()) {
       console.log("❌ Envoi impossible: le destinataire a supprimé son compte");
       return;
     }
 
-    const toUserId = getOtherUserIdFromChat();
+    let toUserId = getOtherUserIdFromChat();
+    if (!toUserId && type === "private" && id) {
+      toUserId = id;
+    }
+
     if (!toUserId) {
       console.log("❌ Aucun destinataire valide trouvé pour cette conversation");
       return;
     }
 
-    if (wsInstance && wsInstance.readyState === WebSocket.OPEN && messageInput && selectedChatId) {
-      const isGroup = groups.includes(selectedChatId);
+    if (wsInstance && wsInstance.readyState === WebSocket.OPEN && messageInput) {
+      const isGroup = groups.includes(selectedChatId || "");
+      const chatId = isGroup ? selectedChatId : getExistingChatId(toUserId);
       const message = {
         type: isGroup ? "group_message" : "private",
         [isGroup ? "groupId" : "toUserId"]: toUserId,
         content: messageInput,
+        chatId: chatId,
       };
       console.log("📤 Envoi du message au WebSocket:", message);
       wsInstance.send(JSON.stringify(message));
       setMessageInput("");
-      console.log("✅ Message envoyé au WebSocket, en attente de réponse du serveur");
+
+      if (!isGroup) {
+        dispatch(fetchPrivateMessages(toUserId)).then((result) => {
+          if (result.payload && result.payload.length > 0) {
+            setSelectedChatId(result.payload[0].chatId);
+            console.log("🔍 ChatId mis à jour après envoi:", result.payload[0].chatId);
+            const otherUserId = result.payload[0].fromUserId === userId ? result.payload[0].toUserId : result.payload[0].fromUserId;
+            if (otherUserId) dispatch(fetchUserById(otherUserId));
+          }
+        });
+      }
     } else {
       console.error("❌ Impossible d’envoyer le message: WebSocket non connecté ou chat non sélectionné");
       if (!wsInstance || wsInstance.readyState !== WebSocket.OPEN) {
@@ -241,7 +217,6 @@ const ChatPage: React.FC = () => {
   };
 
   const handleChatSelect = (chatId: string, isGroup: boolean) => {
-    console.log("🔍 Chat sélectionné:", chatId, "isGroup:", isGroup);
     setSelectedChatId(chatId);
     if (isGroup) {
       dispatch(fetchGroupMessages(chatId));
@@ -250,29 +225,62 @@ const ChatPage: React.FC = () => {
       const otherUserId = messages.find(msg => msg.chatId === chatId)?.toUserId === userId
         ? messages.find(msg => msg.chatId === chatId)?.fromUserId
         : messages.find(msg => msg.chatId === chatId)?.toUserId;
-      dispatch(fetchPrivateMessages(otherUserId || chatId));
-      navigate(`/chat/private/${otherUserId || chatId}`);
+      const targetUserId = otherUserId || chatId;
+      dispatch(fetchPrivateMessages(targetUserId)).then((result) => {
+        if (result.payload && result.payload.length > 0) {
+          setSelectedChatId(result.payload[0].chatId);
+          console.log("🔍 ChatId mis à jour après sélection:", result.payload[0].chatId);
+          const fetchedOtherUserId = result.payload[0].fromUserId === userId ? result.payload[0].toUserId : result.payload[0].fromUserId;
+          if (fetchedOtherUserId) dispatch(fetchUserById(fetchedOtherUserId));
+        } else {
+          setSelectedChatId(chatId);
+          console.log("🔍 Aucun message trouvé, conservation du chatId:", chatId);
+          if (!otherUserId) dispatch(fetchUserById(targetUserId));
+        }
+      });
+      navigate(`/chat/private/${targetUserId}`);
     }
   };
 
   const getContactName = (contactId: string) => {
-    if (!contactId || contactId.match(/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/)) {
-      console.log(`🔍 ${contactId} semble être un chatId, pas un userId`);
-      return "Conversation inconnue";
+    if (!contactId) return "Utilisateur inconnu";
+    if (contactId.match(/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/)) {
+      const chatMessage = messages.find(msg => msg.chatId === contactId);
+      if (chatMessage) {
+        const otherUserId = chatMessage.fromUserId === userId ? chatMessage.toUserId : chatMessage.fromUserId;
+        if (otherUserId) contactId = otherUserId;
+      } else if (type === "private" && id) {
+        contactId = id;
+      }
     }
     const member = members.find((m) => m.id === contactId);
-    console.log(`🔍 Recherche de ${contactId} dans members:`, members.map(m => ({ id: m.id, firstName: m.firstName, lastName: m.lastName })), "Trouvé:", !!member);
     if (!member) {
-      console.log(`🔍 Utilisateur ${contactId} non trouvé dans members, probablement supprimé`);
-      return "Account deleted";
+      console.log("⚠️ Membre non trouvé pour contactId:", contactId);
+      return contactId;
     }
     const name = `${member.firstName || ""} ${member.lastName || ""}`.trim();
     return name || contactId;
   };
 
-  const toggleActions = (messageId: string, event: React.MouseEvent) => {
-    event.stopPropagation();
-    setShowActions(showActions === messageId ? null : messageId);
+  const getProfileImage = (contactId: string) => {
+    if (!contactId) return null;
+    if (contactId.match(/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/)) {
+      const chatMessage = messages.find(msg => msg.chatId === contactId);
+      if (chatMessage) {
+        const otherUserId = chatMessage.fromUserId === userId ? chatMessage.toUserId : chatMessage.fromUserId;
+        if (otherUserId) contactId = otherUserId;
+      } else if (type === "private" && id) {
+        contactId = id;
+      }
+    }
+    // Rechercher l'image dans state.image.images
+    const userImages = images.filter((img) => img.userId === contactId);
+    if (userImages.length > 0) {
+      // Prendre la première image disponible (ou celle marquée comme profile-picture si vous voulez)
+      const profileImg = userImages.find((img) => img.name === "profile-picture.jpg" && !img.isNSFW) || userImages[0];
+      return profileImg.path;
+    }
+    return null;
   };
 
   const getUniqueChats = () => {
@@ -290,6 +298,11 @@ const ChatPage: React.FC = () => {
     return Array.from(chatMap.values());
   };
 
+  const toggleActions = (messageId: string, event: React.MouseEvent) => {
+    event.stopPropagation();
+    setShowActions(showActions === messageId ? null : messageId);
+  };
+
   return (
     <div className="chat-page">
       <div className="chat-container">
@@ -303,7 +316,30 @@ const ChatPage: React.FC = () => {
                 className={chat.chatId === selectedChatId ? "active" : ""}
                 onClick={() => handleChatSelect(chat.chatId, chat.isGroup)}
               >
-                {chat.isGroup ? `Groupe ${chat.chatId}` : getContactName(chat.otherUserId || chat.chatId)}
+                <div className="chat-item">
+                  {chat.isGroup ? (
+                    <div className="chat-avatar-placeholder">
+                      <i className="fas fa-users"></i>
+                    </div>
+                  ) : (
+                    <div className="chat-avatar">
+                      {getProfileImage(chat.otherUserId || chat.chatId) ? (
+                        <img
+                          src={`http://localhost:7000/${getProfileImage(chat.otherUserId || chat.chatId)}`}
+                          alt="Profile"
+                          className="chat-avatar-img"
+                        />
+                      ) : (
+                        <div className="chat-avatar-placeholder">
+                          <i className="fas fa-user-circle"></i>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  <span className="chat-name">
+                    {chat.isGroup ? `Groupe ${chat.chatId}` : getContactName(chat.otherUserId || chat.chatId)}
+                  </span>
+                </div>
               </li>
             ))}
           </ul>
@@ -313,13 +349,12 @@ const ChatPage: React.FC = () => {
           <div className="chat-header">
             <h3>
               {selectedChatId
-                ? (groups.includes(selectedChatId) ? `Groupe ${selectedChatId}` : getContactName(messages.find(msg => msg.chatId === selectedChatId)?.toUserId === userId ? messages.find(msg => msg.chatId === selectedChatId)?.fromUserId : messages.find(msg => msg.chatId === selectedChatId)?.toUserId || selectedChatId))
+                ? (groups.includes(selectedChatId) ? `Groupe ${selectedChatId}` : getContactName(getOtherUserIdFromChat() || selectedChatId))
                 : "Sélectionnez une conversation"}
             </h3>
           </div>
           <div className="chat-messages">
             {status === "loading" && <p>Loading...</p>}
-            {console.log("🔍 Messages actuels dans le rendu:", messages)}
             {messages
               .filter((msg) => msg.chatId === selectedChatId)
               .map((msg) => (
@@ -335,11 +370,8 @@ const ChatPage: React.FC = () => {
                           className="fas fa-caret-down message-options"
                           onClick={(event) => toggleActions(msg.id, event)}
                           ref={(el) => {
-                            if (el) {
-                              messageIconRef.current.set(msg.id, el);
-                            } else {
-                              messageIconRef.current.delete(msg.id);
-                            }
+                            if (el) messageOptionsRef.current.set(msg.id, el);
+                            else messageOptionsRef.current.delete(msg.id);
                           }}
                         ></i>
                       )}
@@ -348,11 +380,8 @@ const ChatPage: React.FC = () => {
                       <div
                         className="message-actions"
                         ref={(el) => {
-                          if (el) {
-                            messageOptionsRef.current.set(msg.id, el);
-                          } else {
-                            messageOptionsRef.current.delete(msg.id);
-                          }
+                          if (el) messageOptionsRef.current.set(msg.id, el);
+                          else messageOptionsRef.current.delete(msg.id);
                         }}
                       >
                         <button onClick={() => handleUpdateMessage(msg.id, msg.content)}>

@@ -54,7 +54,7 @@ const AddressScreen = ({ formData, setFormData }: Props) => {
     }
   }, [isGoogleMapsLoaded, isModalOpen, dispatch, user, formData, setFormData]);
 
-  const handleManualUpdateGeolocation = () => {
+  const handleManualUpdateGeolocation = async () => {
     if (!navigator.geolocation || !user?.id) {
       setGeoError(t("address.geoNotSupported", "Geolocation is not supported by this browser."));
       return;
@@ -63,53 +63,43 @@ const AddressScreen = ({ formData, setFormData }: Props) => {
     setIsGeoLoading(true);
     setGeoError(null);
 
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const { latitude: newLatitude, longitude: newLongitude } = position.coords;
-        dispatch(updateGeolocation({ userId: user.id, latitude: newLatitude, longitude: newLongitude }))
-          .unwrap()
-          .then(() => {
-            handleUpdateAddress(); // Appeler la mise à jour de l'adresse après la géolocalisation
-          })
-          .catch((err: any) => {
-            setGeoError(t("address.geoError", { message: err }));
-            console.error("Erreur de géolocalisation manuelle:", err);
-          })
-          .finally(() => {
-            setIsGeoLoading(false);
-          });
-      },
-      (err) => {
-        setGeoError(t("address.geoError", { message: err.message }));
-        console.error("Erreur de géolocalisation manuelle:", err.message);
-        setIsGeoLoading(false);
-      },
-      {
-        enableHighAccuracy: true,
-        timeout: 20000,
-        maximumAge: 0,
-      }
-    );
+    try {
+      const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(resolve, reject, {
+          enableHighAccuracy: true,
+          timeout: 20000,
+          maximumAge: 0,
+        });
+      });
+
+      const { latitude: newLatitude, longitude: newLongitude } = position.coords;
+      await dispatch(updateGeolocation({ userId: user.id, latitude: newLatitude, longitude: newLongitude })).unwrap();
+      await handleUpdateAddress(); // Attendre que les coordonnées soient mises à jour avant de continuer
+    } catch (err: any) {
+      setGeoError(t("address.geoError", { message: err.message }));
+      console.error("Erreur de géolocalisation manuelle:", err.message);
+    } finally {
+      setIsGeoLoading(false);
+    }
   };
 
   const handleUpdateAddress = async () => {
     if (user && (latitude || longitude)) {
       setIsAddressLoading(true);
-      await dispatch(updateUserAddress(user.id))
-        .unwrap()
-        .then((updatedUser) => {
-          setFormData({
-            ...formData,
-            address: updatedUser.address || formData.address,
-            city: updatedUser.city || formData.city,
-            country: updatedUser.country || formData.country,
-          });
-          setModalAddress(updatedUser.address || "");
-        })
-        .catch((error) => {
-          console.error("❌ Erreur lors de la mise à jour de l’adresse :", error);
+      try {
+        const updatedUser = await dispatch(updateUserAddress(user.id)).unwrap();
+        setFormData({
+          ...formData,
+          address: updatedUser.address || formData.address,
+          city: updatedUser.city || formData.city,
+          country: updatedUser.country || formData.country,
         });
-      setIsAddressLoading(false);
+        setModalAddress(updatedUser.address || "");
+      } catch (error) {
+        console.error("❌ Erreur lors de la mise à jour de l’adresse :", error);
+      } finally {
+        setIsAddressLoading(false);
+      }
     }
   };
 
@@ -129,7 +119,6 @@ const AddressScreen = ({ formData, setFormData }: Props) => {
       <label>{t("editProfile.address", "Address")} :</label>
       <input type="text" value={formData.address} disabled />
 
-      {/* Bouton pour mettre à jour manuellement les coordonnées et l'adresse */}
       <button onClick={handleManualUpdateGeolocation} disabled={isGeoLoading || isAddressLoading}>
         {isGeoLoading || isAddressLoading
           ? t("editProfile.updatingAddress", "Updating...")

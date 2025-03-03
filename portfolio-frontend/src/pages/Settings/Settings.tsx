@@ -1,8 +1,10 @@
+// Settings.tsx
 import React from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { RootState, AppDispatch } from "../../redux/store";
 import { deleteUser, clearUserState } from "../../redux/features/userSlice";
+import { logout } from "../../redux/features/authSlice"; // Ajout de logout
 import { useTranslation } from "react-i18next";
 import "./Settings.css";
 
@@ -12,25 +14,26 @@ const Settings: React.FC = () => {
   const { user, status, error } = useSelector((state: RootState) => state.user);
   const { t } = useTranslation();
 
-  const handleDeleteAccount = () => {
+  const handleDeleteAccount = async () => {
     if (!user?.id) {
       console.error("❌ Aucun utilisateur connecté pour supprimer le compte");
       return;
     }
 
     if (window.confirm(t("settings.confirmDelete"))) {
-      dispatch(deleteUser(user.id))
-        .unwrap()
-        .then(() => {
-          console.log("✅ Compte supprimé avec succès");
-          dispatch(clearUserState()); // Réinitialise l'état utilisateur
-          localStorage.removeItem("token"); // Supprime le token
-          localStorage.removeItem("userId"); // Supprime l'ID utilisateur
-          navigate("/login"); // Redirige vers la page de connexion
-        })
-        .catch((err) => {
-          console.error("❌ Échec de la suppression du compte:", err);
-        });
+      try {
+        await dispatch(deleteUser(user.id)).unwrap();
+        console.log("✅ Compte supprimé avec succès");
+
+        // Réinitialiser les états Redux
+        dispatch(clearUserState()); // Réinitialise userSlice
+        await dispatch(logout()).unwrap(); // Réinitialise authSlice et supprime localStorage
+
+        // Redirection immédiate
+        navigate("/login", { replace: true }); // replace: true pour éviter le retour en arrière
+      } catch (err) {
+        console.error("❌ Échec de la suppression du compte:", err);
+      }
     }
   };
 
