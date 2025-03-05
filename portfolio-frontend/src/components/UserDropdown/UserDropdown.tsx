@@ -1,4 +1,4 @@
-// UserDropdown.tsx
+// src/components/UserDropdown/UserDropdown.tsx
 import { forwardRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -24,12 +24,11 @@ const UserDropdown = forwardRef<HTMLDivElement, UserDropdownProps>((props, ref) 
   };
 
   const handleMemberClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
-    // Vérifier si le profil est complet
     if (!user?.firstName || !user?.lastName) {
-      e.preventDefault(); // Empêche la navigation
-      setIsModalOpen(true); // Ouvre le modal
+      e.preventDefault();
+      setIsModalOpen(true);
     } else {
-      handleItemClick(); // Ferme le dropdown si le profil est complet
+      handleItemClick();
     }
   };
 
@@ -42,7 +41,7 @@ const UserDropdown = forwardRef<HTMLDivElement, UserDropdownProps>((props, ref) 
         <div className={`dropdown-menu ${props.isOpen ? "active" : ""}`}>
           <Link
             to="/member"
-            onClick={handleMemberClick} // Utilise la nouvelle fonction
+            onClick={handleMemberClick}
             className={`dropdown-item ${isArabic ? "arabic" : ""}`}
           >
             <i className="fas fa-users"></i> {t("navbar.member")}
@@ -89,13 +88,7 @@ const UserDropdown = forwardRef<HTMLDivElement, UserDropdownProps>((props, ref) 
           >
             <i className="fas fa-envelope"></i> {t("navbar.messagesReceived")}
           </Link>
-          <Link
-            to="/notifications"
-            onClick={handleItemClick}
-            className={`dropdown-item ${isArabic ? "arabic" : ""}`}
-          >
-            <i className="fas fa-bell"></i> {t("navbar.notifications")}
-          </Link>
+          {/* Suppression de la route notifications, car intégrée dans Navbar */}
         </div>
       </div>
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />

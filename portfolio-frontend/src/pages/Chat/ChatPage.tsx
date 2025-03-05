@@ -14,7 +14,7 @@ import {
 } from "../../redux/features/chatSlice";
 import { fetchUser, fetchUserById } from "../../redux/features/userSlice";
 import { getAllImagesByUserId } from "../../redux/features/imageSlice";
-import { useWebSocket } from "./useWebSocket";
+import { useWebSocket } from "../../pages/Chat/useWebSocket";
 import "./ChatPage.css";
 
 interface Message {
@@ -34,12 +34,12 @@ const ChatPage: React.FC = () => {
   const navigate = useNavigate();
   const { messages, groups, status } = useSelector((state: RootState) => state.chat);
   const { token, userId } = useSelector((state: RootState) => state.auth);
-  const { members, user } = useSelector((state: RootState) => state.user);
+  const { members, user } = useSelector((state: RootState) => state.user); // Corrigé QRSState
   const { images } = useSelector((state: RootState) => state.image);
   const [messageInput, setMessageInput] = useState("");
   const [selectedChatId, setSelectedChatId] = useState<string | null>(id || null);
   const [showActions, setShowActions] = useState<string | null>(null);
-  const { wsInstance, connectWebSocket } = useWebSocket(token);
+  const { wsInstance, connectWebSocket, sendMessage } = useWebSocket(token);
   const messageOptionsRef = useRef<Map<string, HTMLDivElement>>(new Map());
   const messageIconRef = useRef<Map<string, HTMLElement>>(new Map());
 
@@ -118,7 +118,6 @@ const ChatPage: React.FC = () => {
     }
   }, [type, id, dispatch, userId]);
 
-  // Récupérer les images de profil pour tous les utilisateurs dans la sidebar
   useEffect(() => {
     const userIds = new Set<string>();
     messages.forEach((msg) => {
@@ -133,27 +132,27 @@ const ChatPage: React.FC = () => {
 
   const isRecipientDeleted = () => {
     if (!selectedChatId || groups.includes(selectedChatId)) return false;
-    const otherUserId = messages.find(msg => msg.chatId === selectedChatId)?.toUserId === userId
-      ? messages.find(msg => msg.chatId === selectedChatId)?.fromUserId
-      : messages.find(msg => msg.chatId === selectedChatId)?.toUserId;
+    const otherUserId = messages.find((msg) => msg.chatId === selectedChatId)?.toUserId === userId
+      ? messages.find((msg) => msg.chatId === selectedChatId)?.fromUserId
+      : messages.find((msg) => msg.chatId === selectedChatId)?.toUserId;
     if (!otherUserId) return false;
     return !members.find((m) => m.id === otherUserId);
   };
 
   const getOtherUserIdFromChat = () => {
     if (!selectedChatId || groups.includes(selectedChatId)) return null;
-    const chat = messages.find(msg => msg.chatId === selectedChatId);
-    return chat ? (chat.toUserId === userId ? chat.fromUserId : chat.toUserId) : (type === "private" && id ? id : null);
+    const chat = messages.find((msg) => msg.chatId === selectedChatId);
+    return chat ? (chat.toUserId === userId ? chat.fromUserId : chat.toUserId) : type === "private" && id ? id : null;
   };
 
   const getExistingChatId = (toUserId: string) => {
     const existingMessage = messages.find(
-      msg => (msg.fromUserId === userId && msg.toUserId === toUserId) || (msg.fromUserId === toUserId && msg.toUserId === userId)
+      (msg) => (msg.fromUserId === userId && msg.toUserId === toUserId) || (msg.fromUserId === toUserId && msg.toUserId === userId)
     );
     return existingMessage ? existingMessage.chatId : `temp-${toUserId}`;
   };
 
-  const sendMessage = () => {
+  const sendMessageHandler = () => {
     if (isRecipientDeleted()) {
       console.log("❌ Envoi impossible: le destinataire a supprimé son compte");
       return;
@@ -169,31 +168,27 @@ const ChatPage: React.FC = () => {
       return;
     }
 
-    if (wsInstance && wsInstance.readyState === WebSocket.OPEN && messageInput) {
-      const isGroup = groups.includes(selectedChatId || "");
-      const chatId = isGroup ? selectedChatId : getExistingChatId(toUserId);
-      const message = {
-        type: isGroup ? "group_message" : "private",
-        [isGroup ? "groupId" : "toUserId"]: toUserId,
-        content: messageInput,
-        chatId: chatId,
-      };
-      console.log("📤 Envoi du message au WebSocket:", message);
-      wsInstance.send(JSON.stringify(message));
-      setMessageInput("");
+    if (messageInput && selectedChatId) {
+      const chatId = groups.includes(selectedChatId) ? selectedChatId : getExistingChatId(toUserId);
+      const messageType = groups.includes(selectedChatId) ? "group_message" : "private";
 
-      if (!isGroup) {
-        dispatch(fetchPrivateMessages(toUserId)).then((result) => {
-          if (result.payload && result.payload.length > 0) {
-            setSelectedChatId(result.payload[0].chatId);
-            console.log("🔍 ChatId mis à jour après envoi:", result.payload[0].chatId);
-            const otherUserId = result.payload[0].fromUserId === userId ? result.payload[0].toUserId : result.payload[0].fromUserId;
-            if (otherUserId) dispatch(fetchUserById(otherUserId));
-          }
-        });
-      }
+      sendMessage(toUserId, messageInput, chatId, messageType);
+
+      // Ajouter le message localement en attendant la réponse du serveur
+      const localMessage = {
+        id: `${userId}-${Date.now()}`, // ID temporaire
+        type: messageType,
+        fromUserId: userId!,
+        toUserId: messageType === "private" ? toUserId : undefined,
+        groupId: messageType === "group_message" ? selectedChatId : undefined,
+        chatId,
+        content: messageInput,
+        timestamp: new Date().toISOString(),
+      };
+      dispatch(addMessage(localMessage));
+      setMessageInput("");
     } else {
-      console.error("❌ Impossible d’envoyer le message: WebSocket non connecté ou chat non sélectionné");
+      console.error("❌ Impossible d'envoyer le message: entrée vide ou chat non sélectionné");
       if (!wsInstance || wsInstance.readyState !== WebSocket.OPEN) {
         console.log("🔄 WebSocket non connecté, tentative de reconnexion...");
         connectWebSocket();
@@ -222,9 +217,9 @@ const ChatPage: React.FC = () => {
       dispatch(fetchGroupMessages(chatId));
       navigate(`/chat/group/${chatId}`);
     } else {
-      const otherUserId = messages.find(msg => msg.chatId === chatId)?.toUserId === userId
-        ? messages.find(msg => msg.chatId === chatId)?.fromUserId
-        : messages.find(msg => msg.chatId === chatId)?.toUserId;
+      const otherUserId = messages.find((msg) => msg.chatId === chatId)?.toUserId === userId
+        ? messages.find((msg) => msg.chatId === chatId)?.fromUserId
+        : messages.find((msg) => msg.chatId === chatId)?.toUserId;
       const targetUserId = otherUserId || chatId;
       dispatch(fetchPrivateMessages(targetUserId)).then((result) => {
         if (result.payload && result.payload.length > 0) {
@@ -245,7 +240,7 @@ const ChatPage: React.FC = () => {
   const getContactName = (contactId: string) => {
     if (!contactId) return "Utilisateur inconnu";
     if (contactId.match(/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/)) {
-      const chatMessage = messages.find(msg => msg.chatId === contactId);
+      const chatMessage = messages.find((msg) => msg.chatId === contactId);
       if (chatMessage) {
         const otherUserId = chatMessage.fromUserId === userId ? chatMessage.toUserId : chatMessage.fromUserId;
         if (otherUserId) contactId = otherUserId;
@@ -265,7 +260,7 @@ const ChatPage: React.FC = () => {
   const getProfileImage = (contactId: string) => {
     if (!contactId) return null;
     if (contactId.match(/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/)) {
-      const chatMessage = messages.find(msg => msg.chatId === contactId);
+      const chatMessage = messages.find((msg) => msg.chatId === contactId);
       if (chatMessage) {
         const otherUserId = chatMessage.fromUserId === userId ? chatMessage.toUserId : chatMessage.fromUserId;
         if (otherUserId) contactId = otherUserId;
@@ -273,10 +268,8 @@ const ChatPage: React.FC = () => {
         contactId = id;
       }
     }
-    // Rechercher l'image dans state.image.images
     const userImages = images.filter((img) => img.userId === contactId);
     if (userImages.length > 0) {
-      // Prendre la première image disponible (ou celle marquée comme profile-picture si vous voulez)
       const profileImg = userImages.find((img) => img.name === "profile-picture.jpg" && !img.isNSFW) || userImages[0];
       return profileImg.path;
     }
@@ -285,7 +278,7 @@ const ChatPage: React.FC = () => {
 
   const getUniqueChats = () => {
     const chatMap = new Map<string, { chatId: string; isGroup: boolean; otherUserId?: string }>();
-    messages.forEach(msg => {
+    messages.forEach((msg) => {
       if (msg.chatId) {
         if (msg.type === "private") {
           const otherUserId = msg.fromUserId === userId ? msg.toUserId : msg.fromUserId;
@@ -310,7 +303,7 @@ const ChatPage: React.FC = () => {
           <h3>Conversations</h3>
           <button onClick={refreshData}>Rafraîchir</button>
           <ul>
-            {getUniqueChats().map(chat => (
+            {getUniqueChats().map((chat) => (
               <li
                 key={chat.chatId}
                 className={chat.chatId === selectedChatId ? "active" : ""}
@@ -349,7 +342,9 @@ const ChatPage: React.FC = () => {
           <div className="chat-header">
             <h3>
               {selectedChatId
-                ? (groups.includes(selectedChatId) ? `Groupe ${selectedChatId}` : getContactName(getOtherUserIdFromChat() || selectedChatId))
+                ? groups.includes(selectedChatId)
+                  ? `Groupe ${selectedChatId}`
+                  : getContactName(getOtherUserIdFromChat() || selectedChatId)
                 : "Sélectionnez une conversation"}
             </h3>
           </div>
@@ -370,8 +365,8 @@ const ChatPage: React.FC = () => {
                           className="fas fa-caret-down message-options"
                           onClick={(event) => toggleActions(msg.id, event)}
                           ref={(el) => {
-                            if (el) messageOptionsRef.current.set(msg.id, el);
-                            else messageOptionsRef.current.delete(msg.id);
+                            if (el) messageIconRef.current.set(msg.id, el);
+                            else messageIconRef.current.delete(msg.id);
                           }}
                         ></i>
                       )}
@@ -408,10 +403,10 @@ const ChatPage: React.FC = () => {
                   ? "Ce compte a été supprimé"
                   : "Tapez votre message ici..."
               }
-              onKeyPress={(e) => e.key === "Enter" && sendMessage()}
+              onKeyPress={(e) => e.key === "Enter" && sendMessageHandler()}
               disabled={!selectedChatId || isRecipientDeleted()}
             />
-            <button onClick={sendMessage} disabled={!selectedChatId || isRecipientDeleted()}>
+            <button onClick={sendMessageHandler} disabled={!selectedChatId || isRecipientDeleted()}>
               Envoyer
             </button>
           </div>

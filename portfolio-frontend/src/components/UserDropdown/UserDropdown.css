@@ -1,17 +1,19 @@
 /* src/components/UserDropdown/UserDropdown.css */
+
+/* Conteneur principal */
 .navbar-dropdown {
   position: relative;
   display: inline-block;
 }
 
-.dropdown-toggle {
+.navbar-dropdown .dropdown-toggle {
   background: none;
   border: none;
   cursor: pointer;
 }
 
 /* Alignement par défaut (gauche pour toutes les langues sauf arabe) */
-.dropdown-menu {
+.navbar-dropdown .dropdown-menu {
   display: none;
   position: absolute;
   top: 100%;
@@ -23,12 +25,12 @@
   z-index: 1001;
 }
 
-.dropdown-menu.active {
+.navbar-dropdown .dropdown-menu.active {
   display: block;
 }
 
 /* Style par défaut pour les items (icône à gauche, texte à droite) */
-.dropdown-item {
+.navbar-dropdown .dropdown-item {
   color: white;
   padding: 0.8rem 1rem;
   text-decoration: none;
@@ -38,27 +40,40 @@
   transition: background 0.3s ease;
 }
 
-.dropdown-item i {
+.navbar-dropdown .dropdown-item i {
   margin-right: 0.5rem; /* Espacement entre l'icône et le texte par défaut */
 }
 
+/* Style pour l'élément de notification (NotificationBell) */
+.navbar-dropdown .notification-item {
+  padding: 0.8rem 1rem;
+  display: flex;
+  align-items: center;
+  font-size: 1rem;
+  transition: background 0.3s ease;
+}
+
 /* Style pour l'arabe (icône à droite, texte à gauche) */
-.arabic .dropdown-item {
+.navbar-dropdown.arabic .dropdown-item {
   flex-direction: row-reverse; /* Inverse l'ordre : texte à gauche, icône à droite */
 }
 
-.arabic .dropdown-item i {
+.navbar-dropdown.arabic .dropdown-item i {
   margin-right: 0; /* Supprime la marge droite */
   margin-left: 0.5rem; /* Ajoute une marge gauche pour l'icône en arabe */
 }
 
+.navbar-dropdown.arabic .notification-item {
+  flex-direction: row-reverse; /* Inverse l'ordre pour l'élément de notification en arabe */
+}
+
 /* Style spécifique pour le conteneur en arabe */
-.arabic .dropdown-menu {
+.navbar-dropdown.arabic .dropdown-menu {
   right: auto; /* Supprime l'alignement à droite */
   left: 0; /* Aligne le menu à gauche pour l'arabe */
 }
 
-.dropdown-item:hover {
+.navbar-dropdown .dropdown-item:hover {
   background-color: rgba(255, 255, 255, 0.1);
 }
 
@@ -68,24 +83,32 @@
     width: 100%;
   }
 
-  .dropdown-menu {
+  .navbar-dropdown .dropdown-menu {
     position: static;
     width: 100%;
     box-shadow: none;
     background-color: #1e2a44;
   }
 
-  .dropdown-item {
+  .navbar-dropdown .dropdown-item {
+    padding: 0.6rem 1rem;
+  }
+
+  .navbar-dropdown .notification-item {
     padding: 0.6rem 1rem;
   }
 
   /* Ajustements pour l'arabe sur mobile */
-  .arabic .dropdown-item {
+  .navbar-dropdown.arabic .dropdown-item {
     flex-direction: row-reverse;
   }
 
-  .arabic .dropdown-item i {
+  .navbar-dropdown.arabic .dropdown-item i {
     margin-left: 0.5rem;
     margin-right: 0;
+  }
+
+  .navbar-dropdown.arabic .notification-item {
+    flex-direction: row-reverse;
   }
 }

@@ -6,19 +6,20 @@ import { useTranslation } from "react-i18next";
 import "./Register.css";
 
 const Register = () => {
-  const { t, ready } = useTranslation(); // ✅ Chargement des traductions
+  const { t, ready } = useTranslation();
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState(""); // Nouvel état pour confirmation
-  const [error, setError] = useState(""); // État pour gérer les erreurs
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [error, setError] = useState("");
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(""); // Réinitialiser l'erreur avant la soumission
+    setError("");
+    setSuccessMessage(null);
 
-    // Vérifier si les mots de passe correspondent
     if (password !== confirmPassword) {
       setError(t("register.error.passwordMismatch"));
       return;
@@ -27,17 +28,20 @@ const Register = () => {
     try {
       const result = await dispatch(register({ email, password }) as any);
       if (register.fulfilled.match(result)) {
-        alert(t("register.success"));
-        navigate(`/verify-account?email=${encodeURIComponent(email)}`);
+        setSuccessMessage(t("register.success"));
+        setTimeout(() => {
+          navigate(`/verify-account?email=${encodeURIComponent(email)}`);
+        }, 3000);
       } else {
-        alert(t("register.error.generic"));
+        // Afficher le message d'erreur renvoyé par le backend s'il existe
+        setError(result.payload || t("register.error.generic"));
       }
-    } catch (err) {
-      alert(t("register.error.generic"));
+    } catch (err: any) {
+      // Gérer les erreurs inattendues
+      setError(err.message || t("register.error.generic"));
     }
   };
 
-  // Si les traductions ne sont pas prêtes, afficher un fallback
   if (!ready) {
     return <div>Loading translations...</div>;
   }
@@ -45,8 +49,8 @@ const Register = () => {
   return (
     <div className="register-container">
       <h2>{t("register.title")}</h2>
-      {error && <p className="error-message">{error}</p>} {/* Affichage des erreurs */}
-
+      {successMessage && <p className="success-message">{successMessage}</p>}
+      {error && <p className="error-message">{error}</p>}
       <form onSubmit={handleRegister}>
         <input
           type="email"
@@ -75,7 +79,6 @@ const Register = () => {
   );
 };
 
-// 🔹 Utilisation de Suspense pour gérer le chargement des traductions
 const RegisterWithSuspense = () => (
   <Suspense fallback={<div>Loading translations...</div>}>
     <Register />

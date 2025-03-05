@@ -19,8 +19,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Component
 public class ChatWebSocketHandler extends TextWebSocketHandler {
@@ -48,6 +48,7 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
             session.sendMessage(new TextMessage("{\"type\":\"connected\",\"userId\":\"" + userId + "\"}"));
         } else {
             System.out.println("🚫 Connexion WebSocket rejetée: Authentification échouée");
+            session.sendMessage(new TextMessage("{\"error\":\"Token invalide ou expiré, veuillez renouveler votre token\"}"));
             session.close(CloseStatus.BAD_DATA.withReason("Authentification requise"));
         }
     }
@@ -99,6 +100,40 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
         }
     }
 
+    // Notifier une demande d'ami envoyée
+    public void notifyFriendRequestSent(String fromUserId, String toUserId, String requestId) throws IOException {
+        Map<String, String> notificationData = new HashMap<>();
+        notificationData.put("fromUserId", fromUserId);
+        notificationData.put("toUserId", toUserId);
+        notificationData.put("requestId", requestId);
+
+        // Notifier l’expéditeur
+        sendNotification(fromUserId, "friend_request_sent", "Demande d'ami envoyée à " + toUserId, notificationData);
+
+        // Notifier le destinataire
+        sendNotification(toUserId, "friend_request_received", "Nouvelle demande d'ami de " + fromUserId, notificationData);
+    }
+
+    // Envoyer une notification
+    public void sendNotification(String toUserId, String notificationType, String messageContent, Map<String, String> additionalData) throws IOException {
+        WebSocketSession session = sessions.get(toUserId);
+        if (session != null && session.isOpen()) {
+            Map<String, Object> notification = new HashMap<>();
+            notification.put("type", "notification");
+            notification.put("notificationType", notificationType);
+            notification.put("message", messageContent);
+            notification.put("timestamp", Instant.now().toString());
+            if (additionalData != null) {
+                notification.putAll(additionalData);
+            }
+            String notificationJson = objectMapper.writeValueAsString(notification);
+            session.sendMessage(new TextMessage(notificationJson));
+            System.out.println("📢 Notification envoyée à " + toUserId + ": " + notificationJson);
+        } else {
+            System.out.println("ℹ️ Utilisateur " + toUserId + " non connecté, notification non envoyée.");
+        }
+    }
+
     private void sendPrivateMessage(String fromUserId, String toUserId, String content, String receivedChatId, WebSocketSession fromSession) throws IOException {
         Optional<User> toUserOpt = userRepository.findById(toUserId);
         if (!toUserOpt.isPresent()) {
@@ -132,6 +167,10 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
         WebSocketSession toSession = sessions.get(toUserId);
         if (toSession != null && toSession.isOpen()) {
             toSession.sendMessage(new TextMessage(messageJson));
+            Map<String, String> notificationData = new HashMap<>();
+            notificationData.put("chatId", chatId);
+            notificationData.put("fromUserId", fromUserId);
+            sendNotification(toUserId, "new_message", "Nouveau message reçu de " + fromUserId, notificationData);
         } else {
             Map<String, String> sentMessageMap = new HashMap<>();
             sentMessageMap.put("type", "message_sent");
@@ -207,6 +246,12 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
                 WebSocketSession memberSession = sessions.get(entry.getKey());
                 if (memberSession != null && memberSession.isOpen()) {
                     memberSession.sendMessage(new TextMessage(messageJson));
+                    if (!entry.getKey().equals(fromUserId)) {
+                        Map<String, String> notificationData = new HashMap<>();
+                        notificationData.put("groupId", groupId);
+                        notificationData.put("fromUserId", fromUserId);
+                        sendNotification(entry.getKey(), "new_group_message", "Nouveau message dans le groupe " + groupId + " de " + fromUserId, notificationData);
+                    }
                 }
             }
         }
@@ -253,7 +298,6 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
         User fromUser = userRepository.findById(fromUserId).orElseThrow(() -> new IllegalArgumentException("Utilisateur introuvable: " + fromUserId));
         User toUser = userRepository.findById(toUserId).orElseThrow(() -> new IllegalArgumentException("Utilisateur introuvable: " + toUserId));
 
-        // Vérifier les messages existants entre les deux utilisateurs pour réutiliser un chatId
         List<Message> existingMessages = messageRepository.findByTypeAndFromUserIdAndToUserId("private", fromUserId, toUserId);
         existingMessages.addAll(messageRepository.findByTypeAndFromUserIdAndToUserId("private", toUserId, fromUserId));
         if (!existingMessages.isEmpty()) {
@@ -270,7 +314,6 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
             return existingChatId;
         }
 
-        // Si aucun message existant, vérifier les chatIds communs
         for (String chatId : fromUser.getChatIds()) {
             if (toUser.getChatIds().contains(chatId)) {
                 System.out.println("🔍 ChatId commun existant trouvé: " + chatId);
@@ -278,7 +321,6 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
             }
         }
 
-        // Créer un nouveau chatId uniquement si aucune conversation n’existe
         String newChatId = UUID.randomUUID().toString();
         addChatIdToUser(fromUserId, newChatId);
         addChatIdToUser(toUserId, newChatId);

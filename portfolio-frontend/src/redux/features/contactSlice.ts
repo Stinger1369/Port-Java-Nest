@@ -1,6 +1,7 @@
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import axios from "axios";
-import { BASE_URL } from "../../config/hostname"; // Import de la configuration de l'URL
+import { BASE_URL } from "../../config/hostname";
+import { removeNotification } from "./notificationSlice"; // Ajout pour supprimer une notification
 
 // Définir les types pour ContactDTO basé sur ton backend
 interface Contact {
@@ -62,7 +63,7 @@ export const sendContactRequest = createAsyncThunk(
       const response = await axios.post<Contact>(
         `${BASE_URL}/api/contacts/request`,
         request,
-        { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } }
+        { headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" } }
       );
       return response.data;
     } catch (error: any) {
@@ -73,7 +74,7 @@ export const sendContactRequest = createAsyncThunk(
 
 export const acceptContactRequest = createAsyncThunk(
   "contact/acceptContactRequest",
-  async (contactId: string, { rejectWithValue, getState }) => {
+  async (contactId: string, { rejectWithValue, getState, dispatch }) => {
     try {
       const token = getAuthToken();
       if (!token) return rejectWithValue("Token non trouvé, veuillez vous reconnecter.");
@@ -81,8 +82,9 @@ export const acceptContactRequest = createAsyncThunk(
       const response = await axios.post<Contact>(
         `${BASE_URL}/api/contacts/accept/${contactId}`,
         {},
-        { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } }
+        { headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" } }
       );
+      dispatch(removeNotification(contactId)); // Supprime la notification associée
       return response.data;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || "Erreur lors de l'acceptation");
@@ -99,7 +101,7 @@ export const fetchPendingContacts = createAsyncThunk(
 
       const response = await axios.get<Contact[]>(
         `${BASE_URL}/api/contacts/pending`,
-        { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } }
+        { headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" } }
       );
       return response.data;
     } catch (error: any) {
@@ -117,7 +119,7 @@ export const fetchAcceptedContacts = createAsyncThunk(
 
       const response = await axios.get<Contact[]>(
         `${BASE_URL}/api/contacts/accepted`,
-        { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } }
+        { headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" } }
       );
       return response.data;
     } catch (error: any) {
@@ -135,7 +137,7 @@ export const fetchDeveloperContacts = createAsyncThunk(
 
       const response = await axios.get<Contact[]>(
         `${BASE_URL}/api/contacts/developer`,
-        { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } }
+        { headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" } }
       );
       return response.data;
     } catch (error: any) {
@@ -175,11 +177,9 @@ const contactSlice = createSlice({
       })
       .addCase(acceptContactRequest.fulfilled, (state, action: PayloadAction<Contact>) => {
         state.loading = false;
-        // Supprimer le contact des demandes en attente
         state.pendingContacts = state.pendingContacts.filter(
           (contact) => contact.id !== action.payload.id
         );
-        // Ajouter aux contacts acceptés si pas déjà présent
         if (!state.acceptedContacts.some((contact) => contact.id === action.payload.id)) {
           state.acceptedContacts.push(action.payload);
         }
@@ -227,6 +227,5 @@ const contactSlice = createSlice({
   },
 });
 
-// ✅ **Exports**
 export const { clearError } = contactSlice.actions;
 export default contactSlice.reducer;

@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState, AppDispatch } from "./redux/store";
 import { fetchAllUsers } from "./redux/features/userSlice";
+import { useWebSocket } from "./pages/Chat/useWebSocket"; // Ajout pour initialiser le WebSocket
 import Navbar from "./components/Navbar/Navbar";
 import Home from "./pages/Home/Home";
 import Login from "./pages/Profile/Login/Login";
@@ -25,18 +26,21 @@ import Languages from "./pages/Portfolio/Languages/Languages";
 import Recommendations from "./pages/Portfolio/Recommendations/Recommendations";
 import Interests from "./pages/Portfolio/Interests/Interests";
 import ContactScreen from "./pages/Portfolio/ContactPortfolio/ContactPortfolio";
-import Notifications from "./pages/UserMenuDropdown/Notification/Notifications";
+import Notifications from "./pages/UserMenuDropdown/Notification/Notifications"; // Peut être supprimé si tout est dans Navbar
 import OffersReceived from "./pages/UserMenuDropdown/OffersReceived/OffersReceived";
 import ContactHistory from "./pages/UserMenuDropdown/ContactHistory/ContactHistory";
 import MembersList from "./pages/UserMenuDropdown/MembersList/MembersList";
 import ChatPage from "./pages/Chat/ChatPage";
 import Settings from "./pages/Settings/Settings";
-import ErrorBoundary from "./components/ErrorBoundary"; // Ajout de l’ErrorBoundary
+import ErrorBoundary from "./components/ErrorBoundary";
 import "./App.css";
 
 const App = () => {
   const dispatch = useDispatch<AppDispatch>();
   const { token } = useSelector((state: RootState) => state.auth);
+
+  // Initialisation du WebSocket globalement
+  useWebSocket(token);
 
   useEffect(() => {
     if (token) {
@@ -82,7 +86,7 @@ const App = () => {
               <Route path="/chat" element={<ErrorBoundary><ChatPage /></ErrorBoundary>} />
               <Route path="/chat/:type/:id" element={<ErrorBoundary><ChatPage /></ErrorBoundary>} />
               <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
-              {/* <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} /> */}
+              {/* La route "/notifications" peut être supprimée si tout est intégré dans la Navbar */}
             </Routes>
           </main>
         </Suspense>

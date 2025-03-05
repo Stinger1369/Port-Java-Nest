@@ -28,6 +28,7 @@
 │   │   │               │   ├── ContactController.java
 │   │   │               │   ├── EducationController.java
 │   │   │               │   ├── ExperienceController.java
+│   │   │               │   ├── FriendRequestController.java
 │   │   │               │   ├── GoogleMapsController.java
 │   │   │               │   ├── ImageController.java
 │   │   │               │   ├── InterestController.java
@@ -46,6 +47,7 @@
 │   │   │               │   ├── ContactRequestDTO.java
 │   │   │               │   ├── EducationDTO.java
 │   │   │               │   ├── ExperienceDTO.java
+│   │   │               │   ├── FriendRequestDTO.java
 │   │   │               │   ├── ImageDTO.java
 │   │   │               │   ├── InterestDTO.java
 │   │   │               │   ├── LanguageDTO.java
@@ -54,6 +56,7 @@
 │   │   │               │   ├── RecommendationDTO.java
 │   │   │               │   ├── SkillDto.java
 │   │   │               │   ├── SocialLinkDTO.java
+│   │   │               │   ├── UserCoordinatesDTO.java
 │   │   │               │   ├── UserDTO.java
 │   │   │               │   └── WeatherDTO.java
 │   │   │               ├── entity/
@@ -61,6 +64,7 @@
 │   │   │               │   ├── Contact.java
 │   │   │               │   ├── Education.java
 │   │   │               │   ├── Experience.java
+│   │   │               │   ├── FriendRequest.java
 │   │   │               │   ├── Image.java
 │   │   │               │   ├── Interest.java
 │   │   │               │   ├── Language.java
@@ -83,6 +87,7 @@
 │   │   │               │   ├── ContactRepository.java
 │   │   │               │   ├── EducationRepository.java
 │   │   │               │   ├── ExperienceRepository.java
+│   │   │               │   ├── FriendRequestRepository.java
 │   │   │               │   ├── ImageRepository.java
 │   │   │               │   ├── InterestRepository.java
 │   │   │               │   ├── LanguageRepository.java
@@ -105,6 +110,7 @@
 │   │   │               │   ├── EmailService.java
 │   │   │               │   ├── EmailTemplateService.java
 │   │   │               │   ├── ExperienceService.java
+│   │   │               │   ├── FriendRequestService.java
 │   │   │               │   ├── GoogleMapsService.java
 │   │   │               │   ├── ImageService.java
 │   │   │               │   ├── InterestService.java
@@ -152,6 +158,7 @@
 │   │   │           │   ├── ContactController.class
 │   │   │           │   ├── EducationController.class
 │   │   │           │   ├── ExperienceController.class
+│   │   │           │   ├── FriendRequestController.class
 │   │   │           │   ├── GoogleMapsController.class
 │   │   │           │   ├── ImageController.class
 │   │   │           │   ├── InterestController.class
@@ -172,6 +179,8 @@
 │   │   │           │   ├── ContactRequestDTO.class
 │   │   │           │   ├── EducationDTO.class
 │   │   │           │   ├── ExperienceDTO.class
+│   │   │           │   ├── FriendRequestDTO.class
+│   │   │           │   ├── FriendRequestDTO$FriendRequestDTOBuilder.class
 │   │   │           │   ├── ImageDTO.class
 │   │   │           │   ├── ImageDTO$ImageDTOBuilder.class
 │   │   │           │   ├── InterestDTO.class
@@ -187,6 +196,7 @@
 │   │   │           │   ├── SkillDto.class
 │   │   │           │   ├── SocialLinkDTO.class
 │   │   │           │   ├── SocialLinkDTO$SocialLinkDTOBuilder.class
+│   │   │           │   ├── UserCoordinatesDTO.class
 │   │   │           │   ├── UserDTO.class
 │   │   │           │   ├── UserDTO$UserDTOBuilder.class
 │   │   │           │   └── WeatherDTO.class
@@ -199,6 +209,8 @@
 │   │   │           │   ├── Education$EducationBuilder.class
 │   │   │           │   ├── Experience.class
 │   │   │           │   ├── Experience$ExperienceBuilder.class
+│   │   │           │   ├── FriendRequest.class
+│   │   │           │   ├── FriendRequest$FriendRequestBuilder.class
 │   │   │           │   ├── Image.class
 │   │   │           │   ├── Image$ImageBuilder.class
 │   │   │           │   ├── Interest.class
@@ -232,6 +244,7 @@
 │   │   │           │   ├── ContactRepository.class
 │   │   │           │   ├── EducationRepository.class
 │   │   │           │   ├── ExperienceRepository.class
+│   │   │           │   ├── FriendRequestRepository.class
 │   │   │           │   ├── ImageRepository.class
 │   │   │           │   ├── InterestRepository.class
 │   │   │           │   ├── LanguageRepository.class
@@ -254,6 +267,7 @@
 │   │   │           │   ├── EmailService.class
 │   │   │           │   ├── EmailTemplateService.class
 │   │   │           │   ├── ExperienceService.class
+│   │   │           │   ├── FriendRequestService.class
 │   │   │           │   ├── GoogleMapsService.class
 │   │   │           │   ├── ImageService.class
 │   │   │           │   ├── InterestService.class
@@ -285,6 +299,10 @@
 │   ├── generated-test-sources/
 │   │   └── test-annotations/
 │   └── test-classes/
+│       └── com/
+│           └── Portbil/
+│               └── portfolio_backend/
+│                   └── PortfolioBackendApplicationTests.class
 ├── .env
 ├── .gitattributes
 ├── .gitignore

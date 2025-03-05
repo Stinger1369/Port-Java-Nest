@@ -24,25 +24,42 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
             throws ServletException, IOException {
-        // ✅ Laisser passer les requêtes OPTIONS pour la gestion CORS
+        // Laisser passer les requêtes OPTIONS pour CORS
         if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
             chain.doFilter(request, response);
             return;
         }
 
         String authHeader = request.getHeader("Authorization");
+        String token = null;
+        String userId = null;
 
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            chain.doFilter(request, response);
-            return;
+        // Vérifier l’en-tête Authorization
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            token = authHeader.substring(7);
+            try {
+                userId = jwtUtil.extractUserId(token);
+            } catch (Exception e) {
+                System.out.println("🔴 Erreur lors de l'extraction de l'utilisateur depuis l'en-tête: " + e.getMessage());
+            }
         }
 
-        String token = authHeader.substring(7);
-        String userId = jwtUtil.extractUserId(token); // ✅ Extrait **l'ID utilisateur** du token
+        // Si pas d’en-tête, vérifier le paramètre token dans l’URL pour WebSocket
+        if (token == null && request.getRequestURI().startsWith("/chat")) {
+            String query = request.getQueryString();
+            if (query != null && query.startsWith("token=")) {
+                token = query.substring(6);
+                try {
+                    userId = jwtUtil.extractUserId(token);
+                } catch (Exception e) {
+                    System.out.println("🔴 Erreur lors de l'extraction de l'utilisateur depuis l’URL: " + e.getMessage());
+                }
+            }
+        }
 
+        // Authentifier si un userId est extrait
         if (userId != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             System.out.println("🔹 Extraction de l'ID utilisateur depuis le token : " + userId);
-
             UserDetails userDetails = userDetailsService.loadUserByUsername(userId);
             if (jwtUtil.validateToken(token, userDetails)) {
                 UsernamePasswordAuthenticationToken authToken =

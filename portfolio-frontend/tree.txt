@@ -1,4 +1,5 @@
 portfolio-frontend/
+├── .env
 ├── .gitignore
 ├── .yarn/
 │   ├── install-state.gz
@@ -19,10 +20,12 @@ portfolio-frontend/
 │   ├── assets/
 │   │   └── react.svg
 │   ├── components/
+│   │   ├── ErrorBoundary.tsx
 │   │   ├── LanguageSelector/
 │   │   │   ├── LanguageSelector.css
 │   │   │   └── LanguageSelector.tsx
 │   │   ├── MemberCard/
+│   │   │   ├── FriendRequestActions.tsx
 │   │   │   ├── MemberCard.css
 │   │   │   └── MemberCard.tsx
 │   │   ├── Navbar/
@@ -33,6 +36,8 @@ portfolio-frontend/
 │   │   │   └── PhoneInputComponent.tsx
 │   │   ├── ProtectedRoute.tsx
 │   │   ├── UserDropdown/
+│   │   │   ├── Modal.css
+│   │   │   ├── Modal.tsx
 │   │   │   ├── UserDropdown.css
 │   │   │   └── UserDropdown.tsx
 │   │   └── WeatherComponent/
@@ -46,6 +51,10 @@ portfolio-frontend/
 │   ├── index.css
 │   ├── main.tsx
 │   ├── pages/
+│   │   ├── Chat/
+│   │   │   ├── ChatPage.css
+│   │   │   ├── ChatPage.tsx
+│   │   │   └── useWebSocket.ts
 │   │   ├── Home/
 │   │   │   ├── Home.css
 │   │   │   └── Home.tsx
@@ -140,7 +149,11 @@ portfolio-frontend/
 │   │   │   │   ├── ResetPassword.css
 │   │   │   │   └── ResetPassword.tsx
 │   │   │   └── VerifyAccount/
+│   │   │       ├── VerifyAccount.css
 │   │   │       └── VerifyAccount.tsx
+│   │   ├── Settings/
+│   │   │   ├── Settings.css
+│   │   │   └── Settings.tsx
 │   │   └── UserMenuDropdown/
 │   │       ├── ContactHistory/
 │   │       │   ├── ContactHistory.css
@@ -162,21 +175,20 @@ portfolio-frontend/
 │   │   │   ├── contactSlice.ts
 │   │   │   ├── educationSlice.ts
 │   │   │   ├── experienceSlice.ts
+│   │   │   ├── friendRequestSlice.ts
 │   │   │   ├── googleMapsSlice.ts
 │   │   │   ├── imageSlice.ts
 │   │   │   ├── interestSlice.ts
 │   │   │   ├── languageSlice.ts
+│   │   │   ├── notificationSlice.ts
 │   │   │   ├── portfolioSlice.ts
 │   │   │   ├── projectSlice.ts
 │   │   │   ├── recommendationSlice.ts
 │   │   │   ├── skillSlice.ts
 │   │   │   ├── socialLinkSlice.ts
 │   │   │   ├── userSlice.ts
-│   │   │   ├── weatherSlice.ts
-│   │   │   └── websocket/
+│   │   │   └── weatherSlice.ts
 │   │   └── store.ts
-│   ├── utils/
-│   │   └── websocketComponents/
 │   └── vite-env.d.ts
 ├── tree.js
 ├── tsconfig.app.json

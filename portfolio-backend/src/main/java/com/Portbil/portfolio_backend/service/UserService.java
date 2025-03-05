@@ -1,6 +1,6 @@
 package com.Portbil.portfolio_backend.service;
 
-import com.Portbil.portfolio_backend.dto.UserCoordinatesDTO; // Ajout de l'importation
+import com.Portbil.portfolio_backend.dto.UserCoordinatesDTO;
 import com.Portbil.portfolio_backend.dto.UserDTO;
 import com.Portbil.portfolio_backend.dto.WeatherDTO;
 import com.Portbil.portfolio_backend.entity.User;
@@ -363,7 +363,25 @@ public class UserService {
         }
         return weatherService.getWeather(user.getLatitude(), user.getLongitude());
     }
+    public void removeFriend(String userId, String friendId) {
+        if (userId == null || userId.isEmpty() || friendId == null || friendId.isEmpty()) {
+            throw new IllegalArgumentException("Les identifiants des utilisateurs ne peuvent pas être nuls ou vides.");
+        }
 
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("Utilisateur introuvable : " + userId));
+        User friend = userRepository.findById(friendId)
+                .orElseThrow(() -> new IllegalArgumentException("Ami introuvable : " + friendId));
+
+        if (!user.getFriendIds().contains(friendId) || !friend.getFriendIds().contains(userId)) {
+            throw new IllegalStateException("Ces utilisateurs ne sont pas amis.");
+        }
+
+        user.getFriendIds().remove(friendId);
+        friend.getFriendIds().remove(userId);
+        userRepository.save(user);
+        userRepository.save(friend);
+    }
     /**
      * Envoyer une demande de contact entre utilisateurs
      */

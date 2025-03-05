@@ -5,30 +5,62 @@ import { fetchAllUsers, fetchUserById, User } from "../../../redux/features/user
 import { getAllImagesByUserId } from "../../../redux/features/imageSlice";
 import { useNavigate } from "react-router-dom";
 import MemberCard from "../../../components/MemberCard/MemberCard";
+import { useWebSocket } from "../../Chat/useWebSocket";
+import { logout } from "../../../redux/features/authSlice"; // Ajout de l'import pour déconnexion
 import "./MembersList.css";
+import {
+  fetchPendingReceivedFriendRequests,
+  fetchPendingSentFriendRequests,
+  fetchFriends,
+} from "../../../redux/features/friendRequestSlice";
 
 const MembersList: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
   const { user, members, status, error } = useSelector((state: RootState) => state.user);
   const { images } = useSelector((state: RootState) => state.image);
+  const {
+    pendingReceivedRequests,
+    pendingSentRequests,
+    friends,
+    status: friendRequestStatus,
+    error: friendRequestError,
+  } = useSelector((state: RootState) => state.friendRequest);
+  const token = useSelector((state: RootState) => state.auth.token);
   const [selectedMember, setSelectedMember] = useState<User | null>(null);
 
+  // Gestion du WebSocket avec détection d'échec d'authentification
+  const { wsInstance } = useWebSocket(token);
+
   useEffect(() => {
+    if (!token) {
+      console.log("🔴 Aucun token disponible, redirection vers la connexion");
+      dispatch(logout());
+      navigate("/login");
+      return;
+    }
+
     dispatch(fetchAllUsers()).then((result) => {
       if (result.meta.requestStatus === "fulfilled" && result.payload) {
-        // Récupérer les images pour chaque utilisateur
         result.payload.forEach((member: User) => {
           dispatch(getAllImagesByUserId(member.id)).then((imageResult) => {
-            console.log(`🔍 Images récupérées pour l'utilisateur ${member.id}:`, imageResult.payload);
+            console.log(
+              `🔍 Images récupérées pour l'utilisateur ${member.id}:`,
+              imageResult.payload
+            );
           });
         });
       }
     });
-  }, [dispatch]);
+
+    if (user?.id) {
+      dispatch(fetchPendingReceivedFriendRequests(user.id));
+      dispatch(fetchPendingSentFriendRequests(user.id));
+      dispatch(fetchFriends(user.id));
+    }
+  }, [dispatch, user, token, navigate]);
 
   useEffect(() => {
-    // Vérifier les images dans le state après chaque mise à jour
     console.log("🔍 Toutes les images dans state.image.images:", images);
   }, [images]);
 
@@ -58,29 +90,37 @@ const MembersList: React.FC = () => {
   const getProfileImage = (userId: string) => {
     const userImages = images.filter((img) => img.userId === userId);
     if (userImages.length > 0) {
-      const profileImg = userImages.find((img) => img.name === "profile-picture.jpg" && !img.isNSFW) || userImages[0];
+      const profileImg =
+        userImages.find((img) => img.name === "profile-picture.jpg" && !img.isNSFW) ||
+        userImages[0];
       return profileImg.path;
     }
     return null;
   };
 
+  const filteredMembers = members.filter((member) => {
+    const hasFirstName = member.firstName && member.firstName.trim() !== "";
+    const hasLastName = member.lastName && member.lastName.trim() !== "";
+    return hasFirstName && hasLastName;
+  });
+
   const displayedMember = getUpdatedMember();
   const currentUserId = user?.id || localStorage.getItem("userId");
   const isCurrentUser = displayedMember && currentUserId === displayedMember.id;
 
-  if (status === "loading") {
+  if (status === "loading" || friendRequestStatus === "loading") {
     return <p className="loading">⏳ Chargement des membres...</p>;
   }
 
-  if (error) {
-    return <p className="error-message">❌ Erreur : {error}</p>;
+  if (error || friendRequestError) {
+    return <p className="error-message">❌ Erreur : {error || friendRequestError}</p>;
   }
 
-  if (members.length === 0) {
+  if (filteredMembers.length === 0) {
     return (
       <div className="members-list-container">
         <h1>Liste des membres</h1>
-        <p>Aucun membre trouvé.</p>
+        <p>Aucun membre avec un profil complet trouvé.</p>
       </div>
     );
   }
@@ -89,12 +129,15 @@ const MembersList: React.FC = () => {
     <div className="members-list-container">
       <h1>Liste des membres</h1>
       <div className="members-grid">
-        {members.map((member) => (
+        {filteredMembers.map((member) => (
           <MemberCard
             key={member.id}
             member={member}
             profileImage={getProfileImage(member.id)}
             onClick={() => openModal(member)}
+            pendingReceivedRequests={pendingReceivedRequests}
+            pendingSentRequests={pendingSentRequests}
+            friends={friends}
           />
         ))}
       </div>

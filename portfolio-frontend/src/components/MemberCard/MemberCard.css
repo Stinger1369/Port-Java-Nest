@@ -16,14 +16,14 @@
 }
 
 /* En-tête de la carte */
-.member-header {
+.member-card .member-header {
   padding: 15px;
   background-color: #f8f9fa;
   border-bottom: 1px solid #e0e0e0;
   text-align: center;
 }
 
-.member-avatar {
+.member-card .member-avatar {
   width: 60px;
   height: 60px;
   border-radius: 50%;
@@ -31,13 +31,13 @@
   margin: 0 auto 10px;
 }
 
-.member-avatar-img {
+.member-card .member-avatar-img {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
-.member-avatar-placeholder {
+.member-card .member-avatar-placeholder {
   width: 60px;
   height: 60px;
   border-radius: 50%;
@@ -50,83 +50,158 @@
   margin: 0 auto 10px;
 }
 
-.member-header h3 {
+.member-card .member-header h3 {
   font-size: 18px;
   font-weight: 500;
   color: #111b21;
   margin: 0 0 5px;
 }
 
-.email {
+.member-card .email {
   font-size: 14px;
   color: #54656f;
   margin: 0;
 }
 
 /* Détails du membre */
-.member-details {
+.member-card .member-details {
   padding: 15px;
   font-size: 14px;
   color: #111b21;
 }
 
-.member-details p {
+.member-card .member-details p {
   margin: 5px 0;
   display: flex;
   align-items: center;
   gap: 5px;
 }
 
-.member-details i {
+.member-card .member-details i {
   color: #075e54;
 }
 
-.member-details a {
+.member-card .member-details a {
   color: #075e54;
   text-decoration: none;
 }
 
-.member-details a:hover {
+.member-card .member-details a:hover {
   text-decoration: underline;
 }
 
-/* Conteneur des boutons Like et Chat */
-.like-container {
+/* Conteneur des boutons Like, Chat, et Friend Actions */
+.member-card .like-container {
   display: flex;
   justify-content: space-around;
   padding: 10px;
   border-top: 1px solid #e0e0e0;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
-.like-button,
-.chat-button {
+.member-card .like-button,
+.member-card .chat-button,
+.member-card .friend-request-button {
+  display: flex;
+  align-items: center;
+  gap: 5px;
   background: none;
   border: none;
-  font-size: 16px;
+  font-size: 14px;
   cursor: pointer;
   padding: 5px 10px;
   transition: color 0.2s;
 }
 
-.like-button i {
+/* Bouton de like */
+.member-card .like-button i {
   color: #ccc;
 }
 
-.like-button i.fas {
+.member-card .like-button i.fas {
   color: #ff4d4f;
 }
 
-.chat-button i {
+/* Bouton de chat */
+.member-card .chat-button i {
   color: #075e54;
 }
 
-.like-button:hover i,
-.chat-button:hover i {
+/* Bouton pour les actions d'ami */
+.member-card .friend-actions {
+  position: relative;
+}
+
+.member-card .friend-request-button {
+  color: #007bff;
+}
+
+.member-card .friend-request-button.pending {
+  color: #6c757d;
+}
+
+.member-card .friend-request-button.friends {
+  color: #075e54;
+}
+
+.member-card .friend-request-button:hover {
   color: #064f45;
 }
 
-/* Modal pour profil incomplet */
-.profile-modal-overlay {
+.member-card .friend-actions-dropdown {
+  position: relative;
+}
+
+.member-card .dropdown-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background-color: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  min-width: 120px;
+}
+
+.member-card .dropdown-menu button {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  width: 100%;
+  padding: 8px 12px;
+  background: none;
+  border: none;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.member-card .accept-friend-button {
+  color: #28a745;
+}
+
+.member-card .reject-friend-button {
+  color: #dc3545;
+}
+
+.member-card .remove-friend-button {
+  color: #dc3545;
+}
+
+.member-card .dropdown-menu button:hover {
+  background-color: #f8f9fa;
+}
+
+.member-card .accept-friend-button:hover,
+.member-card .reject-friend-button:hover,
+.member-card .remove-friend-button:hover {
+  color: #064f45;
+}
+
+/* Confirmation Dialog */
+.member-card .confirm-dialog-overlay {
   position: fixed;
   top: 0;
   left: 0;
@@ -139,7 +214,7 @@
   z-index: 1000;
 }
 
-.profile-modal-content {
+.member-card .confirm-dialog {
   background: #fff;
   padding: 20px;
   border-radius: 8px;
@@ -148,26 +223,95 @@
   text-align: center;
 }
 
-.profile-modal-content h2 {
-  font-size: 20px;
+.member-card .confirm-dialog h3 {
+  font-size: 18px;
   margin-bottom: 10px;
   color: #111b21;
 }
 
-.profile-modal-content p {
+.member-card .confirm-dialog p {
   font-size: 14px;
   color: #54656f;
   margin-bottom: 20px;
 }
 
-.modal-actions {
+.member-card .confirm-actions {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
+.member-card .confirm-button,
+.member-card .cancel-button {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 5px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.member-card .confirm-button {
+  background-color: #dc3545;
+  color: white;
+}
+
+.member-card .confirm-button:hover {
+  background-color: #c82333;
+}
+
+.member-card .cancel-button {
+  background-color: #e0e0e0;
+  color: #111b21;
+}
+
+.member-card .cancel-button:hover {
+  background-color: #d0d0d0;
+}
+
+/* Modal pour profil incomplet */
+.member-card .profile-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.member-card .profile-modal-content {
+  background: #fff;
+  padding: 20px;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 400px;
+  text-align: center;
+}
+
+.member-card .profile-modal-content h2 {
+  font-size: 20px;
+  margin-bottom: 10px;
+  color: #111b21;
+}
+
+.member-card .profile-modal-content p {
+  font-size: 14px;
+  color: #54656f;
+  margin-bottom: 20px;
+}
+
+.member-card .modal-actions {
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
 
-.complete-profile-btn,
-.close-modal-btn {
+.member-card .complete-profile-btn,
+.member-card .close-modal-btn {
   padding: 10px 20px;
   border: none;
   border-radius: 5px;
@@ -176,20 +320,20 @@
   transition: background-color 0.2s;
 }
 
-.complete-profile-btn {
+.member-card .complete-profile-btn {
   background-color: #075e54;
   color: white;
 }
 
-.complete-profile-btn:hover {
+.member-card .complete-profile-btn:hover {
   background-color: #064f45;
 }
 
-.close-modal-btn {
+.member-card .close-modal-btn {
   background-color: #e0e0e0;
   color: #111b21;
 }
 
-.close-modal-btn:hover {
+.member-card .close-modal-btn:hover {
   background-color: #d0d0d0;
 }

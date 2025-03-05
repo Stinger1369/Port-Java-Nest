@@ -15,11 +15,13 @@ public class JwtUtil {
     @Value("${jwt.secret}")
     private String secret;
 
-    /**
-     * ✅ Extrait l'ID utilisateur du token
-     */
+    @Value("${jwt.expirationMs}")
+    private long expirationMs; // Récupère la valeur depuis application.yml
+
+    private static final long CLOCK_SKEW = 1000 * 60 * 5; // 5 minutes de tolérance
+
     public String extractUserId(String token) {
-        return extractClaim(token, Claims::getSubject); // ✅ Retourne **l'ID utilisateur** (pas l'email)
+        return extractClaim(token, Claims::getSubject);
     }
 
     public Date extractExpiration(String token) {
@@ -32,30 +34,45 @@ public class JwtUtil {
     }
 
     private Claims extractAllClaims(String token) {
-        return Jwts.parserBuilder().setSigningKey(secret).build().parseClaimsJws(token).getBody();
+        try {
+            return Jwts.parserBuilder()
+                    .setSigningKey(secret)
+                    .setAllowedClockSkewSeconds(CLOCK_SKEW / 1000) // Tolérance de 5 minutes
+                    .build()
+                    .parseClaimsJws(token)
+                    .getBody();
+        } catch (Exception e) {
+            System.out.println("🔴 Erreur lors de l'extraction des claims: " + e.getMessage());
+            throw e;
+        }
     }
 
     private boolean isTokenExpired(String token) {
-        return extractExpiration(token).before(new Date());
+        Date expiration = extractExpiration(token);
+        boolean expired = expiration.before(new Date());
+        if (expired) {
+            System.out.println("🔴 Token expiré - Expiration: " + expiration + ", Heure actuelle: " + new Date());
+        }
+        return expired;
     }
 
-    /**
-     * ✅ Génère un JWT contenant **l'ID utilisateur** comme `subject`
-     */
     public String generateToken(UserDetails userDetails) {
-        return Jwts.builder()
-                .setSubject(userDetails.getUsername()) // ✅ Utilise l'ID utilisateur
-                .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 10)) // 10 heures
+        Date now = new Date();
+        Date expiryDate = new Date(now.getTime() + expirationMs); // Utilise expirationMs
+        String token = Jwts.builder()
+                .setSubject(userDetails.getUsername())
+                .setIssuedAt(now)
+                .setExpiration(expiryDate)
                 .signWith(SignatureAlgorithm.HS256, secret)
                 .compact();
+        System.out.println("✅ Token généré - Issued at: " + now + ", Expires at: " + expiryDate);
+        return token;
     }
 
-    /**
-     * ✅ Vérifie la validité du token
-     */
     public boolean validateToken(String token, UserDetails userDetails) {
         final String userId = extractUserId(token);
-        return (userId.equals(userDetails.getUsername()) && !isTokenExpired(token));
+        boolean isValid = userId.equals(userDetails.getUsername()) && !isTokenExpired(token);
+        System.out.println("🔍 Validation du token - UserId: " + userId + ", Valid: " + isValid);
+        return isValid;
     }
 }

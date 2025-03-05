@@ -1,15 +1,15 @@
-// Navbar.tsx
 import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState, AppDispatch } from "../../redux/store";
 import { logout } from "../../redux/features/authSlice";
 import { fetchUser } from "../../redux/features/userSlice";
-import { fetchWeather } from "../../redux/features/weatherSlice"; // Ajout
+import { fetchWeather } from "../../redux/features/weatherSlice";
 import { useTranslation } from "react-i18next";
 import LanguageSelector from "../LanguageSelector/LanguageSelector";
 import WeatherComponent from "../WeatherComponent/WeatherComponent";
 import UserDropdown from "../UserDropdown/UserDropdown";
+import NotificationDropdown from "../NotificationDropdown/NotificationDropdown";
 import "./Navbar.css";
 
 const Navbar = () => {
@@ -18,16 +18,20 @@ const Navbar = () => {
   const navigate = useNavigate();
   const token = useSelector((state: RootState) => state.auth.token);
   const user = useSelector((state: RootState) => state.user.user);
+  const notifications = useSelector((state: RootState) => state.notification.notifications);
+  const unreadCount = notifications.filter((n) => !n.isRead).length;
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isWeatherOpen, setIsWeatherOpen] = useState(false);
   const [isLanguageOpen, setIsLanguageOpen] = useState(false);
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
 
   const isArabic = i18n.language === "ar";
 
   const dropdownRef = useRef<HTMLDivElement>(null);
   const weatherRef = useRef<HTMLDivElement>(null);
   const languageRef = useRef<HTMLDivElement>(null);
+  const notificationsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const storedToken = localStorage.getItem("token");
@@ -44,7 +48,6 @@ const Navbar = () => {
     }
   }, [dispatch, token, user]);
 
-  // Gestion des clics en dehors
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -55,6 +58,9 @@ const Navbar = () => {
       }
       if (languageRef.current && !languageRef.current.contains(event.target as Node)) {
         setIsLanguageOpen(false);
+      }
+      if (notificationsRef.current && !notificationsRef.current.contains(event.target as Node)) {
+        setIsNotificationsOpen(false);
       }
     };
 
@@ -118,6 +124,13 @@ const Navbar = () => {
               isOpen={isWeatherOpen}
               onToggle={() => setIsWeatherOpen(!isWeatherOpen)}
               onClose={() => setIsWeatherOpen(false)}
+            />
+            <NotificationDropdown
+              ref={notificationsRef}
+              isOpen={isNotificationsOpen}
+              onToggle={() => setIsNotificationsOpen(!isNotificationsOpen)}
+              onClose={() => setIsNotificationsOpen(false)}
+              unreadCount={unreadCount} // Passer unreadCount comme prop
             />
             <button onClick={handleLogout} className="nav-item">
               <i className="fas fa-sign-out-alt"></i> {t("navbar.logout")}
