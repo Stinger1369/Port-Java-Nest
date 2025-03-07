@@ -15,7 +15,8 @@ import contactReducer from "./features/contactSlice";
 import googleMapsReducer from "./features/googleMapsSlice";
 import weatherReducer from "./features/weatherSlice";
 import imageReducer from "./features/imageSlice";
-import chatReducer from "./features/chatSlice"; // Nouveau slice ajouté
+import chatReducer from "./features/chatSlice";
+import friendReducer from "./features/friendSlice"; // Nouveau slice ajouté
 
 export const store = configureStore({
   reducer: {
@@ -35,7 +36,8 @@ export const store = configureStore({
     googleMaps: googleMapsReducer,
     weather: weatherReducer,
     image: imageReducer,
-    chat: chatReducer, // Ajout au store
+    chat: chatReducer,
+    friend: friendReducer, // Ajout au store
   },
 });
 

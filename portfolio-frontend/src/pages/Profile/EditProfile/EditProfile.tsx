@@ -226,18 +226,24 @@ const EditProfile = () => {
     );
   }, [formData, initialFormData, latitude, longitude]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (user && hasChanges()) {
-      const payload = {
-        id: user.id,
-        ...formData,
-        latitude,
-        longitude,
-      };
-      dispatch(updateUser(payload));
+ const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  if (user && hasChanges()) {
+    const payload: any = {
+      id: user.id,
+      ...formData,
+    };
+
+    // Inclure latitude/longitude uniquement si elles sont valides (non 0)
+    if (latitude && longitude && latitude !== 0 && longitude !== 0) {
+      payload.latitude = latitude;
+      payload.longitude = longitude;
     }
-  };
+
+    console.log("🔹 Payload envoyé au backend :", payload);
+    dispatch(updateUser(payload));
+  }
+};
 
   const handleUpdateAddress = useCallback(async () => {
     if (user && (latitude || longitude)) {

@@ -21,6 +21,7 @@ interface User {
   showBirthdate?: boolean;
   likedUserIds?: string[];
   likerUserIds?: string[];
+  imageIds?: string[]; // Déjà présent, mais vérifié
 }
 
 interface UserState {
@@ -39,12 +40,11 @@ const initialState: UserState = {
   message: null,
 };
 
-// Fonction utilitaire pour normaliser birthdate (simplifiée)
+// Fonction utilitaire pour normaliser birthdate
 const normalizeBirthdate = (birthdate: any): string | undefined => {
   if (!birthdate) return undefined;
   if (typeof birthdate === "string") {
-    // Le backend renvoie une chaîne ISO (ex: "2025-03-03")
-    return birthdate.split("T")[0]; // Supprime l'heure si présente
+    return birthdate.split("T")[0];
   }
   console.warn("⚠️ Format de birthdate inattendu:", birthdate);
   return undefined;
@@ -77,21 +77,14 @@ export const fetchUser = createAsyncThunk(
       const normalizedData: User = {
         ...data,
         birthdate: normalizeBirthdate(data.birthdate),
-        id: data.id || data._id?.$oid,
+        id: data.id || (data._id?.$oid ?? data._id),
         likedUserIds: data.likedUserIds || [],
         likerUserIds: data.likerUserIds || [],
+        imageIds: data.imageIds || [],
       };
 
       console.log("✅ Utilisateur récupéré:", normalizedData);
-      console.log("Sex, Bio, Birthdate, Age, ShowBirthdate, Likes reçus du backend:", {
-        sex: normalizedData.sex,
-        bio: normalizedData.bio,
-        birthdate: normalizedData.birthdate,
-        age: normalizedData.age,
-        showBirthdate: normalizedData.showBirthdate,
-        likedUserIds: normalizedData.likedUserIds,
-        likerUserIds: normalizedData.likerUserIds,
-      });
+      console.log("🔍 imageIds récupérés:", normalizedData.imageIds);
       return normalizedData;
     } catch (error: any) {
       console.error("❌ Échec de fetchUser:", error.response?.data || error.message);
@@ -99,7 +92,6 @@ export const fetchUser = createAsyncThunk(
     }
   }
 );
-
 // Récupérer tous les utilisateurs
 export const fetchAllUsers = createAsyncThunk(
   "user/fetchAllUsers",
@@ -116,13 +108,18 @@ export const fetchAllUsers = createAsyncThunk(
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      const users = response.data.map((user: any) => ({
-        ...user,
-        id: user.id || user._id?.$oid,
-        birthdate: normalizeBirthdate(user.birthdate),
-        likedUserIds: user.likedUserIds || [],
-        likerUserIds: user.likerUserIds || [],
-      }));
+      const users = response.data.map((user: any) => {
+        const normalizedUser: User = {
+          ...user,
+          id: user.id || (user._id?.$oid ?? user._id),
+          birthdate: normalizeBirthdate(user.birthdate),
+          likedUserIds: user.likedUserIds || [],
+          likerUserIds: user.likerUserIds || [],
+          imageIds: user.imageIds || [],
+        };
+        console.log(`🔍 Utilisateur ${normalizedUser.id} - imageIds:`, normalizedUser.imageIds);
+        return normalizedUser;
+      });
 
       console.log("✅ Liste des utilisateurs récupérée:", users);
       return users;
@@ -151,14 +148,16 @@ export const fetchUserById = createAsyncThunk(
 
       const data = response.data;
       const normalizedData: User = {
-        ...data,
-        id: data.id || data._id?.$oid,
+        ...data, // Corrigé : remplacé ...user par ...data
+        id: data.id || (data._id?.$oid ?? data._id),
         birthdate: normalizeBirthdate(data.birthdate),
         likedUserIds: data.likedUserIds || [],
         likerUserIds: data.likerUserIds || [],
+        imageIds: data.imageIds || [],
       };
 
       console.log("✅ Utilisateur récupéré:", normalizedData);
+      console.log("🔍 imageIds récupérés:", normalizedData.imageIds);
       return normalizedData;
     } catch (error: any) {
       console.error("❌ Échec de fetchUserById:", error.response?.data || error.message);
@@ -178,7 +177,6 @@ export const updateUser = createAsyncThunk(
         return rejectWithValue("No token found");
       }
 
-      // Nettoyer les données avant de les envoyer
       const payload: Partial<User> = {
         ...userData,
         phone: userData.phone ? String(userData.phone) : undefined,
@@ -186,10 +184,10 @@ export const updateUser = createAsyncThunk(
         showBirthdate: userData.showBirthdate,
         likedUserIds: userData.likedUserIds,
         likerUserIds: userData.likerUserIds,
+        imageIds: userData.imageIds, // Inclure imageIds si fourni
       };
 
-      // Supprimer les champs indéfinis ou null pour éviter d'envoyer des données inutiles
-      Object.keys(payload).forEach(key => {
+      Object.keys(payload).forEach((key) => {
         if (payload[key as keyof Partial<User>] === undefined || payload[key as keyof Partial<User>] === null) {
           delete payload[key as keyof Partial<User>];
         }
@@ -206,19 +204,10 @@ export const updateUser = createAsyncThunk(
         birthdate: normalizeBirthdate(data.birthdate),
         likedUserIds: data.likedUserIds || [],
         likerUserIds: data.likerUserIds || [],
+        imageIds: data.imageIds || [], // Ajout explicite
       };
 
       console.log("✅ Mise à jour réussie:", normalizedData);
-      console.log("Phone, City, Country, Birthdate, Age, ShowBirthdate, Likes reçus du backend après update:", {
-        phone: normalizedData.phone,
-        city: normalizedData.city,
-        country: normalizedData.country,
-        birthdate: normalizedData.birthdate,
-        age: normalizedData.age,
-        showBirthdate: normalizedData.showBirthdate,
-        likedUserIds: normalizedData.likedUserIds,
-        likerUserIds: normalizedData.likerUserIds,
-      });
       return normalizedData;
     } catch (error: any) {
       console.error("❌ Échec de updateUser:", error.response?.data || error.message);
@@ -369,7 +358,6 @@ const userSlice = createSlice({
         state.status = "succeeded";
         state.user = action.payload;
         state.message = "Utilisateur mis à jour avec succès !";
-        // Mettre à jour dans members si l'utilisateur est présent
         const index = state.members.findIndex((m) => m.id === action.payload.id);
         if (index !== -1) {
           state.members[index] = action.payload;
@@ -405,7 +393,6 @@ const userSlice = createSlice({
         state.status = "succeeded";
         const { likerId, likedId } = action.payload;
 
-        // Mise à jour de l'utilisateur connecté (liker)
         if (state.user && state.user.id === likerId) {
           state.user.likedUserIds = state.user.likedUserIds || [];
           if (!state.user.likedUserIds.includes(likedId)) {
@@ -413,7 +400,6 @@ const userSlice = createSlice({
           }
         }
 
-        // Mise à jour dans la liste des membres
         const likerIndex = state.members.findIndex((m) => m.id === likerId);
         if (likerIndex !== -1) {
           state.members[likerIndex].likedUserIds = state.members[likerIndex].likedUserIds || [];
@@ -445,12 +431,10 @@ const userSlice = createSlice({
         state.status = "succeeded";
         const { likerId, likedId } = action.payload;
 
-        // Mise à jour de l'utilisateur connecté (liker)
         if (state.user && state.user.id === likerId) {
           state.user.likedUserIds = state.user.likedUserIds?.filter((id) => id !== likedId) || [];
         }
 
-        // Mise à jour dans la liste des membres
         const likerIndex = state.members.findIndex((m) => m.id === likerId);
         if (likerIndex !== -1) {
           state.members[likerIndex].likedUserIds = state.members[likerIndex].likedUserIds?.filter((id) => id !== likedId) || [];

@@ -83,19 +83,23 @@ public class UserService {
 
             if (userDTO.getBio() != null) user.setBio(userDTO.getBio());
 
-            if (userDTO.getLatitudeAsDouble() != null && userDTO.getLongitudeAsDouble() != null) {
-                if (userDTO.getLatitudeAsDouble() < -90 || userDTO.getLatitudeAsDouble() > 90 || userDTO.getLongitudeAsDouble() < -180 || userDTO.getLongitudeAsDouble() > 180) {
+            // Vérifier si les coordonnées sont valides avant d'appeler Google Maps
+            Double latitude = userDTO.getLatitudeAsDouble();
+            Double longitude = userDTO.getLongitudeAsDouble();
+            if (latitude != null && longitude != null && latitude != 0 && longitude != 0) {
+                if (latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180) {
                     throw new IllegalArgumentException("Coordonnées géographiques invalides.");
                 }
-                user.setLatitude(userDTO.getLatitudeAsDouble());
-                user.setLongitude(userDTO.getLongitudeAsDouble());
+                user.setLatitude(latitude);
+                user.setLongitude(longitude);
 
-                Map<String, String> locationDetails = googleMapsService.getCityAndCountryFromCoordinates(
-                        userDTO.getLatitudeAsDouble(), userDTO.getLongitudeAsDouble());
+                Map<String, String> locationDetails = googleMapsService.getCityAndCountryFromCoordinates(latitude, longitude);
                 user.setCity(locationDetails.get("city"));
                 user.setCountry(locationDetails.get("country"));
-            } else if (userDTO.getLatitudeAsDouble() != null || userDTO.getLongitudeAsDouble() != null) {
-                throw new IllegalArgumentException("Les deux coordonnées (latitude et longitude) doivent être fournies ensemble.");
+            } else {
+                // Si les coordonnées sont null ou 0, utiliser les valeurs city/country du DTO si fournies
+                if (userDTO.getCity() != null) user.setCity(capitalizeFirstLetter(userDTO.getCity()));
+                if (userDTO.getCountry() != null) user.setCountry(capitalizeFirstLetter(userDTO.getCountry()));
             }
 
             if (userDTO.getBirthdate() != null) {
@@ -562,5 +566,255 @@ public class UserService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("Utilisateur introuvable : " + userId));
         return user.getChatIds();
+    }
+    /**
+     * Envoyer une demande d'ami
+     */
+    public void sendFriendRequest(String senderId, String receiverId) {
+        if (senderId == null || receiverId == null || senderId.trim().isEmpty() || receiverId.trim().isEmpty()) {
+            throw new IllegalArgumentException("Les identifiants des utilisateurs ne peuvent pas être nuls ou vides.");
+        }
+        if (senderId.equals(receiverId)) {
+            throw new IllegalArgumentException("Un utilisateur ne peut pas s'envoyer une demande d'ami à lui-même.");
+        }
+
+        User sender = userRepository.findById(senderId)
+                .orElseThrow(() -> new IllegalArgumentException("Utilisateur expéditeur introuvable : " + senderId));
+        User receiver = userRepository.findById(receiverId)
+                .orElseThrow(() -> new IllegalArgumentException("Utilisateur destinataire introuvable : " + receiverId));
+
+        // Vérifier si les listes sont initialisées
+        if (sender.getFriendRequestSentIds() == null) {
+            sender.setFriendRequestSentIds(new ArrayList<>());
+        }
+        if (receiver.getFriendRequestReceivedIds() == null) {
+            receiver.setFriendRequestReceivedIds(new ArrayList<>());
+        }
+        if (sender.getFriendIds() == null) {
+            sender.setFriendIds(new ArrayList<>());
+        }
+        if (receiver.getFriendIds() == null) {
+            receiver.setFriendIds(new ArrayList<>());
+        }
+
+        // Vérifier si une relation existe déjà
+        if (sender.getFriendIds().contains(receiverId) || receiver.getFriendIds().contains(senderId)) {
+            throw new IllegalStateException("Ces utilisateurs sont déjà amis.");
+        }
+        if (sender.getFriendRequestSentIds().contains(receiverId)) {
+            throw new IllegalStateException("Une demande d'ami a déjà été envoyée à cet utilisateur.");
+        }
+        if (receiver.getFriendRequestSentIds().contains(senderId)) {
+            throw new IllegalStateException("Cet utilisateur vous a déjà envoyé une demande d'ami. Veuillez l'accepter.");
+        }
+
+        // Ajouter la demande
+        sender.getFriendRequestSentIds().add(receiverId);
+        receiver.getFriendRequestReceivedIds().add(senderId);
+
+        // Envoi d'un email au destinataire
+        String senderName = Optional.ofNullable(sender.getFirstName())
+                .map(fn -> fn + " " + Optional.ofNullable(sender.getLastName()).orElse(""))
+                .orElse("Utilisateur inconnu");
+        String senderSlug = Optional.ofNullable(sender.getSlug()).orElse("N/A");
+        String portfolioLink = "http://localhost:5173/portfolio/" + sender.getFirstName() + "/" + sender.getLastName() + "/" + senderSlug;
+
+        String htmlMessage = emailTemplateService.generateContactRequestEmail(
+                Optional.ofNullable(receiver.getFirstName()).orElse("Utilisateur"),
+                senderName,
+                sender.getEmail(),
+                Optional.ofNullable(sender.getPhone()).orElse("Non fourni"),
+                portfolioLink
+        );
+
+        emailService.sendEmail(
+                receiver.getEmail(),
+                "Nouvelle demande d'ami",
+                htmlMessage
+        );
+
+        userRepository.save(sender);
+        userRepository.save(receiver);
+        System.out.println("✅ Demande d'ami envoyée de " + senderId + " à " + receiverId);
+    }
+
+    /**
+     * Accepter une demande d'ami
+     */
+    public void acceptFriendRequest(String userId, String friendId) {
+        if (userId == null || friendId == null || userId.trim().isEmpty() || friendId.trim().isEmpty()) {
+            throw new IllegalArgumentException("Les identifiants des utilisateurs ne peuvent pas être nuls ou vides.");
+        }
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("Utilisateur introuvable : " + userId));
+        User friend = userRepository.findById(friendId)
+                .orElseThrow(() -> new IllegalArgumentException("Ami introuvable : " + friendId));
+
+        // Vérifier si les listes sont initialisées
+        if (user.getFriendRequestReceivedIds() == null || friend.getFriendRequestSentIds() == null) {
+            throw new IllegalStateException("Aucune demande d'ami n'a été trouvée.");
+        }
+        if (user.getFriendIds() == null) {
+            user.setFriendIds(new ArrayList<>());
+        }
+        if (friend.getFriendIds() == null) {
+            friend.setFriendIds(new ArrayList<>());
+        }
+
+        // Vérifier si une demande existe
+        if (!user.getFriendRequestReceivedIds().contains(friendId) || !friend.getFriendRequestSentIds().contains(userId)) {
+            throw new IllegalStateException("Aucune demande d'ami n'a été envoyée par cet utilisateur.");
+        }
+
+        // Ajouter les utilisateurs comme amis
+        user.getFriendIds().add(friendId);
+        friend.getFriendIds().add(userId);
+
+        // Supprimer la demande
+        user.getFriendRequestReceivedIds().remove(friendId);
+        friend.getFriendRequestSentIds().remove(userId);
+
+        userRepository.save(user);
+        userRepository.save(friend);
+        System.out.println("✅ Demande d'ami acceptée entre " + userId + " et " + friendId);
+    }
+
+    /**
+     * Refuser une demande d'ami
+     */
+    public void rejectFriendRequest(String userId, String friendId) {
+        if (userId == null || friendId == null || userId.trim().isEmpty() || friendId.trim().isEmpty()) {
+            throw new IllegalArgumentException("Les identifiants des utilisateurs ne peuvent pas être nuls ou vides.");
+        }
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("Utilisateur introuvable : " + userId));
+        User friend = userRepository.findById(friendId)
+                .orElseThrow(() -> new IllegalArgumentException("Ami introuvable : " + friendId));
+
+        // Vérifier si les listes sont initialisées
+        if (user.getFriendRequestReceivedIds() == null || friend.getFriendRequestSentIds() == null) {
+            throw new IllegalStateException("Aucune demande d'ami n'a été trouvée.");
+        }
+
+        // Vérifier si une demande existe
+        if (!user.getFriendRequestReceivedIds().contains(friendId) || !friend.getFriendRequestSentIds().contains(userId)) {
+            throw new IllegalStateException("Aucune demande d'ami n'a été envoyée par cet utilisateur.");
+        }
+
+        // Supprimer la demande
+        user.getFriendRequestReceivedIds().remove(friendId);
+        friend.getFriendRequestSentIds().remove(userId);
+
+        userRepository.save(user);
+        userRepository.save(friend);
+        System.out.println("✅ Demande d'ami refusée entre " + userId + " et " + friendId);
+    }
+
+    /**
+     * Supprimer un ami
+     */
+    public void removeFriend(String userId, String friendId) {
+        if (userId == null || friendId == null || userId.trim().isEmpty() || friendId.trim().isEmpty()) {
+            throw new IllegalArgumentException("Les identifiants des utilisateurs ne peuvent pas être nuls ou vides.");
+        }
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("Utilisateur introuvable : " + userId));
+        User friend = userRepository.findById(friendId)
+                .orElseThrow(() -> new IllegalArgumentException("Ami introuvable : " + friendId));
+
+        // Vérifier si les listes sont initialisées
+        if (user.getFriendIds() == null || friend.getFriendIds() == null) {
+            throw new IllegalStateException("Aucune relation d'amitié n'existe entre ces utilisateurs.");
+        }
+
+        // Vérifier si les utilisateurs sont amis
+        if (!user.getFriendIds().contains(friendId) || !friend.getFriendIds().contains(userId)) {
+            throw new IllegalStateException("Ces utilisateurs ne sont pas amis.");
+        }
+
+        // Supprimer la relation d'amitié
+        user.getFriendIds().remove(friendId);
+        friend.getFriendIds().remove(userId);
+
+        userRepository.save(user);
+        userRepository.save(friend);
+        System.out.println("✅ Relation d'amitié supprimée entre " + userId + " et " + friendId);
+    }
+
+    /**
+     * Annuler une demande d'ami envoyée
+     */
+    public void cancelFriendRequest(String senderId, String receiverId) {
+        if (senderId == null || receiverId == null || senderId.trim().isEmpty() || receiverId.trim().isEmpty()) {
+            throw new IllegalArgumentException("Les identifiants des utilisateurs ne peuvent pas être nuls ou vides.");
+        }
+
+        User sender = userRepository.findById(senderId)
+                .orElseThrow(() -> new IllegalArgumentException("Utilisateur expéditeur introuvable : " + senderId));
+        User receiver = userRepository.findById(receiverId)
+                .orElseThrow(() -> new IllegalArgumentException("Utilisateur destinataire introuvable : " + receiverId));
+
+        // Vérifier si les listes sont initialisées
+        if (sender.getFriendRequestSentIds() == null || receiver.getFriendRequestReceivedIds() == null) {
+            throw new IllegalStateException("Aucune demande d'ami n'a été envoyée.");
+        }
+
+        // Vérifier si une demande existe
+        if (!sender.getFriendRequestSentIds().contains(receiverId) || !receiver.getFriendRequestReceivedIds().contains(senderId)) {
+            throw new IllegalStateException("Aucune demande d'ami n'a été envoyée à cet utilisateur.");
+        }
+
+        // Supprimer la demande
+        sender.getFriendRequestSentIds().remove(receiverId);
+        receiver.getFriendRequestReceivedIds().remove(senderId);
+
+        userRepository.save(sender);
+        userRepository.save(receiver);
+        System.out.println("✅ Demande d'ami annulée de " + senderId + " à " + receiverId);
+    }
+
+    /**
+     * Récupérer les amis d’un utilisateur
+     */
+    public List<User> getFriends(String userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("Utilisateur introuvable : " + userId));
+
+        if (user.getFriendIds() == null || user.getFriendIds().isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        return userRepository.findAllById(user.getFriendIds());
+    }
+
+    /**
+     * Récupérer les demandes d'amis envoyées
+     */
+    public List<User> getSentFriendRequests(String userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("Utilisateur introuvable : " + userId));
+
+        if (user.getFriendRequestSentIds() == null || user.getFriendRequestSentIds().isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        return userRepository.findAllById(user.getFriendRequestSentIds());
+    }
+
+    /**
+     * Récupérer les demandes d'amis reçues
+     */
+    public List<User> getReceivedFriendRequests(String userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("Utilisateur introuvable : " + userId));
+
+        if (user.getFriendRequestReceivedIds() == null || user.getFriendRequestReceivedIds().isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        return userRepository.findAllById(user.getFriendRequestReceivedIds());
     }
 }

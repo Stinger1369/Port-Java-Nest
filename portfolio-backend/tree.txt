@@ -10,6 +10,8 @@
 ├── .mvn/
 │   └── wrapper/
 │       └── maven-wrapper.properties
+├── node_modules/
+│   └── .yarn-integrity
 ├── src/
 │   ├── main/
 │   │   ├── java/
@@ -54,6 +56,7 @@
 │   │   │               │   ├── RecommendationDTO.java
 │   │   │               │   ├── SkillDto.java
 │   │   │               │   ├── SocialLinkDTO.java
+│   │   │               │   ├── UserCoordinatesDTO.java
 │   │   │               │   ├── UserDTO.java
 │   │   │               │   └── WeatherDTO.java
 │   │   │               ├── entity/
@@ -187,6 +190,7 @@
 │   │   │           │   ├── SkillDto.class
 │   │   │           │   ├── SocialLinkDTO.class
 │   │   │           │   ├── SocialLinkDTO$SocialLinkDTOBuilder.class
+│   │   │           │   ├── UserCoordinatesDTO.class
 │   │   │           │   ├── UserDTO.class
 │   │   │           │   ├── UserDTO$UserDTOBuilder.class
 │   │   │           │   └── WeatherDTO.class
@@ -285,6 +289,10 @@
 │   ├── generated-test-sources/
 │   │   └── test-annotations/
 │   └── test-classes/
+│       └── com/
+│           └── Portbil/
+│               └── portfolio_backend/
+│                   └── PortfolioBackendApplicationTests.class
 ├── .env
 ├── .gitattributes
 ├── .gitignore

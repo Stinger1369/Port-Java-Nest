@@ -62,7 +62,6 @@ public class GoogleMapsService {
                 String city = null;
                 String country = null;
 
-                // Parcourir les composants de l’adresse pour extraire ville et pays
                 for (com.google.maps.model.AddressComponent component : results[0].addressComponents) {
                     for (AddressComponentType type : component.types) {
                         if (type == AddressComponentType.LOCALITY || type == AddressComponentType.SUBLOCALITY) {
@@ -74,17 +73,24 @@ public class GoogleMapsService {
                 }
 
                 Map<String, String> locationDetails = new HashMap<>();
-                locationDetails.put("city", city != null ? city : "Not provided");
-                locationDetails.put("country", country != null ? country : "Not provided");
+                locationDetails.put("city", city != null ? city : "Unknown");
+                locationDetails.put("country", country != null ? country : "Unknown");
 
                 System.out.println("✅ Ville et pays récupérés via Google Maps : city=" + city + ", country=" + country);
                 return locationDetails;
             } else {
-                throw new RuntimeException("Aucune localisation trouvée pour ces coordonnées.");
+                System.out.println("⚠️ Aucune localisation trouvée, renvoi de valeurs par défaut.");
+                Map<String, String> defaultDetails = new HashMap<>();
+                defaultDetails.put("city", "Unknown");
+                defaultDetails.put("country", "Unknown");
+                return defaultDetails;
             }
         } catch (Exception e) {
             System.out.println("❌ Erreur lors de la récupération de la ville et du pays : " + e.getMessage());
-            throw new RuntimeException("Erreur lors de la récupération de la ville et du pays via Google Maps : " + e.getMessage());
+            Map<String, String> errorDetails = new HashMap<>();
+            errorDetails.put("city", "Unknown");
+            errorDetails.put("country", "Unknown");
+            return errorDetails;
         } finally {
             if (context != null) {
                 context.shutdown();

@@ -14,7 +14,7 @@ import {
 } from "../../redux/features/chatSlice";
 import { fetchUser, fetchUserById } from "../../redux/features/userSlice";
 import { getAllImagesByUserId } from "../../redux/features/imageSlice";
-import { useWebSocket } from "./useWebSocket";
+import { useWebSocket } from "../../hooks/useWebSocket";
 import "./ChatPage.css";
 
 interface Message {

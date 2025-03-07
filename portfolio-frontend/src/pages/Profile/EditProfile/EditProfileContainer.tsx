@@ -54,7 +54,7 @@ const EditProfileContainer = () => {
     age: 0,
   });
 
-  const [isInitialDataSet, setIsInitialDataSet] = useState(false); // Ajout d’un drapeau pour éviter de réinitialiser initialFormData
+  const [isInitialDataSet, setIsInitialDataSet] = useState(false);
 
   useEffect(() => {
     const userId = localStorage.getItem("userId");
@@ -66,7 +66,6 @@ const EditProfileContainer = () => {
     }
   }, [dispatch, navigate]);
 
-  // Initialisation des données initiales (une seule fois)
   useEffect(() => {
     if (user && !isInitialDataSet) {
       const normalizedPhone = user.phone && !user.phone.startsWith("+") ? `+${user.phone}` : user.phone || "";
@@ -92,11 +91,10 @@ const EditProfileContainer = () => {
       console.log("🔹 Initialisation des données initiales :", updatedFormData);
       setInitialFormData(updatedFormData);
       setFormData(updatedFormData);
-      setIsInitialDataSet(true); // Marquer les données initiales comme définies
+      setIsInitialDataSet(true);
     }
-  }, [user]);
+  }, [user, isInitialDataSet]);
 
-  // Mise à jour de formData pour les champs dépendants de Google Maps (address, city, country, latitude, longitude)
   useEffect(() => {
     if (isInitialDataSet) {
       setFormData((prevFormData) => ({

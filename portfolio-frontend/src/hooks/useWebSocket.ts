@@ -1,9 +1,9 @@
 // useWebSocket.ts
 import { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { AppDispatch, RootState } from "../../redux/store";
-import { addMessage, addGroup } from "../../redux/features/chatSlice";
-import { BASE_URL } from "../../config/hostname";
+import { AppDispatch, RootState } from "../redux/store";
+import { addMessage, addGroup } from "../redux/features/chatSlice";
+import { BASE_URL } from "../config/hostname";
 
 export const useWebSocket = (token: string | null) => {
   const dispatch = useDispatch<AppDispatch>();

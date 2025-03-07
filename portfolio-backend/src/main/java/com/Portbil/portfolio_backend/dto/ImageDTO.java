@@ -21,9 +21,11 @@ public class ImageDTO {
 
     private String path;
 
-    // Champ pour correspondre au JSON Go "isNSFW"
     @JsonProperty("isNSFW")
     private boolean isNSFW;
+
+    @JsonProperty("isProfilePicture") // Ajout du champ
+    private boolean isProfilePicture;
 
     private String uploadedAt;
 }

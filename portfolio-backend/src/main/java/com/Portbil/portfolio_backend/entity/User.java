@@ -100,7 +100,17 @@ public class User implements UserDetails {
 
     // Nouveau champ pour les conversations (chatIds)
     @Builder.Default
-    private List<String> chatIds = new ArrayList<>(); // IDs des conversations privées ou de groupe
+    private List<String> chatIds = new ArrayList<>();
+
+    // Nouveaux champs pour gérer les relations d'amitié
+    @Builder.Default
+    private List<String> friendIds = new ArrayList<>(); // Liste des amis acceptés
+
+    @Builder.Default
+    private List<String> friendRequestSentIds = new ArrayList<>(); // Demandes d'amis envoyées
+
+    @Builder.Default
+    private List<String> friendRequestReceivedIds = new ArrayList<>(); // Demandes d'amis reçues
 
     // Méthode pour récupérer toutes les IDs des sections du portfolio
     public List<String> getAllPortfolioIds() {
