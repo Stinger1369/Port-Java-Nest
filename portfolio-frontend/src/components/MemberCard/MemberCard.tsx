@@ -4,36 +4,38 @@ import { RootState, AppDispatch } from "../../redux/store";
 import { likeUser, unlikeUser, User } from "../../redux/features/userSlice";
 import { fetchPrivateMessages } from "../../redux/features/chatSlice";
 import { useNavigate } from "react-router-dom";
+import { useFriendActions } from "../../redux/features/friendActions";
 import "./MemberCard.css";
-import FriendRequestActions from "./FriendRequestActions";
 
 interface MemberCardProps {
   member: User;
   profileImage: string | null;
   onClick: () => void;
-  pendingReceivedRequests: any[];
-  pendingSentRequests: any[];
-  friends: any[];
 }
 
-const MemberCard: React.FC<MemberCardProps> = ({
-  member,
-  profileImage,
-  onClick,
-  pendingReceivedRequests,
-  pendingSentRequests,
-  friends,
-}) => {
+const MemberCard: React.FC<MemberCardProps> = ({ member, profileImage, onClick }) => {
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
   const currentUser = useSelector((state: RootState) => state.user.user);
+  const {
+    friends,
+    sentRequests,
+    receivedRequests,
+    handleSendFriendRequest,
+    handleCancelFriendRequest,
+    handleRemoveFriend,
+  } = useFriendActions();
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  console.log(`🔍 Image de profil pour l'utilisateur ${member.id}:`, profileImage);
+  console.log(`🔍 Rendu de MemberCard pour ${member.id}, profileImage: ${profileImage}`); // Log pour débogage
 
   const isCurrentUser = currentUser?.id === member.id;
   const hasLiked = currentUser?.likedUserIds?.includes(member.id);
+
+  // Vérifier l'état de la relation avec le membre
   const isFriend = friends.some((friend) => friend.id === member.id);
+  const hasSentRequest = sentRequests.some((request) => request.id === member.id);
+  const hasReceivedRequest = receivedRequests.some((request) => request.id === member.id);
 
   const isProfileIncomplete = useCallback(() => {
     const incomplete =
@@ -70,14 +72,12 @@ const MemberCard: React.FC<MemberCardProps> = ({
 
       if (isProfileIncomplete()) {
         setIsModalOpen(true);
-      } else if (!isFriend) {
-        setIsModalOpen(true);
       } else {
         dispatch(fetchPrivateMessages(member.id));
         navigate(`/chat/private/${member.id}`);
       }
     },
-    [currentUser, isCurrentUser, isProfileIncomplete, dispatch, member.id, navigate, isFriend]
+    [currentUser, isCurrentUser, isProfileIncomplete, dispatch, member.id, navigate]
   );
 
   const closeModal = useCallback(() => {
@@ -98,6 +98,41 @@ const MemberCard: React.FC<MemberCardProps> = ({
     [onClick]
   );
 
+  const handleFriendAction = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (isFriend) {
+      handleRemoveFriend(member.id);
+    } else if (hasSentRequest) {
+      handleCancelFriendRequest(member.id);
+    } else {
+      handleSendFriendRequest(member.id, (errorMessage) => {
+        alert(errorMessage || "Une erreur s'est produite.");
+      });
+    }
+  };
+
+  const getFriendButtonProps = () => {
+    if (isFriend) {
+      return {
+        className: "friend-remove-button",
+        icon: "fas fa-trash-alt",
+      };
+    } else if (hasSentRequest) {
+      return {
+        className: "friend-pending-button",
+        icon: "fas fa-hourglass-half",
+        cancelIcon: "fas fa-times",
+      };
+    } else {
+      return {
+        className: "friend-request-button",
+        icon: "fas fa-user-plus",
+      };
+    }
+  };
+
+  const buttonProps = getFriendButtonProps();
+
   return (
     <div className={`member-card ${isModalOpen ? "modal-open" : ""}`} onClick={handleCardClick}>
       <div className="member-header">
@@ -115,7 +150,7 @@ const MemberCard: React.FC<MemberCardProps> = ({
           )}
         </div>
         <h3>
-          {member.firstName} {member.lastName}
+          {member.firstName || "Non défini"} {member.lastName || "Non défini"}
         </h3>
         <p className="email">{member.email}</p>
       </div>
@@ -142,36 +177,34 @@ const MemberCard: React.FC<MemberCardProps> = ({
         <div className="like-container">
           <button className="like-button" onClick={handleLikeToggle}>
             <i className={hasLiked ? "fas fa-heart" : "far fa-heart"}></i>
-            <span>{hasLiked ? "Unlike" : "Like"}</span>
           </button>
           <button className="chat-button" onClick={handleChat}>
             <i className="fas fa-comment"></i>
-            <span>Tchatter</span>
           </button>
-          <FriendRequestActions
-            member={member}
-            pendingReceivedRequests={pendingReceivedRequests}
-            pendingSentRequests={pendingSentRequests}
-            friends={friends}
-          />
+          <div className="friend-action-container">
+            <button className={buttonProps.className} onClick={handleFriendAction}>
+              <i className={buttonProps.icon}></i>
+            </button>
+            {hasSentRequest && (
+              <button className="friend-cancel-button" onClick={handleFriendAction}>
+                <i className="fas fa-times"></i>
+              </button>
+            )}
+          </div>
         </div>
       )}
 
       {isModalOpen && (
         <div className="profile-modal-overlay">
           <div className="profile-modal-content">
-            <h2>{isProfileIncomplete() ? "Profil incomplet" : "Action non autorisée"}</h2>
+            <h2>Profil incomplet</h2>
             <p>
-              {isProfileIncomplete()
-                ? "Veuillez compléter votre profil avec un prénom et un nom pour pouvoir tchatter avec les membres."
-                : "Vous devez être amis pour tchatter avec ce membre."}
+              Veuillez compléter votre profil avec un prénom et un nom pour pouvoir tchatter avec les membres.
             </p>
             <div className="modal-actions">
-              {isProfileIncomplete() && (
-                <button className="complete-profile-btn" onClick={handleCompleteProfile}>
-                  Compléter mon profil
-                </button>
-              )}
+              <button className="complete-profile-btn" onClick={handleCompleteProfile}>
+                Compléter mon profil
+              </button>
               <button className="close-modal-btn" onClick={closeModal}>
                 Fermer
               </button>

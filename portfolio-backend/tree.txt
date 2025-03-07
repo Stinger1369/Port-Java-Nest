@@ -10,6 +10,8 @@
 ├── .mvn/
 │   └── wrapper/
 │       └── maven-wrapper.properties
+├── node_modules/
+│   └── .yarn-integrity
 ├── src/
 │   ├── main/
 │   │   ├── java/

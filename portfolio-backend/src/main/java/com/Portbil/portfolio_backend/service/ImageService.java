@@ -5,25 +5,10 @@ import com.Portbil.portfolio_backend.entity.Image;
 import com.Portbil.portfolio_backend.entity.User;
 import com.Portbil.portfolio_backend.repository.ImageRepository;
 import com.Portbil.portfolio_backend.repository.UserRepository;
-import com.Portbil.portfolio_backend.service.UserService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
-import org.springframework.web.client.RestTemplate;
-import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.core.io.FileSystemResource;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -36,32 +21,27 @@ public class ImageService {
 
     private final ImageRepository imageRepository;
     private final UserRepository userRepository;
-    private final RestTemplate restTemplate;
     private final UserService userService;
-    private static final String IMAGE_SERVER_URL = "http://localhost:7000/server-image";
 
     /**
      * Upload d'une image unique
      */
-    public ImageDTO uploadImage(String userId, String name, MultipartFile file, String imageUrl, boolean isNSFW) {
+    public ImageDTO uploadImage(String userId, String name, MultipartFile file, String imageUrl, boolean isNSFW, boolean isProfilePicture) {
         try {
-            System.out.println("🔹 Début de l'upload d'image pour userId: " + userId + ", name: " + name);
-            // Utiliser le nom complet tiré de l'URL renvoyée par Go
-            String fullName = imageUrl.substring(imageUrl.lastIndexOf("/") + 1); // Extrait le nom avec UUID
+            System.out.println("🔹 Début de l'upload d'image pour userId: " + userId + ", name: " + name + ", isProfilePicture: " + isProfilePicture);
+            String fullName = imageUrl.substring(imageUrl.lastIndexOf("/") + 1);
 
-            // Enregistrer les métadonnées dans MongoDB
             Image image = Image.builder()
                     .userId(userId)
-                    .name(fullName) // Utiliser fullName au lieu de name
+                    .name(fullName)
                     .path(imageUrl.replace("http://localhost:7000/", ""))
                     .isNSFW(isNSFW)
-                    .isProfilePicture(true)
+                    .isProfilePicture(isProfilePicture)
                     .uploadedAt(LocalDateTime.now())
                     .build();
 
             Image savedImage = imageRepository.save(image);
 
-            // Associer l'image à l'utilisateur directement via UserRepository
             User user = userRepository.findById(userId)
                     .orElseThrow(() -> new IllegalArgumentException("Utilisateur introuvable : " + userId));
             if (user.getImageIds() == null) {
@@ -69,43 +49,40 @@ public class ImageService {
             }
             user.getImageIds().add(savedImage.getId());
 
-            // Vérifier s'il y a déjà une photo de profil et la mettre à jour si nécessaire
-            if (user.getImageIds().size() == 1 || !user.getImageIds().stream()
-                    .map(imageRepository::findById)
-                    .filter(Optional::isPresent)
-                    .map(Optional::get)
-                    .anyMatch(img -> img.isProfilePicture())) {
-                savedImage.setIsProfilePicture(true);
-            } else {
-                user.getImageIds().stream()
-                        .map(imageRepository::findById)
-                        .filter(Optional::isPresent)
-                        .map(Optional::get)
-                        .filter(img -> img.isProfilePicture())
+            if (isProfilePicture) {
+                // Désactiver les autres photos de profil
+                imageRepository.findByUserId(userId).stream()
+                        .filter(img -> !img.getId().equals(savedImage.getId()) && img.isProfilePicture())
                         .forEach(img -> {
                             img.setIsProfilePicture(false);
                             imageRepository.save(img);
                         });
-                savedImage.setIsProfilePicture(true);
+                userService.updateProfilePictureUrl(userId, "http://localhost:7000/" + savedImage.getPath());
             }
 
-            userService.updateProfilePictureUrl(userId, "http://localhost:7000/" + savedImage.getPath());
             userRepository.save(user);
-
             System.out.println("✅ Image uploadée avec succès: " + savedImage);
             return mapToDTO(savedImage);
         } catch (Exception e) {
-            System.out.println("❌ Erreur inattendue lors de l'upload: " + e.getMessage() + ", Stacktrace: " + e.getStackTrace());
-            throw new RuntimeException("Failed to upload image: " + e.getMessage(), e);
+            System.out.println("❌ Erreur inattendue lors de l'upload: " + e.getMessage());
+            throw new RuntimeException("Échec de l'upload de l'image: " + e.getMessage(), e);
         }
     }
 
     /**
-     * Récupérer les images d'un utilisateur
+     * Récupérer toutes les images d'un utilisateur depuis MongoDB
      */
-    public List<ImageDTO> getUserImages(String userId) {
-        List<Image> images = imageRepository.findByUserId(userId);
-        return images.stream().map(this::mapToDTO).collect(Collectors.toList());
+    public List<ImageDTO> getAllImagesByUserId(String userId) {
+        try {
+            System.out.println("🔹 Récupération des images depuis MongoDB pour userId: " + userId);
+            List<Image> images = imageRepository.findByUserId(userId);
+            List<ImageDTO> imageDTOs = images.stream().map(this::mapToDTO).collect(Collectors.toList());
+            System.out.println("✅ Images récupérées depuis MongoDB: " + imageDTOs);
+            return imageDTOs;
+        } catch (Exception e) {
+            System.out.println("❌ Erreur lors de la récupération des images depuis MongoDB: " + e.getMessage());
+            throw new RuntimeException("Échec de la récupération des images: " + e.getMessage(), e);
+        }
     }
 
     /**
@@ -115,7 +92,6 @@ public class ImageService {
         try {
             System.out.println("🔹 Début de la suppression d'image dans MongoDB pour userId: " + userId + ", name: " + name);
 
-            // 1. Trouver et supprimer l'image dans MongoDB
             Optional<Image> imageOpt = imageRepository.findByUserIdAndName(userId, name);
             if (imageOpt.isEmpty()) {
                 System.out.println("⚠️ Image non trouvée dans MongoDB pour userId: " + userId + ", name: " + name);
@@ -125,7 +101,6 @@ public class ImageService {
             imageRepository.delete(deletedImage);
             System.out.println("✅ Image supprimée de MongoDB : " + deletedImage.getId());
 
-            // 2. Mettre à jour l'utilisateur
             User user = userRepository.findById(userId)
                     .orElseThrow(() -> new IllegalArgumentException("Utilisateur introuvable : " + userId));
             boolean removed = user.getImageIds().remove(deletedImage.getId());
@@ -133,7 +108,6 @@ public class ImageService {
                 System.out.println("⚠️ L'image " + deletedImage.getId() + " n'était pas dans la liste imageIds de l'utilisateur");
             }
 
-            // 3. Gérer la photo de profil si elle est supprimée
             if (deletedImage.isProfilePicture()) {
                 List<Image> remainingImages = imageRepository.findByUserId(userId);
                 Image newProfileImage = null;
@@ -148,7 +122,7 @@ public class ImageService {
                     }
                 }
                 String newProfilePictureUrl = newProfileImage != null ? "http://localhost:7000/" + newProfileImage.getPath() : null;
-                userService.updateProfilePictureUrl(userId, newProfilePictureUrl); // Correction ici : utiliser userService
+                userService.updateProfilePictureUrl(userId, newProfilePictureUrl);
             }
 
             userRepository.save(user);
@@ -160,19 +134,73 @@ public class ImageService {
     }
 
     /**
-     * Extraire l'URL de l'image depuis la réponse JSON du serveur Go
+     * Récupérer les images par IDs avec option de filtrage par isProfilePicture
      */
-    private String extractImageUrl(String responseBody) {
-        int linkStart = responseBody.indexOf("\"link\":\"") + 8;
-        int linkEnd = responseBody.indexOf("\"", linkStart);
-        return responseBody.substring(linkStart, linkEnd);
+    public List<ImageDTO> getImagesByIds(List<String> imageIds, boolean filterProfile) {
+        try {
+            System.out.println("🔹 Récupération des images par IDs: " + imageIds + ", Filtre profil: " + filterProfile);
+            List<Image> images = imageRepository.findAllById(imageIds);
+            List<ImageDTO> imageDTOs = images.stream()
+                    .filter(image -> !filterProfile || image.isProfilePicture())
+                    .map(this::mapToDTO)
+                    .collect(Collectors.toList());
+            System.out.println("✅ Images récupérées par IDs: " + imageDTOs);
+            return imageDTOs;
+        } catch (Exception e) {
+            System.out.println("❌ Erreur lors de la récupération des images par IDs: " + e.getMessage());
+            throw new RuntimeException("Échec de la récupération des images par IDs: " + e.getMessage(), e);
+        }
     }
 
     /**
-     * Vérifier NSFW dans la réponse (si le serveur Go renvoie cette info)
+     * Récupérer uniquement les images de profil d'un utilisateur
      */
-    private boolean checkNSFWFromResponse(String responseBody) {
-        return false; // Le serveur Go supprime déjà les images NSFW
+    public List<ImageDTO> getProfileImagesByUserId(String userId) {
+        try {
+            System.out.println("🔹 Récupération des images de profil pour userId: " + userId);
+            List<Image> images = imageRepository.findByUserId(userId);
+            List<ImageDTO> profileImages = images.stream()
+                    .filter(Image::isProfilePicture)
+                    .map(this::mapToDTO)
+                    .collect(Collectors.toList());
+            System.out.println("✅ Images de profil récupérées pour userId: " + userId + " - " + profileImages);
+            return profileImages;
+        } catch (Exception e) {
+            System.out.println("❌ Erreur lors de la récupération des images de profil: " + e.getMessage());
+            throw new RuntimeException("Échec de la récupération des images de profil: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Définir une image comme photo de profil
+     */
+    public ImageDTO setProfilePicture(String imageId) {
+        try {
+            Image image = imageRepository.findById(imageId)
+                    .orElseThrow(() -> new IllegalArgumentException("Image introuvable : " + imageId));
+            String userId = image.getUserId();
+
+            // Désactiver toutes les autres photos de profil pour cet utilisateur
+            imageRepository.findByUserId(userId).stream()
+                    .filter(img -> !img.getId().equals(imageId) && img.isProfilePicture())
+                    .forEach(img -> {
+                        img.setIsProfilePicture(false);
+                        imageRepository.save(img);
+                    });
+
+            // Activer cette image comme photo de profil
+            image.setIsProfilePicture(true);
+            Image updatedImage = imageRepository.save(image);
+
+            // Mettre à jour l'URL de la photo de profil dans User
+            userService.updateProfilePictureUrl(userId, "http://localhost:7000/" + updatedImage.getPath());
+
+            System.out.println("✅ Image " + imageId + " définie comme photo de profil pour userId: " + userId);
+            return mapToDTO(updatedImage);
+        } catch (Exception e) {
+            System.out.println("❌ Erreur lors de la définition de la photo de profil: " + e.getMessage());
+            throw new RuntimeException("Échec de la définition de la photo de profil: " + e.getMessage(), e);
+        }
     }
 
     /**
@@ -185,25 +213,8 @@ public class ImageService {
                 .name(image.getName())
                 .path(image.getPath())
                 .isNSFW(image.isNSFW())
-                .uploadedAt(image.getUploadedAt().toString()) // Convertir LocalDateTime en String (ISO 8601)
+                .isProfilePicture(image.isProfilePicture())
+                .uploadedAt(image.getUploadedAt() != null ? image.getUploadedAt().toString() : null)
                 .build();
-    }
-
-    // Méthode helper pour créer un formulaire multipart/form-data avec un fichier réel
-    private HttpEntity<?> createMultipartFormData(String userId, String name, MultipartFile file) throws IOException {
-        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
-        body.add("user_id", userId);
-        body.add("name", name);
-
-        // Sauvegarder temporairement le MultipartFile dans un fichier local
-        File tempFile = File.createTempFile("upload_", ".tmp");
-        try (FileOutputStream fos = new FileOutputStream(tempFile)) {
-            fos.write(file.getBytes());
-        }
-        body.add("file", new FileSystemResource(tempFile));
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
-        return new HttpEntity<>(body, headers);
     }
 }

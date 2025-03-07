@@ -1,6 +1,7 @@
 package com.Portbil.portfolio_backend.controller;
 
-import com.Portbil.portfolio_backend.dto.UserCoordinatesDTO; // Importation manquante ajoutée
+import com.Portbil.portfolio_backend.dto.UserCoordinatesDTO;
+import com.Portbil.portfolio_backend.dto.FriendRequestDTO;
 import com.Portbil.portfolio_backend.dto.UserDTO;
 import com.Portbil.portfolio_backend.entity.User;
 import com.Portbil.portfolio_backend.service.UserService;
@@ -69,11 +70,16 @@ public class UserController {
                         .showBirthdate(user.isShowBirthdate())
                         .likedUserIds(user.getLikedUserIds())
                         .likerUserIds(user.getLikerUserIds())
+                        .imageIds(user.getImageIds()) // Ajout de imageIds
                         .latitude(user.getLatitude() != null ? user.getLatitude().toString() : null)
                         .longitude(user.getLongitude() != null ? user.getLongitude().toString() : null)
+                        .friendIds(user.getFriendIds()) // Ajouté
+                        .friendRequestSentIds(user.getFriendRequestSentIds()) // Ajouté
+                        .friendRequestReceivedIds(user.getFriendRequestReceivedIds())
                         .build())
                 .collect(Collectors.toList());
 
+        System.out.println("✅ Tous les utilisateurs récupérés pour l'utilisateur authentifié: " + userDTOs);
         return ResponseEntity.ok(userDTOs);
     }
 
@@ -84,40 +90,50 @@ public class UserController {
     @PreAuthorize("hasAuthority('ADMIN') or #id == authentication.principal.username")
     public ResponseEntity<UserDTO> getUserById(@PathVariable String id) {
         System.out.println("🔹 Tentative de récupération de l'utilisateur ID: " + id);
-        Optional<User> user = userService.getUserById(id);
-        if (user.isEmpty()) {
+        Optional<User> userOpt = userService.getUserById(id);
+        if (userOpt.isEmpty()) {
             System.out.println("❌ Utilisateur non trouvé : " + id);
             return ResponseEntity.notFound().build();
         }
-        System.out.println("✅ Utilisateur trouvé : " + user.get().getEmail());
-        System.out.println("Phone renvoyé au frontend : " + user.get().getPhone());
-        System.out.println("Sex et Bio renvoyés au frontend : sex=" + user.get().getSex() +
-                ", bio=" + user.get().getBio() +
-                ", birthdate=" + user.get().getBirthdate() +
-                ", age=" + user.get().getAge() +
-                ", showBirthdate=" + user.get().isShowBirthdate() +
-                ", likedUserIds=" + user.get().getLikedUserIds() +
-                ", likerUserIds=" + user.get().getLikerUserIds());
+
+        User user = userOpt.get(); // Extraire l'objet User après vérification
+        System.out.println("✅ Utilisateur trouvé : " + user.getEmail());
+        System.out.println("Phone renvoyé au frontend : " + user.getPhone());
+        System.out.println("Sex et Bio renvoyés au frontend : sex=" + user.getSex() +
+                ", bio=" + user.getBio() +
+                ", birthdate=" + user.getBirthdate() +
+                ", age=" + user.getAge() +
+                ", showBirthdate=" + user.isShowBirthdate() +
+                ", likedUserIds=" + user.getLikedUserIds() +
+                ", likerUserIds=" + user.getLikerUserIds() +
+                ", imageIds=" + user.getImageIds() +
+                ", friendIds=" + user.getFriendIds() + // Ajouté pour log
+                ", friendRequestSentIds=" + user.getFriendRequestSentIds() + // Ajouté pour log
+                ", friendRequestReceivedIds=" + user.getFriendRequestReceivedIds()); // Ajouté pour log
 
         UserDTO userDTO = UserDTO.builder()
-                .id(user.get().getId())
-                .email(user.get().getEmail())
-                .firstName(user.get().getFirstName())
-                .lastName(user.get().getLastName())
-                .phone(user.get().getPhone())
-                .address(user.get().getAddress())
-                .city(user.get().getCity())
-                .country(user.get().getCountry())
-                .sex(user.get().getSex())
-                .slug(user.get().getSlug())
-                .bio(user.get().getBio())
-                .birthdate(user.get().getBirthdate())
-                .age(user.get().getAge())
-                .showBirthdate(user.get().isShowBirthdate())
-                .likedUserIds(user.get().getLikedUserIds())
-                .likerUserIds(user.get().getLikerUserIds())
-                .latitude(user.get().getLatitude() != null ? user.get().getLatitude().toString() : null)
-                .longitude(user.get().getLongitude() != null ? user.get().getLongitude().toString() : null)
+                .id(user.getId())
+                .email(user.getEmail())
+                .firstName(user.getFirstName())
+                .lastName(user.getLastName())
+                .phone(user.getPhone())
+                .address(user.getAddress())
+                .city(user.getCity())
+                .country(user.getCountry())
+                .sex(user.getSex())
+                .slug(user.getSlug())
+                .bio(user.getBio())
+                .birthdate(user.getBirthdate())
+                .age(user.getAge())
+                .showBirthdate(user.isShowBirthdate())
+                .likedUserIds(user.getLikedUserIds())
+                .likerUserIds(user.getLikerUserIds())
+                .imageIds(user.getImageIds()) // Ajout de imageIds
+                .latitude(user.getLatitude() != null ? user.getLatitude().toString() : null)
+                .longitude(user.getLongitude() != null ? user.getLongitude().toString() : null)
+                .friendIds(user.getFriendIds()) // Corrigé
+                .friendRequestSentIds(user.getFriendRequestSentIds()) // Corrigé
+                .friendRequestReceivedIds(user.getFriendRequestReceivedIds()) // Corrigé
                 .build();
         return ResponseEntity.ok(userDTO);
     }
@@ -152,9 +168,7 @@ public class UserController {
         }
 
         try {
-            // Vérifier si le corps de la requête contient uniquement latitude et longitude
             if (requestBody.containsKey("latitude") && requestBody.containsKey("longitude") && requestBody.size() == 2) {
-                // Cas où on met à jour uniquement les coordonnées
                 UserCoordinatesDTO coordinatesDTO = new UserCoordinatesDTO();
                 coordinatesDTO.setLatitude(Double.valueOf(requestBody.get("latitude").toString()));
                 coordinatesDTO.setLongitude(Double.valueOf(requestBody.get("longitude").toString()));
@@ -183,15 +197,18 @@ public class UserController {
                         .showBirthdate(updatedUser.isShowBirthdate())
                         .likedUserIds(updatedUser.getLikedUserIds())
                         .likerUserIds(updatedUser.getLikerUserIds())
+                        .imageIds(updatedUser.getImageIds()) // Ajout de imageIds
                         .latitude(updatedUser.getLatitude() != null ? updatedUser.getLatitude().toString() : null)
                         .longitude(updatedUser.getLongitude() != null ? updatedUser.getLongitude().toString() : null)
+                        .friendIds(updatedUser.getFriendIds()) // Corrigé
+                        .friendRequestSentIds(updatedUser.getFriendRequestSentIds()) // Corrigé
+                        .friendRequestReceivedIds(updatedUser.getFriendRequestReceivedIds()) // Corrigé
                         .build();
 
                 log.info("✅ Mise à jour des coordonnées réussie pour l'utilisateur ID: {}", id);
                 return ResponseEntity.ok(responseDTO);
             } else {
-                // Cas où on met à jour les autres champs de l'utilisateur (via UserDTO)
-                UserDTO userDTO = UserDTO.builder() // Utilisation de builder au lieu de new UserDTO()
+                UserDTO userDTO = UserDTO.builder()
                         .email((String) requestBody.get("email"))
                         .firstName((String) requestBody.get("firstName"))
                         .lastName((String) requestBody.get("lastName"))
@@ -232,8 +249,12 @@ public class UserController {
                         .showBirthdate(updatedUser.isShowBirthdate())
                         .likedUserIds(updatedUser.getLikedUserIds())
                         .likerUserIds(updatedUser.getLikerUserIds())
+                        .imageIds(updatedUser.getImageIds()) // Ajout de imageIds
                         .latitude(updatedUser.getLatitude() != null ? updatedUser.getLatitude().toString() : null)
                         .longitude(updatedUser.getLongitude() != null ? updatedUser.getLongitude().toString() : null)
+                        .friendIds(updatedUser.getFriendIds()) // Corrigé
+                        .friendRequestSentIds(updatedUser.getFriendRequestSentIds()) // Corrigé
+                        .friendRequestReceivedIds(updatedUser.getFriendRequestReceivedIds()) // Corrigé
                         .build();
 
                 log.info("✅ Mise à jour réussie pour l'utilisateur ID: {}", id);

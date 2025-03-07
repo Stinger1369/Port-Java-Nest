@@ -41,9 +41,10 @@ public class ImageController {
     public ResponseEntity<ImageDTO> uploadImage(
             @RequestParam("userId") String userId,
             @RequestParam("name") String name,
-            @RequestParam("file") MultipartFile file) {
+            @RequestParam("file") MultipartFile file,
+            @RequestParam(value = "isProfilePicture", defaultValue = "false") boolean isProfilePicture) {
         try {
-            System.out.println("🔹 Début de l'upload d'image pour userId: " + userId + ", name: " + name);
+            System.out.println("🔹 Début de l'upload d'image pour userId: " + userId + ", name: " + name + ", isProfilePicture: " + isProfilePicture);
 
             MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
             body.add("user_id", userId);
@@ -73,7 +74,7 @@ public class ImageController {
                 String imageUrl = extractImageUrl(goResponse.getBody());
                 boolean isNSFW = checkNSFWFromResponse(goResponse.getBody());
 
-                ImageDTO imageDTO = imageService.uploadImage(userId, name, file, imageUrl, isNSFW);
+                ImageDTO imageDTO = imageService.uploadImage(userId, name, file, imageUrl, isNSFW, isProfilePicture);
                 System.out.println("✅ ImageDTO créé et sauvegardé avec succès: " + imageDTO);
 
                 tempFile.delete();
@@ -112,7 +113,8 @@ public class ImageController {
             );
 
             if (goResponse.getStatusCode().is2xxSuccessful()) {
-                List<ImageDTO> images = imageService.getUserImages(userId);
+                List<ImageDTO> images = imageService.getAllImagesByUserId(userId); // Remplacement de getUserImages par getAllImagesByUserId
+                System.out.println("✅ Images récupérées pour userId: " + userId + " - " + images);
                 return ResponseEntity.ok(images);
             } else {
                 ErrorResponse errorResponse = parseErrorResponse(goResponse.getBody());
@@ -142,8 +144,8 @@ public class ImageController {
             );
 
             if (goResponse.getStatusCode().is2xxSuccessful()) {
-                // Appeler ImageService pour supprimer l'image dans MongoDB et mettre à jour l'utilisateur
                 imageService.deleteImage(userId, name);
+                System.out.println("✅ Image supprimée pour userId: " + userId + ", name: " + name);
                 return ResponseEntity.noContent().build();
             } else {
                 ErrorResponse errorResponse = parseErrorResponse(goResponse.getBody());
@@ -158,7 +160,6 @@ public class ImageController {
         }
     }
 
-    // Endpoint pour récupérer une image spécifique
     @GetMapping("/{userId}/{name}")
     public ResponseEntity<ImageDTO> getImage(
             @PathVariable String userId,
@@ -199,43 +200,69 @@ public class ImageController {
         }
     }
 
-    // Nouveau endpoint pour récupérer toutes les images d'un utilisateur spécifique
     @GetMapping("/all/{userId}")
     public ResponseEntity<List<ImageDTO>> getAllImagesByUserId(@PathVariable String userId) {
         try {
-            String goApiUrl = "http://localhost:7000/server-image/all-images/" + userId;
-            HttpHeaders headers = new HttpHeaders();
-            HttpEntity<?> entity = new HttpEntity<>(headers);
-
-            ResponseEntity<String> goResponse = restTemplate.exchange(
-                    goApiUrl,
-                    HttpMethod.GET,
-                    entity,
-                    String.class
-            );
-
-            if (goResponse.getStatusCode().is2xxSuccessful()) {
-                List<ImageDTO> images = objectMapper.readValue(
-                        goResponse.getBody(),
-                        objectMapper.getTypeFactory().constructCollectionType(List.class, ImageDTO.class)
-                );
-                // Garantir que images n'est jamais null
-                List<ImageDTO> result = (images != null) ? images : Collections.emptyList();
-                System.out.println("✅ Toutes les images récupérées avec succès pour userId: " + userId + " - " + result);
-                return ResponseEntity.ok(result);
-            } else {
-                ErrorResponse errorResponse = parseErrorResponse(goResponse.getBody());
-                throw new GoApiException(HttpStatus.valueOf(goResponse.getStatusCode().value()), errorResponse);
+            System.out.println("🔹 Récupération des images pour userId: " + userId);
+            List<ImageDTO> images = imageService.getAllImagesByUserId(userId);
+            if (images.isEmpty()) {
+                System.out.println("⚠️ Aucune image trouvée pour userId: " + userId);
+                return ResponseEntity.ok(Collections.emptyList());
             }
-        } catch (HttpClientErrorException e) {
-            ErrorResponse errorResponse = parseErrorResponse(e.getResponseBodyAsString());
-            throw new GoApiException(HttpStatus.valueOf(e.getStatusCode().value()), errorResponse);
-        } catch (JsonProcessingException e) {
-            System.out.println("❌ Erreur lors du parsing des images: " + e.getMessage());
-            return ResponseEntity.ok(Collections.emptyList()); // Retourne [] en cas d'erreur de parsing
+            System.out.println("✅ Toutes les images récupérées pour userId: " + userId + " - " + images);
+            return ResponseEntity.ok(images);
         } catch (Exception e) {
-            System.out.println("❌ Erreur lors de la récupération de toutes les images: " + e.getMessage());
-            return ResponseEntity.ok(Collections.emptyList()); // Retourne [] en cas d'erreur générale
+            System.out.println("❌ Erreur lors de la récupération des images: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Collections.emptyList());
+        }
+    }
+
+    @GetMapping("/by-ids")
+    public ResponseEntity<List<ImageDTO>> getImagesByIds(
+            @RequestParam("imageIds") List<String> imageIds,
+            @RequestParam(value = "filterProfile", required = false, defaultValue = "false") boolean filterProfile) {
+        try {
+            System.out.println("🔹 Récupération des images par IDs: " + imageIds + ", Filtre profil: " + filterProfile);
+            List<ImageDTO> images = imageService.getImagesByIds(imageIds, filterProfile);
+            if (images.isEmpty()) {
+                System.out.println("⚠️ Aucune image trouvée pour les IDs: " + imageIds + " avec filtre: " + filterProfile);
+            } else {
+                System.out.println("✅ Images récupérées par IDs: " + images);
+            }
+            return ResponseEntity.ok(images);
+        } catch (Exception e) {
+            System.out.println("❌ Erreur lors de la récupération des images par IDs: " + e.getMessage());
+            return ResponseEntity.ok(Collections.emptyList());
+        }
+    }
+
+    @GetMapping("/profile/{userId}")
+    public ResponseEntity<List<ImageDTO>> getProfileImagesByUserId(@PathVariable String userId) {
+        try {
+            System.out.println("🔹 Récupération des images de profil pour userId: " + userId);
+            List<ImageDTO> profileImages = imageService.getProfileImagesByUserId(userId);
+            if (profileImages.isEmpty()) {
+                System.out.println("⚠️ Aucune image de profil trouvée pour userId: " + userId);
+                return ResponseEntity.ok(Collections.emptyList());
+            }
+            System.out.println("✅ Images de profil récupérées pour userId: " + userId + " - " + profileImages);
+            return ResponseEntity.ok(profileImages);
+        } catch (Exception e) {
+            System.out.println("❌ Erreur lors de la récupération des images de profil: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Collections.emptyList());
+        }
+    }
+
+    @PutMapping("/set-profile-picture/{imageId}")
+    public ResponseEntity<ImageDTO> setProfilePicture(@PathVariable String imageId) {
+        try {
+            System.out.println("🔹 Tentative de définir l'image " + imageId + " comme photo de profil");
+            ImageDTO updatedImage = imageService.setProfilePicture(imageId);
+            System.out.println("✅ Image définie comme photo de profil: " + updatedImage);
+            return ResponseEntity.ok(updatedImage);
+        } catch (Exception e) {
+            System.out.println("❌ Erreur lors de la définition de la photo de profil: " + e.getMessage());
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 

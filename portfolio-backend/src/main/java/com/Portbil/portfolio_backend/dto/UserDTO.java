@@ -28,6 +28,14 @@ public class UserDTO {
     private List<String> likedUserIds;
     private List<String> likerUserIds;
 
+    // Champ pour les images
+    private List<String> imageIds;
+
+    // Nouveaux champs pour les amis
+    private List<String> friendIds; // Liste des amis acceptés
+    private List<String> friendRequestSentIds; // Demandes d'amis envoyées
+    private List<String> friendRequestReceivedIds; // Demandes d'amis reçues
+
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
     private LocalDate birthdate;
 
@@ -42,7 +50,7 @@ public class UserDTO {
     @JsonAlias({"longitude", "lon"})
     private String longitude;
 
-    // Nouveau champ pour les conversations
+    // Champ pour les conversations
     private List<String> chatIds;
 
     public Double getLatitudeAsDouble() {

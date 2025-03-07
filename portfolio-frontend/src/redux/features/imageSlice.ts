@@ -8,6 +8,7 @@ interface Image {
   name: string;
   path: string;
   isNSFW: boolean;
+  isProfilePicture: boolean;
   uploadedAt: string | null;
 }
 
@@ -30,7 +31,7 @@ const getAuthToken = () => localStorage.getItem("token");
 export const uploadImage = createAsyncThunk(
   "image/uploadImage",
   async (
-    { userId, name, file }: { userId: string; name: string; file: File },
+    { userId, name, file, isProfilePicture }: { userId: string; name: string; file: File; isProfilePicture?: boolean },
     { rejectWithValue }
   ) => {
     try {
@@ -43,6 +44,9 @@ export const uploadImage = createAsyncThunk(
       formData.append("userId", userId);
       formData.append("name", name);
       formData.append("file", file);
+      if (isProfilePicture !== undefined) {
+        formData.append("isProfilePicture", String(isProfilePicture));
+      }
 
       const response = await axios.post<Image>(
         `${BASE_URL}/api/images/upload`,
@@ -55,8 +59,10 @@ export const uploadImage = createAsyncThunk(
         }
       );
 
+      console.log("✅ Image uploadée:", response.data);
       return response.data;
     } catch (error: any) {
+      console.error("❌ Échec de uploadImage:", error.response?.data || error.message);
       return rejectWithValue(error.response?.data?.error || "Échec du téléversement de l'image.");
     }
   }
@@ -76,8 +82,10 @@ export const getUserImages = createAsyncThunk(
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
+      console.log("✅ Images utilisateur récupérées:", response.data);
       return response.data;
     } catch (error: any) {
+      console.error("❌ Échec de getUserImages:", error.response?.data || error.message);
       return rejectWithValue(error.response?.data?.error || "Échec de la récupération des images utilisateur.");
     }
   }
@@ -100,8 +108,10 @@ export const deleteImage = createAsyncThunk(
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
+      console.log("✅ Image supprimée:", { userId, name });
       return { userId, name };
     } catch (error: any) {
+      console.error("❌ Échec de deleteImage:", error.response?.data || error.message);
       return rejectWithValue(error.response?.data?.error || "Échec de la suppression de l'image.");
     }
   }
@@ -116,14 +126,113 @@ export const getAllImagesByUserId = createAsyncThunk(
         return rejectWithValue("Token non trouvé, veuillez vous reconnecter.");
       }
 
-      const response = await axios.get<Image[]>(
+      const response = await axios.get<any[]>(
         `${BASE_URL}/api/images/all/${userId}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      return { userId, images: response.data }; // Retourner l'userId avec les images pour les associer
+      console.log("✅ Toutes les images récupérées pour userId:", userId, response.data);
+      const normalizedImages = response.data.map((img) => ({
+        id: img._id ? String(img._id) : img.id || null,
+        userId: img.userId,
+        name: img.name,
+        path: img.path,
+        isNSFW: img.isNSFW || false,
+        isProfilePicture: img.isProfilePicture || false,
+        uploadedAt: img.uploadedAt || null,
+      }));
+      console.log("🔍 Images normalisées:", normalizedImages);
+      return { userId, images: normalizedImages };
     } catch (error: any) {
+      console.error("❌ Échec de getAllImagesByUserId:", error.response?.data || error.message);
       return rejectWithValue(error.response?.data?.error || "Échec de la récupération de toutes les images.");
+    }
+  }
+);
+
+export const getImagesByIds = createAsyncThunk(
+  "image/getImagesByIds",
+  async (imageIds: string[], { rejectWithValue }) => {
+    try {
+      const token = getAuthToken();
+      if (!token) {
+        return rejectWithValue("Token non trouvé, veuillez vous reconnecter.");
+      }
+
+      const response = await axios.get<Image[]>(
+        `${BASE_URL}/api/images/by-ids`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+          params: { imageIds: imageIds.join(","), filterProfile: true },
+        }
+      );
+
+      console.log("✅ Images récupérées par IDs:", response.data);
+      const normalizedImages = response.data.map((img) => ({
+        ...img,
+        id: img._id ? String(img._id) : img.id || null,
+      }));
+      return normalizedImages;
+    } catch (error: any) {
+      console.error("❌ Échec de getImagesByIds:", error.response?.data || error.message);
+      return rejectWithValue(error.response?.data?.error || "Échec de la récupération des images par IDs.");
+    }
+  }
+);
+
+export const getProfileImagesByUserId = createAsyncThunk(
+  "image/getProfileImagesByUserId",
+  async (userId: string, { rejectWithValue }) => {
+    try {
+      const token = getAuthToken();
+      if (!token) {
+        return rejectWithValue("Token non trouvé, veuillez vous reconnecter.");
+      }
+
+      const response = await axios.get<Image[]>(
+        `${BASE_URL}/api/images/profile/${userId}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      console.log("✅ Images de profil récupérées pour userId:", userId, response.data);
+      const normalizedImages = response.data.map((img) => ({
+        id: img._id ? String(img._id) : img.id || null,
+        userId: img.userId,
+        name: img.name,
+        path: img.path,
+        isNSFW: img.isNSFW || false,
+        isProfilePicture: img.isProfilePicture || true,
+        uploadedAt: img.uploadedAt || null,
+      }));
+      return normalizedImages;
+    } catch (error: any) {
+      console.error("❌ Échec de getProfileImagesByUserId:", error.response?.data || error.message);
+      return rejectWithValue(error.response?.data?.error || "Échec de la récupération des images de profil.");
+    }
+  }
+);
+
+export const setProfilePicture = createAsyncThunk(
+  "image/setProfilePicture",
+  async (imageId: string, { rejectWithValue }) => {
+    try {
+      const token = getAuthToken();
+      if (!token) {
+        return rejectWithValue("Token non trouvé, veuillez vous reconnecter.");
+      }
+
+      console.log("🔹 Définition de l'image comme photo de profil, imageId:", imageId);
+      const response = await axios.put<Image>(
+        `${BASE_URL}/api/images/set-profile-picture/${imageId}`,
+        null,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      console.log("✅ Photo de profil définie:", response.data);
+      return response.data;
+    } catch (error: any) {
+      console.error("❌ Échec de setProfilePicture:", error.response?.data || error.message);
+      return rejectWithValue(error.response?.data?.error || "Échec de la définition de la photo de profil.");
     }
   }
 );
@@ -152,7 +261,12 @@ const imageSlice = createSlice({
       })
       .addCase(uploadImage.fulfilled, (state, action: PayloadAction<Image>) => {
         state.status = "succeeded";
-        state.images.push(action.payload);
+        const index = state.images.findIndex((img) => img.id === action.payload.id);
+        if (index !== -1) {
+          state.images[index] = action.payload;
+        } else {
+          state.images.push(action.payload);
+        }
         state.message = "Image téléversée avec succès !";
       })
       .addCase(uploadImage.rejected, (state, action) => {
@@ -166,7 +280,16 @@ const imageSlice = createSlice({
       })
       .addCase(getUserImages.fulfilled, (state, action: PayloadAction<Image[]>) => {
         state.status = "succeeded";
-        state.images = action.payload;
+        // Fusionner les images au lieu de remplacer
+        action.payload.forEach((newImage) => {
+          const index = state.images.findIndex((img) => img.id === newImage.id);
+          if (index !== -1) {
+            state.images[index] = newImage;
+          } else {
+            state.images.push(newImage);
+          }
+        });
+        console.log("🔍 Nouvel état des images après getUserImages:", state.images);
       })
       .addCase(getUserImages.rejected, (state, action) => {
         state.status = "failed";
@@ -195,12 +318,82 @@ const imageSlice = createSlice({
       })
       .addCase(getAllImagesByUserId.fulfilled, (state, action: PayloadAction<{ userId: string; images: Image[] }>) => {
         state.status = "succeeded";
-        // Supprimer les anciennes images de cet utilisateur pour éviter les doublons
-        state.images = state.images.filter((img) => img.userId !== action.payload.userId);
-        // Ajouter les nouvelles images
-        state.images.push(...action.payload.images);
+        // Fusionner les nouvelles images avec les existantes
+        action.payload.images.forEach((newImage) => {
+          const index = state.images.findIndex((img) => img.id === newImage.id);
+          if (index !== -1) {
+            state.images[index] = newImage; // Mettre à jour si l'image existe
+          } else {
+            state.images.push(newImage); // Ajouter si nouvelle
+          }
+        });
+        console.log("🔍 Nouvel état des images après getAllImagesByUserId:", state.images);
       })
       .addCase(getAllImagesByUserId.rejected, (state, action) => {
+        state.status = "failed";
+        state.error = action.payload as string;
+      })
+      .addCase(getImagesByIds.pending, (state) => {
+        state.status = "loading";
+        state.error = null;
+        state.message = null;
+      })
+      .addCase(getImagesByIds.fulfilled, (state, action: PayloadAction<Image[]>) => {
+        state.status = "succeeded";
+        console.log("🔍 Images reçues dans le reducer:", action.payload);
+        action.payload.forEach((newImage) => {
+          const index = state.images.findIndex((img) => img.id === newImage.id);
+          if (index !== -1) {
+            state.images[index] = newImage;
+          } else {
+            state.images.push(newImage);
+          }
+        });
+        console.log("🔍 Nouvel état des images:", state.images);
+      })
+      .addCase(getImagesByIds.rejected, (state, action) => {
+        state.status = "failed";
+        state.error = action.payload as string;
+        console.log("❌ Erreur dans getImagesByIds:", state.error);
+      })
+      .addCase(getProfileImagesByUserId.pending, (state) => {
+        state.status = "loading";
+        state.error = null;
+        state.message = null;
+      })
+      .addCase(getProfileImagesByUserId.fulfilled, (state, action: PayloadAction<Image[]>) => {
+        state.status = "succeeded";
+        // Fusionner les images de profil
+        action.payload.forEach((newImage) => {
+          const index = state.images.findIndex((img) => img.id === newImage.id);
+          if (index !== -1) {
+            state.images[index] = newImage;
+          } else {
+            state.images.push(newImage);
+          }
+        });
+        console.log("🔍 Images de profil mises à jour dans le state:", state.images);
+      })
+      .addCase(getProfileImagesByUserId.rejected, (state, action) => {
+        state.status = "failed";
+        state.error = action.payload as string;
+        console.log("❌ Erreur dans getProfileImagesByUserId:", state.error);
+      })
+      .addCase(setProfilePicture.pending, (state) => {
+        state.status = "loading";
+        state.error = null;
+        state.message = null;
+      })
+      .addCase(setProfilePicture.fulfilled, (state, action: PayloadAction<Image>) => {
+        state.status = "succeeded";
+        state.images = state.images.map((img) =>
+          img.userId === action.payload.userId
+            ? { ...img, isProfilePicture: img.id === action.payload.id }
+            : img
+        );
+        state.message = "Photo de profil mise à jour avec succès !";
+      })
+      .addCase(setProfilePicture.rejected, (state, action) => {
         state.status = "failed";
         state.error = action.payload as string;
       });

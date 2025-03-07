@@ -15,6 +15,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.filter.CorsFilter;
 
 import java.util.List;
 
@@ -29,7 +30,7 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         System.out.println("🔹 Configuring SecurityFilterChain");
         http
-                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                .cors(cors -> cors.configurationSource(corsConfigurationSource())) // Appliquer CORS en premier
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
@@ -43,12 +44,13 @@ public class SecurityConfig {
                                 "/chat" // WebSocket endpoint
                         ).permitAll()
                         .requestMatchers("/api/portfolio/public/**").permitAll()
-                        .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
+                        .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll() // Autoriser OPTIONS
                         .requestMatchers("/api/users/*/like/*", "/api/users/*/unlike/*").authenticated()
                         .requestMatchers("/api/users/all").authenticated()
                         .requestMatchers("/api/users/**").authenticated()
                         .requestMatchers("/api/images/**").authenticated()
-                        .requestMatchers("/api/chat/**").authenticated() // Protège les endpoints de récupération d’historique
+                        .requestMatchers("/api/friends/**").authenticated() // Ajouté
+                        .requestMatchers("/api/chat/**").authenticated()
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -74,17 +76,22 @@ public class SecurityConfig {
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
-        System.out.println("Applying CORS configuration");
+        System.out.println("🔹 Applying CORS configuration");
         CorsConfiguration corsConfig = new CorsConfiguration();
-        corsConfig.setAllowedOrigins(List.of("http://localhost:5173"));
-        corsConfig.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        corsConfig.setAllowedHeaders(List.of("Authorization", "Content-Type", "Accept"));
+        corsConfig.setAllowedOrigins(List.of("http://localhost:5173")); // Origine spécifique
+        corsConfig.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS")); // Inclut OPTIONS
+        corsConfig.setAllowedHeaders(List.of("*")); // Autorise tous les en-têtes pour débogage
         corsConfig.setExposedHeaders(List.of("Authorization"));
-        corsConfig.setAllowCredentials(true);
+        corsConfig.setAllowCredentials(true); // Nécessaire pour les cookies/authentification
         corsConfig.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", corsConfig);
+        source.registerCorsConfiguration("/**", corsConfig); // Applique à toutes les routes
         return source;
+    }
+
+    @Bean
+    public CorsFilter corsFilter() {
+        return new CorsFilter(corsConfigurationSource());
     }
 }

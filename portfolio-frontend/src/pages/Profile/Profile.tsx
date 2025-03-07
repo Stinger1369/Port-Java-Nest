@@ -13,6 +13,7 @@ interface Image {
   name: string;
   path: string;
   isNSFW: boolean;
+  isProfilePicture: boolean; // Ajouté pour identifier la photo de profil
   uploadedAt: string | null;
 }
 
@@ -50,7 +51,9 @@ const Profile = () => {
 
   useEffect(() => {
     if (images.length > 0) {
-      const profileImg = images.find((img) => img.name === "profile-picture.jpg" && !img.isNSFW) ||
+      // Prioriser l'image avec isProfilePicture: true
+      const profileImg = images.find((img) => img.isProfilePicture) ||
+        // Sinon, prendre la plus récente comme repli
         images.reduce((latest, current) =>
           new Date(current.uploadedAt || "1970-01-01") > new Date(latest.uploadedAt || "1970-01-01") ? current : latest,
           images[0]
@@ -120,7 +123,7 @@ const Profile = () => {
               <div className="images-container">
                 {images.map((image) => (
                   <div
-                    key={image.name}
+                    key={image.id || image.name} // Clé unique
                     className="image-item"
                     onClick={() => handleImageClick(image)}
                   >
@@ -130,6 +133,9 @@ const Profile = () => {
                       className="user-image"
                     />
                     {image.isNSFW && <span className="nsfw-label">{t("profile.nsfw", "NSFW")}</span>}
+                    {image.isProfilePicture && (
+                      <span className="profile-label">{t("profile.currentProfile", "Profile Picture")}</span>
+                    )}
                   </div>
                 ))}
               </div>
