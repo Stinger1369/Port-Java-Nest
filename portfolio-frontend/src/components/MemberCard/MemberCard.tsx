@@ -1,10 +1,11 @@
+// src/components/MemberCard.tsx
 import React, { useState, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState, AppDispatch } from "../../redux/store";
 import { likeUser, unlikeUser, User } from "../../redux/features/userSlice";
 import { fetchPrivateMessages } from "../../redux/features/chatSlice";
 import { useNavigate } from "react-router-dom";
-import { useFriendActions } from "../../redux/features/friendActions";
+import { useFriendActions } from "../../hooks/useFriendActions";
 import "./MemberCard.css";
 
 interface MemberCardProps {
@@ -24,15 +25,16 @@ const MemberCard: React.FC<MemberCardProps> = ({ member, profileImage, onClick }
     handleSendFriendRequest,
     handleCancelFriendRequest,
     handleRemoveFriend,
+    handleAcceptFriendRequest,
+    handleRejectFriendRequest,
   } = useFriendActions();
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  console.log(`🔍 Rendu de MemberCard pour ${member.id}, profileImage: ${profileImage}`); // Log pour débogage
+  console.log(`🔍 Rendu de MemberCard pour ${member.id}, profileImage: ${profileImage}`);
 
   const isCurrentUser = currentUser?.id === member.id;
   const hasLiked = currentUser?.likedUserIds?.includes(member.id);
 
-  // Vérifier l'état de la relation avec le membre
   const isFriend = friends.some((friend) => friend.id === member.id);
   const hasSentRequest = sentRequests.some((request) => request.id === member.id);
   const hasReceivedRequest = receivedRequests.some((request) => request.id === member.id);
@@ -101,14 +103,32 @@ const MemberCard: React.FC<MemberCardProps> = ({ member, profileImage, onClick }
   const handleFriendAction = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (isFriend) {
-      handleRemoveFriend(member.id);
+      handleRemoveFriend(member.id, (errorMessage) => {
+        alert(errorMessage);
+      });
     } else if (hasSentRequest) {
-      handleCancelFriendRequest(member.id);
+      handleCancelFriendRequest(member.id, (errorMessage) => {
+        alert(errorMessage);
+      });
     } else {
       handleSendFriendRequest(member.id, (errorMessage) => {
-        alert(errorMessage || "Une erreur s'est produite.");
+        alert(errorMessage);
       });
     }
+  };
+
+  const handleAccept = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    handleAcceptFriendRequest(member.id, (errorMessage) => {
+      alert(errorMessage);
+    });
+  };
+
+  const handleReject = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    handleRejectFriendRequest(member.id, (errorMessage) => {
+      alert(errorMessage);
+    });
   };
 
   const getFriendButtonProps = () => {
@@ -116,12 +136,19 @@ const MemberCard: React.FC<MemberCardProps> = ({ member, profileImage, onClick }
       return {
         className: "friend-remove-button",
         icon: "fas fa-trash-alt",
+
       };
     } else if (hasSentRequest) {
       return {
         className: "friend-pending-button",
         icon: "fas fa-hourglass-half",
-        cancelIcon: "fas fa-times",
+
+      };
+    } else if (hasReceivedRequest) {
+      return {
+        className: "friend-received-button",
+        icon: "fas fa-user-check",
+
       };
     } else {
       return {
@@ -175,22 +202,25 @@ const MemberCard: React.FC<MemberCardProps> = ({ member, profileImage, onClick }
       </div>
       {!isCurrentUser && (
         <div className="like-container">
-          <button className="like-button" onClick={handleLikeToggle}>
+          <button className="like-button" onClick={handleLikeToggle} title={hasLiked ? "Retirer le like" : "Liker"}>
             <i className={hasLiked ? "fas fa-heart" : "far fa-heart"}></i>
           </button>
-          <button className="chat-button" onClick={handleChat}>
+          <button className="chat-button" onClick={handleChat} title="Chatter">
             <i className="fas fa-comment"></i>
           </button>
-          <div className="friend-action-container">
-            <button className={buttonProps.className} onClick={handleFriendAction}>
-              <i className={buttonProps.icon}></i>
-            </button>
-            {hasSentRequest && (
-              <button className="friend-cancel-button" onClick={handleFriendAction}>
+          <button className={buttonProps.className} onClick={handleFriendAction} title={buttonProps.title}>
+            <i className={buttonProps.icon}></i> {buttonProps.text}
+          </button>
+          {hasReceivedRequest && (
+            <>
+              <button className="accept-button" onClick={handleAccept} title="Accepter">
+                <i className="fas fa-check"></i>
+              </button>
+              <button className="reject-button" onClick={handleReject} title="Refuser">
                 <i className="fas fa-times"></i>
               </button>
-            )}
-          </div>
+            </>
+          )}
         </div>
       )}
 

@@ -1,9 +1,10 @@
+// src/App.tsx
 import { Suspense, useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState, AppDispatch } from "./redux/store";
 import { fetchAllUsers } from "./redux/features/userSlice";
-import { useWebSocket } from "./pages/Chat/useWebSocket"; // Ajout pour initialiser le WebSocket
+import { useWebSocket } from "./hooks/useWebSocket"; // Importer useWebSocket
 import Navbar from "./components/Navbar/Navbar";
 import Home from "./pages/Home/Home";
 import Login from "./pages/Profile/Login/Login";
@@ -26,7 +27,7 @@ import Languages from "./pages/Portfolio/Languages/Languages";
 import Recommendations from "./pages/Portfolio/Recommendations/Recommendations";
 import Interests from "./pages/Portfolio/Interests/Interests";
 import ContactScreen from "./pages/Portfolio/ContactPortfolio/ContactPortfolio";
-import Notifications from "./pages/UserMenuDropdown/Notification/Notifications"; // Peut être supprimé si tout est dans Navbar
+import Notifications from "./pages/UserMenuDropdown/Notification/Notifications";
 import OffersReceived from "./pages/UserMenuDropdown/OffersReceived/OffersReceived";
 import ContactHistory from "./pages/UserMenuDropdown/ContactHistory/ContactHistory";
 import MembersList from "./pages/UserMenuDropdown/MembersList/MembersList";
@@ -38,9 +39,10 @@ import "./App.css";
 const App = () => {
   const dispatch = useDispatch<AppDispatch>();
   const { token } = useSelector((state: RootState) => state.auth);
+  const { userId } = useSelector((state: RootState) => state.chat);
 
-  // Initialisation du WebSocket globalement
-  useWebSocket(token);
+  // Intégrer useWebSocket pour établir la connexion WebSocket
+  const { wsInstance } = useWebSocket(token);
 
   useEffect(() => {
     if (token) {
@@ -50,6 +52,14 @@ const App = () => {
       console.log("🔍 Aucun token trouvé, l'utilisateur n'est pas authentifié.");
     }
   }, [token, dispatch]);
+
+  useEffect(() => {
+    if (wsInstance) {
+      console.log("📡 WebSocket instance active pour userId:", userId);
+    } else {
+      console.log("🔴 WebSocket non connecté pour userId:", userId);
+    }
+  }, [wsInstance, userId]);
 
   return (
     <Router>
@@ -86,7 +96,7 @@ const App = () => {
               <Route path="/chat" element={<ErrorBoundary><ChatPage /></ErrorBoundary>} />
               <Route path="/chat/:type/:id" element={<ErrorBoundary><ChatPage /></ErrorBoundary>} />
               <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
-              {/* La route "/notifications" peut être supprimée si tout est intégré dans la Navbar */}
+              {/* <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} /> */}
             </Routes>
           </main>
         </Suspense>

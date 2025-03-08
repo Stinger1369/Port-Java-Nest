@@ -43,7 +43,7 @@ public class UserDTO {
     private Integer age;
     private String slug;
     private String bio;
-
+    private String profilePictureUrl;
     @JsonAlias({"latitude", "lat"})
     private String latitude;
 

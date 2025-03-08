@@ -11,7 +11,23 @@
     "settings": "Paramètres",
     "rencontre": "Rencontre",
     "offersReceived": "Offres reçues",
-    "messagesReceived": "Messages reçus"
+    "messagesReceived": "Messages reçus",
+    "notifications": "Notifications",
+    "clearNotifications": "Effacer les notifications",
+    "contactHistory": "Historique des contacts"
+  },
+  "notification": {
+    "noNotifications": "Aucune notification pour le moment",
+    "loading": "Chargement des notifications...",
+    "error": "Erreur lors du chargement des notifications",
+    "markAsRead": "Marquer comme lu",
+    "remove": "Supprimer",
+    "accept": "Accepter",
+    "reject": "Refuser",
+    "removeFriend": "Supprimer l'ami",
+    "clearAll": "Effacer tout",
+    "confirmClear": "Voulez-vous effacer toutes les notifications ?",
+    "confirmFriendRequest": "Voulez-vous accepter la demande d'ami de {{message}} ?"
   },
   "profile": {
     "title": "Mon Profil",

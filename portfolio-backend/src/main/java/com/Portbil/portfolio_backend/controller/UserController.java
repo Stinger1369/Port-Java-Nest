@@ -1,7 +1,6 @@
 package com.Portbil.portfolio_backend.controller;
 
 import com.Portbil.portfolio_backend.dto.UserCoordinatesDTO;
-import com.Portbil.portfolio_backend.dto.FriendRequestDTO;
 import com.Portbil.portfolio_backend.dto.UserDTO;
 import com.Portbil.portfolio_backend.entity.User;
 import com.Portbil.portfolio_backend.service.UserService;

@@ -1,3 +1,4 @@
+// src/components/Navbar.tsx
 import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
@@ -126,11 +127,9 @@ const Navbar = () => {
               onClose={() => setIsWeatherOpen(false)}
             />
             <NotificationDropdown
-              ref={notificationsRef}
               isOpen={isNotificationsOpen}
               onToggle={() => setIsNotificationsOpen(!isNotificationsOpen)}
               onClose={() => setIsNotificationsOpen(false)}
-              unreadCount={unreadCount} // Passer unreadCount comme prop
             />
             <button onClick={handleLogout} className="nav-item">
               <i className="fas fa-sign-out-alt"></i> {t("navbar.logout")}

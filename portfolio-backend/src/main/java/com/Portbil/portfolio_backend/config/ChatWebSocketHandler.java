@@ -2,8 +2,10 @@ package com.Portbil.portfolio_backend.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.Portbil.portfolio_backend.entity.Message;
+import com.Portbil.portfolio_backend.entity.Notification;
 import com.Portbil.portfolio_backend.entity.User;
 import com.Portbil.portfolio_backend.repository.MessageRepository;
+import com.Portbil.portfolio_backend.repository.NotificationRepository;
 import com.Portbil.portfolio_backend.repository.UserRepository;
 import com.Portbil.portfolio_backend.security.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,6 +35,9 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private NotificationRepository notificationRepository;
 
     private final Map<String, WebSocketSession> sessions = new ConcurrentHashMap<>();
     private final Map<String, String> groupInvitations = new ConcurrentHashMap<>();
@@ -100,40 +105,7 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
         }
     }
 
-    // Notifier une demande d'ami envoyée
-    public void notifyFriendRequestSent(String fromUserId, String toUserId, String requestId) throws IOException {
-        Map<String, String> notificationData = new HashMap<>();
-        notificationData.put("fromUserId", fromUserId);
-        notificationData.put("toUserId", toUserId);
-        notificationData.put("requestId", requestId);
-
-        // Notifier l’expéditeur
-        sendNotification(fromUserId, "friend_request_sent", "Demande d'ami envoyée à " + toUserId, notificationData);
-
-        // Notifier le destinataire
-        sendNotification(toUserId, "friend_request_received", "Nouvelle demande d'ami de " + fromUserId, notificationData);
-    }
-
-    // Envoyer une notification
-    public void sendNotification(String toUserId, String notificationType, String messageContent, Map<String, String> additionalData) throws IOException {
-        WebSocketSession session = sessions.get(toUserId);
-        if (session != null && session.isOpen()) {
-            Map<String, Object> notification = new HashMap<>();
-            notification.put("type", "notification");
-            notification.put("notificationType", notificationType);
-            notification.put("message", messageContent);
-            notification.put("timestamp", Instant.now().toString());
-            if (additionalData != null) {
-                notification.putAll(additionalData);
-            }
-            String notificationJson = objectMapper.writeValueAsString(notification);
-            session.sendMessage(new TextMessage(notificationJson));
-            System.out.println("📢 Notification envoyée à " + toUserId + ": " + notificationJson);
-        } else {
-            System.out.println("ℹ️ Utilisateur " + toUserId + " non connecté, notification non envoyée.");
-        }
-    }
-
+    // Dans sendPrivateMessage
     private void sendPrivateMessage(String fromUserId, String toUserId, String content, String receivedChatId, WebSocketSession fromSession) throws IOException {
         Optional<User> toUserOpt = userRepository.findById(toUserId);
         if (!toUserOpt.isPresent()) {
@@ -170,7 +142,8 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
             Map<String, String> notificationData = new HashMap<>();
             notificationData.put("chatId", chatId);
             notificationData.put("fromUserId", fromUserId);
-            sendNotification(toUserId, "new_message", "Nouveau message reçu de " + fromUserId, notificationData);
+            sendNotification(toUserId, "new_private_message", "Nouveau message privé de " + fromUserId, notificationData);
+            persistNotification(toUserId, "new_private_message", "Nouveau message privé de " + fromUserId, notificationData);
         } else {
             Map<String, String> sentMessageMap = new HashMap<>();
             sentMessageMap.put("type", "message_sent");
@@ -181,6 +154,67 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
             sentMessageMap.put("timestamp", msg.getTimestamp().toString());
             fromSession.sendMessage(new TextMessage(objectMapper.writeValueAsString(sentMessageMap)));
             System.out.println("📤 Message envoyé à " + toUserId + " (hors ligne), sauvegardé dans MongoDB avec chatId: " + chatId);
+
+            // Forcer l'envoi de la notification via WebSocket même si hors ligne (sera ignoré si pas connecté)
+            Map<String, String> notificationData = new HashMap<>();
+            notificationData.put("chatId", chatId);
+            notificationData.put("fromUserId", fromUserId);
+            sendNotification(toUserId, "new_private_message", "Nouveau message privé de " + fromUserId, notificationData);
+            persistNotification(toUserId, "new_private_message", "Nouveau message privé de " + fromUserId, notificationData);
+        }
+    }
+
+    // Dans sendGroupMessage (ajuster de manière similaire)
+    private void sendGroupMessage(String fromUserId, String groupId, String content) throws IOException {
+        addChatIdToUser(fromUserId, groupId);
+        for (Map.Entry<String, String> entry : groupMembers.entrySet()) {
+            if (entry.getValue().equals(groupId) && !entry.getKey().equals(fromUserId)) {
+                addChatIdToUser(entry.getKey(), groupId);
+            }
+        }
+
+        Message msg = Message.builder()
+                .type("group_message")
+                .fromUserId(fromUserId)
+                .groupId(groupId)
+                .chatId(groupId)
+                .content(content)
+                .timestamp(Instant.now())
+                .build();
+        messageRepository.save(msg);
+
+        Map<String, String> messageMap = new HashMap<>();
+        messageMap.put("id", msg.getId());
+        messageMap.put("type", "group_message");
+        messageMap.put("fromUserId", fromUserId);
+        messageMap.put("groupId", groupId);
+        messageMap.put("chatId", groupId);
+        messageMap.put("content", content);
+        messageMap.put("timestamp", msg.getTimestamp().toString());
+        String messageJson = objectMapper.writeValueAsString(messageMap);
+
+        for (Map.Entry<String, String> entry : groupMembers.entrySet()) {
+            if (entry.getValue().equals(groupId) && !entry.getKey().equals(fromUserId)) {
+                WebSocketSession memberSession = sessions.get(entry.getKey());
+                if (memberSession != null && memberSession.isOpen()) {
+                    memberSession.sendMessage(new TextMessage(messageJson));
+                    Map<String, String> notificationData = new HashMap<>();
+                    notificationData.put("groupId", groupId);
+                    notificationData.put("fromUserId", fromUserId);
+                    sendNotification(entry.getKey(), "new_group_message", "Nouveau message dans le groupe " + groupId + " de " + fromUserId, notificationData);
+                    persistNotification(entry.getKey(), "new_group_message", "Nouveau message dans le groupe " + groupId + " de " + fromUserId, notificationData);
+                } else {
+                    Map<String, String> notificationData = new HashMap<>();
+                    notificationData.put("groupId", groupId);
+                    notificationData.put("fromUserId", fromUserId);
+                    sendNotification(entry.getKey(), "new_group_message", "Nouveau message dans le groupe " + groupId + " de " + fromUserId, notificationData);
+                    persistNotification(entry.getKey(), "new_group_message", "Nouveau message dans le groupe " + groupId + " de " + fromUserId, notificationData);
+                }
+            }
+        }
+        WebSocketSession fromSession = sessions.get(fromUserId);
+        if (fromSession != null && fromSession.isOpen()) {
+            fromSession.sendMessage(new TextMessage(messageJson));
         }
     }
 
@@ -208,56 +242,59 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
             inviteSentMap.put("invitedUserId", invitedUserId);
             sessions.get(fromUserId).sendMessage(new TextMessage(objectMapper.writeValueAsString(inviteSentMap)));
             System.out.println("✅ Invitation envoyée à " + invitedUserId + " pour le groupe " + groupId);
+
+            // Notification pour l'invité
+            Map<String, String> notificationData = new HashMap<>();
+            notificationData.put("groupId", groupId);
+            notificationData.put("fromUserId", fromUserId);
+            sendNotification(invitedUserId, "group_invite", "Vous avez été invité au groupe " + groupId + " par " + fromUserId, notificationData);
+            persistNotification(invitedUserId, "group_invite", "Vous avez été invité au groupe " + groupId + " par " + fromUserId, notificationData);
         } else {
             sessions.get(fromUserId).sendMessage(new TextMessage("{\"error\":\"Utilisateur invité hors ligne\"}"));
+            // Persister la notification pour l'utilisateur hors ligne
+            Map<String, String> notificationData = new HashMap<>();
+            notificationData.put("groupId", groupId);
+            notificationData.put("fromUserId", fromUserId);
+            persistNotification(invitedUserId, "group_invite", "Vous avez été invité au groupe " + groupId + " par " + fromUserId, notificationData);
         }
     }
 
-    private void sendGroupMessage(String fromUserId, String groupId, String content) throws IOException {
-        addChatIdToUser(fromUserId, groupId);
-        for (Map.Entry<String, String> entry : groupMembers.entrySet()) {
-            if (entry.getValue().equals(groupId)) {
-                addChatIdToUser(entry.getKey(), groupId);
+    // Envoyer une notification
+    public void sendNotification(String toUserId, String notificationType, String messageContent, Map<String, String> additionalData) throws IOException {
+        WebSocketSession session = sessions.get(toUserId);
+        if (session != null && session.isOpen()) {
+            Map<String, Object> notification = new HashMap<>();
+            notification.put("type", "notification");
+            notification.put("notificationType", notificationType);
+            notification.put("message", messageContent);
+            notification.put("timestamp", Instant.now().toString());
+            if (additionalData != null) {
+                notification.putAll(additionalData);
             }
+            String notificationJson = objectMapper.writeValueAsString(notification);
+            session.sendMessage(new TextMessage(notificationJson));
+            System.out.println("📢 Notification envoyée à " + toUserId + ": " + notificationJson);
+        } else {
+            System.out.println("ℹ️ Utilisateur " + toUserId + " non connecté, notification non envoyée en temps réel.");
         }
+    }
 
-        Message msg = Message.builder()
-                .type("group_message")
-                .fromUserId(fromUserId)
-                .groupId(groupId)
-                .chatId(groupId)
-                .content(content)
-                .timestamp(Instant.now())
-                .build();
-        messageRepository.save(msg);
-
-        Map<String, String> messageMap = new HashMap<>();
-        messageMap.put("id", msg.getId());
-        messageMap.put("type", "group_message");
-        messageMap.put("fromUserId", fromUserId);
-        messageMap.put("groupId", groupId);
-        messageMap.put("chatId", groupId);
-        messageMap.put("content", content);
-        messageMap.put("timestamp", msg.getTimestamp().toString());
-        String messageJson = objectMapper.writeValueAsString(messageMap);
-
-        for (Map.Entry<String, String> entry : groupMembers.entrySet()) {
-            if (entry.getValue().equals(groupId)) {
-                WebSocketSession memberSession = sessions.get(entry.getKey());
-                if (memberSession != null && memberSession.isOpen()) {
-                    memberSession.sendMessage(new TextMessage(messageJson));
-                    if (!entry.getKey().equals(fromUserId)) {
-                        Map<String, String> notificationData = new HashMap<>();
-                        notificationData.put("groupId", groupId);
-                        notificationData.put("fromUserId", fromUserId);
-                        sendNotification(entry.getKey(), "new_group_message", "Nouveau message dans le groupe " + groupId + " de " + fromUserId, notificationData);
-                    }
-                }
-            }
-        }
-        WebSocketSession fromSession = sessions.get(fromUserId);
-        if (fromSession != null && fromSession.isOpen()) {
-            fromSession.sendMessage(new TextMessage(messageJson));
+    // Persister une notification dans MongoDB
+    private void persistNotification(String toUserId, String notificationType, String messageContent, Map<String, String> additionalData) {
+        try {
+            Notification notification = Notification.builder()
+                    .id(UUID.randomUUID().toString())
+                    .userId(toUserId)
+                    .type(notificationType)
+                    .message(messageContent)
+                    .timestamp(Instant.now())
+                    .isRead(false)
+                    .data(additionalData != null ? additionalData : new HashMap<>())
+                    .build();
+            notificationRepository.save(notification);
+            System.out.println("💾 Notification persistantée pour " + toUserId + ": " + notification.getMessage());
+        } catch (Exception e) {
+            System.err.println("❌ Erreur lors de la persistance de la notification pour " + toUserId + ": " + e.getMessage());
         }
     }
 

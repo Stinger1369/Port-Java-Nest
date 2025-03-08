@@ -3,17 +3,23 @@ package com.Portbil.portfolio_backend.service;
 import com.Portbil.portfolio_backend.config.ChatWebSocketHandler;
 import com.Portbil.portfolio_backend.dto.FriendRequestDTO;
 import com.Portbil.portfolio_backend.entity.FriendRequest;
+import com.Portbil.portfolio_backend.entity.Notification;
 import com.Portbil.portfolio_backend.entity.User;
 import com.Portbil.portfolio_backend.repository.FriendRequestRepository;
+import com.Portbil.portfolio_backend.repository.NotificationRepository;
 import com.Portbil.portfolio_backend.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -27,6 +33,9 @@ public class FriendRequestService {
 
     @Autowired
     private ChatWebSocketHandler chatWebSocketHandler;
+
+    @Autowired
+    private NotificationRepository notificationRepository;
 
     public FriendRequestDTO sendFriendRequest(String senderId, String receiverId) {
         if (senderId == null || senderId.isEmpty() || receiverId == null || receiverId.isEmpty()) {
@@ -45,67 +54,68 @@ public class FriendRequestService {
             throw new IllegalStateException("Une demande d'ami en attente existe déjà entre ces utilisateurs.");
         }
 
-        // Vérifier si les utilisateurs sont déjà amis via friendIds
         if (sender.getFriendIds().contains(receiverId) || receiver.getFriendIds().contains(senderId)) {
             throw new IllegalStateException("Ces utilisateurs sont déjà amis.");
         }
 
         FriendRequest friendRequest = FriendRequest.builder()
+                .id(UUID.randomUUID().toString()) // Générer un ID unique
                 .sender(sender)
                 .receiver(receiver)
                 .status("PENDING")
+                .createdAt(LocalDateTime.now())
+                .updatedAt(LocalDateTime.now())
                 .build();
 
         friendRequest = friendRequestRepository.save(friendRequest);
 
-        sender.getFriendRequests().add(friendRequest);
-        receiver.getFriendRequests().add(friendRequest);
+        sender.getFriendRequestSentIds().add(friendRequest.getId());
+        receiver.getFriendRequestReceivedIds().add(friendRequest.getId());
         userRepository.save(sender);
         userRepository.save(receiver);
 
-        // Envoyer une notification au destinataire via WebSocket
         try {
             Map<String, String> notificationData = new HashMap<>();
-            notificationData.put("requestId", friendRequest.getId());
+            String requestId = friendRequest.getId();
+            notificationData.put("requestId", requestId);
             notificationData.put("fromUserId", senderId);
-            chatWebSocketHandler.sendNotification(receiverId, "friend_request", "Nouvelle demande d’ami de " + senderId, notificationData);
+
+            String receiverMessage = "Nouvelle demande d'ami reçue de " + sender.getFirstName() + " " + sender.getLastName();
+            chatWebSocketHandler.sendNotification(receiverId, "friend_request_received", receiverMessage, notificationData);
+            persistNotification(receiverId, "friend_request_received", receiverMessage, notificationData);
+
+            String senderMessage = "Demande d'ami envoyée avec succès à " + receiver.getFirstName() + " " + receiver.getLastName();
+            chatWebSocketHandler.sendNotification(senderId, "friend_request_sent", senderMessage, notificationData);
+            persistNotification(senderId, "friend_request_sent", senderMessage, notificationData);
+
+            System.out.println("📢 Notifications envoyées et persistantées pour sendFriendRequest (sender: " + senderId + ", receiver: " + receiverId + ")");
         } catch (IOException e) {
-            System.err.println("❌ Erreur lors de l'envoi de la notification pour la demande d'ami : " + e.getMessage());
+            System.err.println("❌ Erreur lors de l'envoi des notifications pour sendFriendRequest : " + e.getMessage());
         }
 
         return mapToDTO(friendRequest);
     }
 
-    // Accepter une demande d'ami
     public FriendRequestDTO acceptFriendRequest(String requestId) {
-        System.out.println("🔍 Accepting friend request with ID: " + requestId);
         FriendRequest friendRequest = friendRequestRepository.findById(requestId)
-                .orElseThrow(() -> {
-                    System.out.println("❌ Friend request not found: " + requestId);
-                    return new IllegalArgumentException("Demande d'ami introuvable : " + requestId);
-                });
+                .orElseThrow(() -> new IllegalArgumentException("Demande d'ami introuvable : " + requestId));
 
         String currentUserId = SecurityContextHolder.getContext().getAuthentication().getName();
-        System.out.println("🔍 Current authenticated user: " + currentUserId + ", Receiver ID: " + friendRequest.getReceiver().getId());
         if (!friendRequest.getReceiver().getId().equals(currentUserId)) {
-            System.out.println("❌ User " + currentUserId + " is not authorized to accept this request");
             throw new SecurityException("Vous n'êtes pas autorisé à accepter cette demande d'ami.");
         }
 
         if (!friendRequest.getStatus().equals("PENDING")) {
-            System.out.println("❌ Friend request status is not PENDING: " + friendRequest.getStatus());
             throw new IllegalStateException("La demande d'ami n'est pas en attente. Statut actuel : " + friendRequest.getStatus());
         }
 
         friendRequest.setStatus("ACCEPTED");
-        System.out.println("✅ Updating friend request status to ACCEPTED");
+        friendRequest.setUpdatedAt(LocalDateTime.now());
         friendRequest = friendRequestRepository.save(friendRequest);
 
         User sender = friendRequest.getSender();
         User receiver = friendRequest.getReceiver();
-        System.out.println("🔍 Adding friendship: " + sender.getId() + " <-> " + receiver.getId());
 
-        // Ajouter les IDs aux listes friendIds
         if (!sender.getFriendIds().contains(receiver.getId())) {
             sender.getFriendIds().add(receiver.getId());
         }
@@ -113,34 +123,55 @@ public class FriendRequestService {
             receiver.getFriendIds().add(sender.getId());
         }
 
-        try {
-            userRepository.save(sender);
-            userRepository.save(receiver);
-            System.out.println("✅ Users updated with new friendship IDs");
-        } catch (Exception e) {
-            System.err.println("❌ Error saving users: " + e.getMessage());
-            throw new RuntimeException("Erreur lors de la mise à jour des utilisateurs : " + e.getMessage(), e);
-        }
+        sender.getFriendRequestSentIds().remove(friendRequest.getId());
+        receiver.getFriendRequestReceivedIds().remove(friendRequest.getId());
+
+        userRepository.save(sender);
+        userRepository.save(receiver);
 
         try {
             Map<String, String> notificationData = new HashMap<>();
-            notificationData.put("requestId", friendRequest.getId());
-            notificationData.put("fromUserId", receiver.getId());
-            chatWebSocketHandler.sendNotification(
-                    sender.getId(),
-                    "friend_request_accepted",
-                    "Votre demande d’ami a été acceptée par " + receiver.getId(),
-                    notificationData
-            );
-            System.out.println("✅ Notification sent to sender: " + sender.getId());
+            notificationData.put("requestId", requestId);
+
+            String senderMessage = "Votre demande d'ami a été acceptée par " + receiver.getFirstName() + " " + receiver.getLastName();
+            chatWebSocketHandler.sendNotification(sender.getId(), "friend_request_accepted", senderMessage, notificationData);
+            persistNotification(sender.getId(), "friend_request_accepted", senderMessage, notificationData);
+
+            String receiverMessage = "Vous avez accepté la demande d'ami de " + sender.getFirstName() + " " + sender.getLastName();
+            chatWebSocketHandler.sendNotification(receiver.getId(), "friend_request_accepted", receiverMessage, notificationData);
+            persistNotification(receiver.getId(), "friend_request_accepted", receiverMessage, notificationData);
+
+            System.out.println("📢 Notifications envoyées et persistantées pour acceptFriendRequest (requestId: " + requestId + ")");
         } catch (IOException e) {
-            System.err.println("❌ Erreur lors de l'envoi de la notification d'acceptation : " + e.getMessage());
+            System.err.println("❌ Erreur lors de l'envoi des notifications pour acceptFriendRequest : " + e.getMessage());
         }
 
         return mapToDTO(friendRequest);
     }
 
-    // Rejeter une demande d'ami
+    public void acceptFriendRequestByIds(String userId, String friendId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("Utilisateur introuvable : " + userId));
+        User friend = userRepository.findById(friendId)
+                .orElseThrow(() -> new IllegalArgumentException("Ami introuvable : " + friendId));
+
+        // Trouver la demande d'ami dans friendRequestReceivedIds de l'utilisateur
+        Optional<String> requestIdOpt = user.getFriendRequestReceivedIds().stream()
+                .filter(requestId -> {
+                    Optional<FriendRequest> requestOpt = friendRequestRepository.findById(requestId);
+                    return requestOpt.isPresent() &&
+                            requestOpt.get().getSender().getId().equals(friendId) &&
+                            requestOpt.get().getStatus().equals("PENDING");
+                })
+                .findFirst();
+
+        if (requestIdOpt.isEmpty()) {
+            throw new IllegalArgumentException("Demande d'ami non trouvée ou déjà traitée.");
+        }
+
+        acceptFriendRequest(requestIdOpt.get());
+    }
+
     public FriendRequestDTO rejectFriendRequest(String requestId) {
         FriendRequest friendRequest = friendRequestRepository.findById(requestId)
                 .orElseThrow(() -> new IllegalArgumentException("Demande d'ami introuvable : " + requestId));
@@ -155,12 +186,60 @@ public class FriendRequestService {
         }
 
         friendRequest.setStatus("REJECTED");
+        friendRequest.setUpdatedAt(LocalDateTime.now());
         friendRequest = friendRequestRepository.save(friendRequest);
+
+        User sender = friendRequest.getSender();
+        User receiver = friendRequest.getReceiver();
+
+        sender.getFriendRequestSentIds().remove(friendRequest.getId());
+        receiver.getFriendRequestReceivedIds().remove(friendRequest.getId());
+        userRepository.save(sender);
+        userRepository.save(receiver);
+
+        try {
+            Map<String, String> notificationData = new HashMap<>();
+            notificationData.put("requestId", requestId);
+
+            String senderMessage = "Votre demande d'ami a été refusée par " + receiver.getFirstName() + " " + receiver.getLastName();
+            chatWebSocketHandler.sendNotification(sender.getId(), "friend_request_rejected", senderMessage, notificationData);
+            persistNotification(sender.getId(), "friend_request_rejected", senderMessage, notificationData);
+
+            String receiverMessage = "Vous avez refusé la demande d'ami de " + sender.getFirstName() + " " + sender.getLastName();
+            chatWebSocketHandler.sendNotification(receiver.getId(), "friend_request_rejected", receiverMessage, notificationData);
+            persistNotification(receiver.getId(), "friend_request_rejected", receiverMessage, notificationData);
+
+            System.out.println("📢 Notifications envoyées et persistantées pour rejectFriendRequest (requestId: " + requestId + ")");
+        } catch (IOException e) {
+            System.err.println("❌ Erreur lors de l'envoi des notifications pour rejectFriendRequest : " + e.getMessage());
+        }
 
         return mapToDTO(friendRequest);
     }
 
-    // Annuler une demande d'ami
+    public void rejectFriendRequestByIds(String userId, String friendId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("Utilisateur introuvable : " + userId));
+        User friend = userRepository.findById(friendId)
+                .orElseThrow(() -> new IllegalArgumentException("Ami introuvable : " + friendId));
+
+        // Trouver la demande d'ami dans friendRequestReceivedIds de l'utilisateur
+        Optional<String> requestIdOpt = user.getFriendRequestReceivedIds().stream()
+                .filter(requestId -> {
+                    Optional<FriendRequest> requestOpt = friendRequestRepository.findById(requestId);
+                    return requestOpt.isPresent() &&
+                            requestOpt.get().getSender().getId().equals(friendId) &&
+                            requestOpt.get().getStatus().equals("PENDING");
+                })
+                .findFirst();
+
+        if (requestIdOpt.isEmpty()) {
+            throw new IllegalArgumentException("Demande d'ami non trouvée ou déjà traitée.");
+        }
+
+        rejectFriendRequest(requestIdOpt.get());
+    }
+
     public FriendRequestDTO cancelFriendRequest(String requestId) {
         FriendRequest friendRequest = friendRequestRepository.findById(requestId)
                 .orElseThrow(() -> new IllegalArgumentException("Demande d'ami introuvable : " + requestId));
@@ -175,12 +254,51 @@ public class FriendRequestService {
         }
 
         friendRequest.setStatus("CANCELED");
+        friendRequest.setUpdatedAt(LocalDateTime.now());
         friendRequest = friendRequestRepository.save(friendRequest);
+
+        User sender = friendRequest.getSender();
+        User receiver = friendRequest.getReceiver();
+
+        sender.getFriendRequestSentIds().remove(friendRequest.getId());
+        receiver.getFriendRequestReceivedIds().remove(friendRequest.getId());
+        userRepository.save(sender);
+        userRepository.save(receiver);
+
+        try {
+            Map<String, String> notificationData = new HashMap<>();
+            notificationData.put("requestId", requestId);
+
+            String senderMessage = "Vous avez annulé votre demande d'ami envers " + receiver.getFirstName() + " " + receiver.getLastName();
+            chatWebSocketHandler.sendNotification(sender.getId(), "friend_request_canceled", senderMessage, notificationData);
+            persistNotification(sender.getId(), "friend_request_canceled", senderMessage, notificationData);
+
+            String receiverMessage = sender.getFirstName() + " " + sender.getLastName() + " a annulé sa demande d’ami.";
+            chatWebSocketHandler.sendNotification(receiver.getId(), "friend_request_canceled", receiverMessage, notificationData);
+            persistNotification(receiver.getId(), "friend_request_canceled", receiverMessage, notificationData);
+
+            System.out.println("📢 Notifications envoyées et persistantées pour cancelFriendRequest (requestId: " + requestId + ")");
+        } catch (IOException e) {
+            System.err.println("❌ Erreur lors de l'envoi des notifications pour cancelFriendRequest : " + e.getMessage());
+        }
 
         return mapToDTO(friendRequest);
     }
 
-    // Supprimer un ami
+    public void cancelFriendRequestByIds(String senderId, String receiverId) {
+        User sender = userRepository.findById(senderId)
+                .orElseThrow(() -> new IllegalArgumentException("Utilisateur expéditeur introuvable : " + senderId));
+        User receiver = userRepository.findById(receiverId)
+                .orElseThrow(() -> new IllegalArgumentException("Utilisateur destinataire introuvable : " + receiverId));
+
+        Optional<FriendRequest> friendRequestOpt = friendRequestRepository.findBySenderAndReceiverAndStatus(sender, receiver, "PENDING");
+        if (friendRequestOpt.isEmpty()) {
+            throw new IllegalArgumentException("Demande d'ami non trouvée ou déjà traitée.");
+        }
+
+        cancelFriendRequest(friendRequestOpt.get().getId());
+    }
+
     public void removeFriend(String userId, String friendId) {
         if (userId == null || userId.isEmpty() || friendId == null || friendId.isEmpty()) {
             throw new IllegalArgumentException("Les identifiants des utilisateurs ne peuvent pas être nuls ou vides.");
@@ -191,7 +309,6 @@ public class FriendRequestService {
         User friend = userRepository.findById(friendId)
                 .orElseThrow(() -> new IllegalArgumentException("Ami introuvable : " + friendId));
 
-        // Vérifier si les utilisateurs sont amis via friendIds
         if (!user.getFriendIds().contains(friendId) || !friend.getFriendIds().contains(userId)) {
             throw new IllegalStateException("Ces utilisateurs ne sont pas amis.");
         }
@@ -200,25 +317,53 @@ public class FriendRequestService {
         friend.getFriendIds().remove(userId);
         userRepository.save(user);
         userRepository.save(friend);
+
+        try {
+            Map<String, String> notificationData = new HashMap<>();
+            notificationData.put("friendId", friendId);
+
+            String messageToUser = "Vous avez supprimé " + friend.getFirstName() + " " + friend.getLastName() + " de votre liste d'amis.";
+            chatWebSocketHandler.sendNotification(userId, "friendship_removed", messageToUser, notificationData);
+            persistNotification(userId, "friendship_removed", messageToUser, notificationData);
+
+            String messageToFriend = user.getFirstName() + " " + user.getLastName() + " vous a supprimé de sa liste d'amis.";
+            chatWebSocketHandler.sendNotification(friendId, "friendship_removed", messageToFriend, notificationData);
+            persistNotification(friendId, "friendship_removed", messageToFriend, notificationData);
+
+            System.out.println("📢 Notifications envoyées et persistantées pour removeFriend (userId: " + userId + ", friendId: " + friendId + ")");
+        } catch (IOException e) {
+            System.err.println("❌ Erreur lors de l'envoi des notifications pour removeFriend : " + e.getMessage());
+        }
     }
 
-    // Récupérer les demandes d'amis en attente reçues
-    public List<FriendRequestDTO> getPendingReceivedFriendRequests(String userId) {
+    public List<User> getFriends(String userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("Utilisateur introuvable : " + userId));
-        return friendRequestRepository.findByReceiverAndStatus(user, "PENDING")
-                .stream()
-                .map(this::mapToDTO)
+        return user.getFriendIds().stream()
+                .map(friendId -> userRepository.findById(friendId)
+                        .orElseThrow(() -> new IllegalArgumentException("Ami introuvable : " + friendId)))
                 .collect(Collectors.toList());
     }
 
-    // Récupérer les demandes d'amis envoyées
-    public List<FriendRequestDTO> getPendingSentFriendRequests(String userId) {
+    public List<User> getSentFriendRequests(String userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("Utilisateur introuvable : " + userId));
-        return friendRequestRepository.findBySenderAndStatus(user, "PENDING")
-                .stream()
-                .map(this::mapToDTO)
+        return user.getFriendRequestSentIds().stream()
+                .map(requestId -> friendRequestRepository.findById(requestId)
+                        .orElseThrow(() -> new IllegalArgumentException("Demande d'ami introuvable : " + requestId)))
+                .filter(request -> "PENDING".equals(request.getStatus()))
+                .map(FriendRequest::getReceiver)
+                .collect(Collectors.toList());
+    }
+
+    public List<User> getReceivedFriendRequests(String userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("Utilisateur introuvable : " + userId));
+        return user.getFriendRequestReceivedIds().stream()
+                .map(requestId -> friendRequestRepository.findById(requestId)
+                        .orElseThrow(() -> new IllegalArgumentException("Demande d'ami introuvable : " + requestId)))
+                .filter(request -> "PENDING".equals(request.getStatus()))
+                .map(FriendRequest::getSender)
                 .collect(Collectors.toList());
     }
 
@@ -227,9 +372,31 @@ public class FriendRequestService {
                 .id(friendRequest.getId())
                 .senderId(friendRequest.getSender().getId())
                 .receiverId(friendRequest.getReceiver().getId())
+                .firstName(friendRequest.getSender().getFirstName())
+                .lastName(friendRequest.getSender().getLastName())
+                .email(friendRequest.getSender().getEmail())
+                .profilePictureUrl(friendRequest.getSender().getProfilePictureUrl())
                 .status(friendRequest.getStatus())
                 .createdAt(friendRequest.getCreatedAt())
                 .updatedAt(friendRequest.getUpdatedAt())
                 .build();
+    }
+
+    private void persistNotification(String userId, String notificationType, String message, Map<String, String> data) {
+        try {
+            Notification notification = Notification.builder()
+                    .id(UUID.randomUUID().toString())
+                    .userId(userId)
+                    .type(notificationType)
+                    .message(message)
+                    .timestamp(Instant.now())
+                    .isRead(false)
+                    .data(data != null ? data : new HashMap<>())
+                    .build();
+            notificationRepository.save(notification);
+            System.out.println("💾 Notification persistantée pour " + userId + ": " + message);
+        } catch (Exception e) {
+            System.err.println("❌ Erreur lors de la persistance de la notification pour " + userId + ": " + e.getMessage());
+        }
     }
 }

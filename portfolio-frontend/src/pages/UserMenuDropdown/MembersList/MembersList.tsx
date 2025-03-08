@@ -1,11 +1,13 @@
-import React, { useEffect, useState, useMemo } from "react";
+// src/components/MembersList.tsx
+import React, { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState, AppDispatch } from "../../../redux/store";
 import { fetchAllUsers, User, fetchUserById } from "../../../redux/features/userSlice";
 import { getImagesByIds, getAllImagesByUserId, Image } from "../../../redux/features/imageSlice";
 import { useNavigate } from "react-router-dom";
 import MemberCard from "../../../components/MemberCard/MemberCard";
-import { useFriendActions } from "../../../redux/features/friendActions";
+import { useFriendActions } from "../../../hooks/useFriendActions";
+import { useNotificationActions } from "../../../hooks/useNotificationActions";
 import "./MembersList.css";
 
 const MembersList: React.FC = () => {
@@ -20,15 +22,13 @@ const MembersList: React.FC = () => {
     friends,
     sentRequests,
     receivedRequests,
-    handleAcceptFriendRequest,
-    handleRejectFriendRequest,
   } = useFriendActions();
+  const { loadNotifications } = useNotificationActions();
   const [selectedMember, setSelectedMember] = useState<User | null>(null);
   const [selectedMemberImages, setSelectedMemberImages] = useState<Image[]>([]);
   const [imagesLoaded, setImagesLoaded] = useState(false);
   const token = useSelector((state: RootState) => state.auth.token);
 
-  // Charger les données initiales au montage (une seule fois)
   useEffect(() => {
     if (!token) {
       console.log("🔴 Aucun token, redirection vers login");
@@ -36,7 +36,6 @@ const MembersList: React.FC = () => {
       return;
     }
 
-    // Charger les utilisateurs
     if (status === "idle") {
       console.log("🔍 Chargement initial des membres...");
       dispatch(fetchAllUsers())
@@ -49,15 +48,14 @@ const MembersList: React.FC = () => {
         });
     }
 
-    // Charger les données des amis et demandes une seule fois
     if (user?.id && status !== "loading") {
       loadFriends();
       loadSentFriendRequests();
       loadReceivedFriendRequests();
+      loadNotifications(user.id);
     }
-  }, [dispatch, status, token, navigate, user?.id]); // Simplifié les dépendances
+  }, [dispatch, status, token, navigate, user?.id]);
 
-  // Charger les images des membres
   useEffect(() => {
     if (members.length > 0 && !imagesLoaded && token) {
       const allImageIds = members
@@ -82,7 +80,6 @@ const MembersList: React.FC = () => {
     }
   }, [members, imagesLoaded, dispatch, token]);
 
-  // Logs pour débogage (limité aux changements d'état des images)
   useEffect(() => {
     console.log("🔍 Statut des images:", imageStatus, "Erreur:", imageError);
   }, [imageStatus, imageError]);
@@ -93,7 +90,6 @@ const MembersList: React.FC = () => {
     return profileImg?.path || null;
   };
 
-  // Mémoriser les images de profil pour éviter les recalculs
   const memberCards = useMemo(() => {
     return members.map((member) => (
       <MemberCard
@@ -103,7 +99,7 @@ const MembersList: React.FC = () => {
         onClick={() => openModal(member)}
       />
     ));
-  }, [members, images]); // Dépendances : members et images
+  }, [members, images]);
 
   const openModal = async (member: User) => {
     setSelectedMember(member);
@@ -176,38 +172,6 @@ const MembersList: React.FC = () => {
     <div className="members-list-container">
       <h1>Liste des membres</h1>
       <div className="members-grid">{memberCards}</div>
-
-      {/* Afficher les demandes d'amis reçues */}
-      <div className="friend-requests-section">
-        <h2>Demandes d'amis reçues</h2>
-        {receivedRequests.length === 0 ? (
-          <p>Aucune demande d'ami reçue.</p>
-        ) : (
-          <ul className="friend-requests-list">
-            {receivedRequests.map((request) => (
-              <li key={request.id} className="friend-request-item">
-                <span>
-                  {request.firstName} {request.lastName} ({request.email})
-                </span>
-                <div className="friend-request-actions">
-                  <button
-                    className="accept-button"
-                    onClick={() => handleAcceptFriendRequest(request.id)}
-                  >
-                    <i className="fas fa-check"></i> Accepter
-                  </button>
-                  <button
-                    className="reject-button"
-                    onClick={() => handleRejectFriendRequest(request.id)}
-                  >
-                    <i className="fas fa-times"></i> Refuser
-                  </button>
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
 
       {displayedMember && (
         <div className="modal-overlay">

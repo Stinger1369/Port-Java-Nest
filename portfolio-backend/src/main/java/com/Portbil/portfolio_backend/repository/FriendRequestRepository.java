@@ -6,6 +6,7 @@ import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface FriendRequestRepository extends MongoRepository<FriendRequest, String> {
@@ -18,4 +19,7 @@ public interface FriendRequestRepository extends MongoRepository<FriendRequest, 
 
     // Vérifier si une demande existe entre deux utilisateurs
     boolean existsBySenderAndReceiverAndStatus(User sender, User receiver, String status);
+
+    // Ajout de la méthode manquante pour trouver une demande spécifique
+    Optional<FriendRequest> findBySenderAndReceiverAndStatus(User sender, User receiver, String status);
 }

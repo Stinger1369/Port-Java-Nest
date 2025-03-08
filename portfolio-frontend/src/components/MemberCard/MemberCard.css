@@ -3,31 +3,31 @@
 /* Carte membre */
 .member-card {
   background-color: #ffffff;
-  border: 1px solid #e5e7eb;
+  border: 1px solid #e5e7eb; /* Bordure légère comme dans l'image */
   border-radius: 10px;
   overflow: hidden;
   cursor: pointer;
-  transition: transform 0.2s ease;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
   width: 100%;
-  max-width: 260px;
-  margin: 10px;
+  max-width: 260px; /* Largeur fixe correspondant à l'image */
+  margin: 10px auto; /* Centrage horizontal */
 }
 
 .member-card:hover {
   transform: translateY(-5px);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1); /* Ombre plus prononcée au survol */
 }
 
 /* En-tête de la carte */
 .member-header {
   padding: 15px;
-  background-color: #f3f4f6;
-  border-bottom: 1px solid #e5e7eb;
   text-align: center;
+  background-color: transparent; /* Suppression du fond gris */
 }
 
 .member-avatar {
-  width: 70px;
-  height: 70px;
+  width: 80px; /* Taille légèrement plus grande pour correspondre à l'image */
+  height: 80px;
   border-radius: 50%;
   overflow: hidden;
   margin: 0 auto 12px;
@@ -41,22 +41,22 @@
 }
 
 .member-avatar-placeholder {
-  width: 70px;
-  height: 70px;
+  width: 80px;
+  height: 80px;
   border-radius: 50%;
   background-color: #d1d5db;
   display: flex;
   align-items: center;
   justify-content: center;
   color: #ffffff;
-  font-size: 32px;
+  font-size: 40px; /* Ajustement de la taille de l'icône */
   margin: 0 auto 12px;
 }
 
 .member-header h3 {
-  font-size: 1.1rem;
+  font-size: 1.2rem;
   font-weight: 600;
-  color: #1e293b;
+  color: #1e3a8a; /* Bleu foncé comme dans l'image */
   margin: 0 0 6px;
 }
 
@@ -71,17 +71,19 @@
   padding: 12px 15px;
   font-size: 0.9rem;
   color: #374151;
+  text-align: center; /* Centrage du texte */
 }
 
 .member-details p {
   margin: 6px 0;
   display: flex;
   align-items: center;
+  justify-content: center; /* Centrage des éléments */
   gap: 6px;
 }
 
 .member-details i {
-  color: #10b981;
+  color: #10b981; /* Vert comme dans l'image */
   font-size: 0.9rem;
 }
 
@@ -98,7 +100,8 @@
 /* Conteneur des boutons */
 .like-container {
   display: flex;
-  justify-content: space-around;
+  justify-content: center; /* Centrage des boutons */
+  gap: 10px; /* Espacement uniforme */
   padding: 10px;
   border-top: 1px solid #e5e7eb;
 }
@@ -108,87 +111,119 @@
 .chat-button,
 .friend-request-button,
 .friend-pending-button,
-.friend-remove-button {
+.friend-remove-button,
+.friend-received-button,
+.accept-button,
+.reject-button {
   background: none;
   border: none;
   font-size: 1rem;
   cursor: pointer;
-  padding: 6px;
+  padding: 8px;
   display: flex;
   align-items: center;
-  gap: 6px;
-  border-radius: 0; /* Suppression des bordures arrondies */
+  justify-content: center;
+  border-radius: 50%; /* Boutons en cercle */
+  width: 40px; /* Taille fixe pour les cercles */
+  height: 40px;
+  transition: background-color 0.3s ease, transform 0.2s ease;
 }
 
 .like-button i,
 .chat-button i,
 .friend-request-button i,
 .friend-pending-button i,
-.friend-remove-button i {
-  color: #9ca3af; /* Couleur par défaut */
-}
-
-.like-button i.fas {
-  color: #ef4444; /* Coeur plein en rouge */
-}
-
-.chat-button i {
-  color: #3b82f6; /* Bleu pour chat */
-}
-
-.friend-request-button i {
-  color: #4caf50; /* Vert pour ajouter ami */
-}
-
-.friend-request-button:hover i {
-  color: #45a049; /* Vert plus foncé au survol */
-}
-
-.friend-pending-button i {
-  color: #888; /* Gris pour en attente */
-}
-
-.friend-pending-button:hover i {
-  color: #7a7a7a; /* Gris plus foncé au survol */
-}
-
-.friend-cancel-button {
-  background: none;
-  border: none;
+.friend-remove-button i,
+.friend-received-button i,
+.accept-button i,
+.reject-button i {
   font-size: 1rem;
-  cursor: pointer;
-  padding: 6px;
-  color: #ff9800; /* Orange pour annuler */
 }
 
-.friend-cancel-button:hover i {
-  color: #e68a00; /* Orange plus foncé au survol */
+.like-button {
+  background-color: #f43f5e; /* Rouge comme dans l'image */
+  color: #ffffff;
 }
 
-.friend-remove-button i {
-  color: #f44336; /* Rouge pour supprimer */
+.like-button:hover {
+  background-color: #e11d48;
+  transform: scale(1.1);
 }
 
-.friend-remove-button:hover i {
-  color: #da190b; /* Rouge plus foncé au survol */
+.chat-button {
+  background-color: #3b82f6; /* Bleu comme dans l'image */
+  color: #ffffff;
 }
 
-/* Conteneur pour aligner les boutons "En attente" et "Annuler" */
+.chat-button:hover {
+  background-color: #2563eb;
+  transform: scale(1.1);
+}
+
+.friend-request-button {
+  background-color: #4caf50; /* Vert pour ajouter ami */
+  color: #ffffff;
+}
+
+.friend-request-button:hover {
+  background-color: #45a049;
+  transform: scale(1.1);
+}
+
+.friend-pending-button {
+  background-color: #f59e0b; /* Jaune pour en attente */
+  color: #ffffff;
+}
+
+.friend-pending-button:hover {
+  background-color: #d97706;
+  transform: scale(1.1);
+}
+
+.friend-remove-button {
+  background-color: #f44336; /* Rouge pour supprimer */
+  color: #ffffff;
+}
+
+.friend-remove-button:hover {
+  background-color: #da190b;
+  transform: scale(1.1);
+}
+
+.friend-received-button {
+  background-color: #000000; /* Noir comme dans l'image */
+  color: #ffffff;
+}
+
+.friend-received-button:hover {
+  background-color: #333333;
+  transform: scale(1.1);
+}
+
+.accept-button {
+  background-color: #10b981; /* Vert comme dans l'image */
+  color: #ffffff;
+}
+
+.accept-button:hover {
+  background-color: #059669;
+  transform: scale(1.1);
+}
+
+.reject-button {
+  background-color: #ef4444; /* Rouge comme dans l'image */
+  color: #ffffff;
+}
+
+.reject-button:hover {
+  background-color: #dc2626;
+  transform: scale(1.1);
+}
+
+/* Suppression des styles inutiles pour friend-cancel-button et friend-action-container */
+.friend-cancel-button,
 .friend-action-container {
-  display: flex;
-  align-items: center;
-}
-
-/* Suppression des effets hover sur les boutons eux-mêmes */
-.like-button:hover,
-.chat-button:hover,
-.friend-request-button:hover,
-.friend-pending-button:hover,
-.friend-remove-button:hover,
-.friend-cancel-button:hover {
-  background: none; /* Pas de fond */
-  transform: none; /* Pas de transformation */
-  box-shadow: none; /* Pas d'ombre */
+  display: none; /* Ces éléments ne sont plus utilisés */
 }
 
 /* Modal pour profil incomplet */
@@ -230,7 +265,7 @@
 
 .modal-actions {
   display: flex;
-  flex-direction: column;
+  justify-content: center; /* Centrage horizontal */
   gap: 10px;
 }
 
@@ -241,7 +276,7 @@
   border-radius: 6px;
   font-size: 1rem;
   cursor: pointer;
-  transition: background-color 0.3s ease;
+  transition: background-color 0.3s ease, transform 0.2s ease;
   font-weight: 600;
 }
 
@@ -252,6 +287,7 @@
 
 .complete-profile-btn:hover {
   background-color: #2563eb;
+  transform: scale(1.05);
 }
 
 .close-modal-btn {
@@ -261,13 +297,14 @@
 
 .close-modal-btn:hover {
   background-color: #d1d5db;
+  transform: scale(1.05);
 }
 
 /* Responsive */
 @media (max-width: 768px) {
   .member-card {
     max-width: 230px;
-    margin: 8px;
+    margin: 8px auto;
   }
 
   .member-header {
@@ -275,18 +312,18 @@
   }
 
   .member-avatar {
-    width: 60px;
-    height: 60px;
+    width: 70px;
+    height: 70px;
   }
 
   .member-avatar-placeholder {
-    width: 60px;
-    height: 60px;
-    font-size: 28px;
+    width: 70px;
+    height: 70px;
+    font-size: 36px;
   }
 
   .member-header h3 {
-    font-size: 1rem;
+    font-size: 1.1rem;
   }
 
   .email {
@@ -300,26 +337,27 @@
 
   .like-container {
     padding: 8px;
+    gap: 8px;
   }
 
   .like-button,
   .chat-button,
   .friend-request-button,
   .friend-pending-button,
-  .friend-remove-button {
-    padding: 4px;
+  .friend-remove-button,
+  .friend-received-button,
+  .accept-button,
+  .reject-button {
+    width: 35px;
+    height: 35px;
     font-size: 0.9rem;
-  }
-
-  .friend-cancel-button {
-    padding: 4px;
   }
 }
 
 @media (max-width: 480px) {
   .member-card {
     max-width: 100%;
-    margin: 6px 0;
+    margin: 6px auto;
   }
 
   .member-header {
@@ -327,18 +365,18 @@
   }
 
   .member-avatar {
-    width: 50px;
-    height: 50px;
+    width: 60px;
+    height: 60px;
   }
 
   .member-avatar-placeholder {
-    width: 50px;
-    height: 50px;
-    font-size: 24px;
+    width: 60px;
+    height: 60px;
+    font-size: 32px;
   }
 
   .member-header h3 {
-    font-size: 0.9rem;
+    font-size: 1rem;
   }
 
   .email {
@@ -352,18 +390,19 @@
 
   .like-container {
     padding: 6px;
+    gap: 6px;
   }
 
   .like-button,
   .chat-button,
   .friend-request-button,
   .friend-pending-button,
-  .friend-remove-button {
-    padding: 3px;
+  .friend-remove-button,
+  .friend-received-button,
+  .accept-button,
+  .reject-button {
+    width: 30px;
+    height: 30px;
     font-size: 0.8rem;
-  }
-
-  .friend-cancel-button {
-    padding: 3px;
   }
 }

@@ -1,133 +1,332 @@
+/* NotificationDropdown.css */
+
+/* Conteneur principal des notifications */
 .navbar-notifications {
   position: relative;
+  display: inline-block;
 }
 
+/* Bouton de la cloche */
 .nav-item {
-  color: white;
-  text-decoration: none;
-  font-size: 1.1rem;
-  display: flex;
-  align-items: center;
-  padding: 0.5rem 1rem;
-  border-radius: 5px;
-  transition: background 0.3s ease, color 0.3s ease;
   background: none;
   border: none;
   cursor: pointer;
+  font-size: 1.4rem;
+  color: #1e40af;
+  padding: 0.5rem;
+  display: flex;
+  align-items: center;
+  transition: color 0.3s ease;
 }
 
 .nav-item:hover {
-  background-color: rgba(255, 255, 255, 0.1);
+  color: #3b82f6;
 }
 
 .nav-item.has-unread {
-  color: #ff9800; /* Couleur orange pour notifications non lues */
+  color: #10b981;
 }
 
 .nav-item i {
-  margin-right: 0.5rem;
+  margin-right: 0.25rem;
 }
 
-/* Ajustements pour l'arabe (RTL) */
-.arabic .nav-item {
-  flex-direction: row-reverse;
-}
-
-.arabic .nav-item i {
-  margin-right: 0;
-  margin-left: 0.5rem;
-}
-
+/* Compteur de notifications */
 .notification-count {
   position: absolute;
-  top: -5px;
-  right: -5px;
-  background-color: #ff4d4f;
-  color: white;
+  top: -8px;
+  right: -8px;
+  background-color: #dc2626;
+  color: #ffffff;
   border-radius: 50%;
-  width: 18px;
-  height: 18px;
+  width: 22px;
+  height: 22px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.8rem;
-  font-weight: bold;
+  font-size: 0.9rem;
+  font-weight: 600;
+  animation: pulse 1.5s infinite;
 }
 
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+
+/* Menu déroulant */
 .dropdown-menu {
   display: none;
   position: absolute;
   top: 100%;
   right: 0;
   background-color: #ffffff;
-  border-radius: 5px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-  width: 250px;
+  border-radius: 12px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  width: 420px;
+  max-height: 450px;
+  overflow-y: auto;
   z-index: 1000;
-}
-
-/* Ajustements pour l'arabe (RTL) */
-.arabic .dropdown-menu {
-  right: auto;
-  left: 0;
+  animation: slideDown 0.3s ease-out;
 }
 
 .dropdown-menu.active {
   display: block;
 }
 
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Item de notification */
 .dropdown-item {
-  padding: 0.75rem 1rem;
-  font-size: 0.9rem;
-  color: #333;
+  padding: 0.75rem 1rem; /* Réduction du padding pour une apparence plus compacte */
+  font-size: 0.95rem;
+  color: #1e293b;
   cursor: pointer;
   display: flex;
   align-items: center;
-  transition: background 0.2s ease;
+  gap: 0.75rem;
+  transition: background-color 0.3s ease;
 }
 
-.dropdown-item i {
-  margin-right: 0.75rem;
-  color: #1e2a44;
-}
-
-/* Ajustements pour l'arabe (RTL) */
-.arabic .dropdown-item {
-  flex-direction: row-reverse;
-  text-align: right;
+.dropdown-item.unread {
+  background-color: #f1f5f9;
+  font-weight: 600;
 }
 
 .dropdown-item:hover {
-  background-color: #e6f0ff;
+  background-color: #e0f2fe;
 }
 
-.no-notifications {
-  font-style: italic;
-  color: #999;
-  text-align: center;
+/* Regroupement des icônes à gauche */
+.icon-group {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem; /* Espacement réduit entre les icônes */
+}
+
+.icon-group i {
+  font-size: 1.4rem; /* Taille augmentée pour une meilleure visibilité */
+  color: #3b82f6;
+  background: none;
+}
+
+/* Contenu de la notification */
+.notification-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
 }
 
 .notification-message {
-  flex: 1;
+  font-weight: 500;
+  color: #1e293b;
+  word-break: break-word;
+  white-space: normal; /* Permet le retour à la ligne si nécessaire */
 }
 
-.clear-button {
-  border-top: 1px solid #eee;
-  color: #ff4d4f;
-  font-weight: 500;
+.notification-time {
+  font-size: 0.85rem;
+  color: #6b7280;
+  margin-top: 2px; /* Espacement réduit */
+}
+
+/* Conteneur des boutons d'action à droite */
+.action-buttons {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.notification-divider {
+  border-top: 1px solid #e5e7eb;
+  margin: 0 1rem;
+}
+
+/* Bouton "Supprimer l'ami" */
+.remove-friend-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.2rem;
+  padding: 0.25rem;
+  color: #dc2626;
+  transition: color 0.3s ease, transform 0.2s ease;
+}
+
+.remove-friend-button:hover {
+  color: #b91c1c;
+  transform: scale(1.2);
+}
+
+/* Message "Aucune notification" */
+.no-notifications {
+  padding: 2rem;
+  font-style: italic;
+  color: #9ca3af;
   text-align: center;
-  margin-top: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+}
+
+.no-notifications i {
+  font-size: 1.5rem;
+  color: #9ca3af;
+}
+
+/* Boutons d'action */
+.mark-read-button,
+.remove-button,
+.accept-button,
+.reject-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.2rem;
+  padding: 0.25rem;
+  transition: color 0.3s ease, transform 0.2s ease;
+}
+
+.mark-read-button:hover,
+.remove-button:hover,
+.accept-button:hover,
+.reject-button:hover {
+  transform: scale(1.2);
+}
+
+.mark-read-button {
+  color: #3b82f6; /* Bleu comme dans l'image */
+}
+
+.mark-read-button:hover {
+  color: #2563eb;
+}
+
+.remove-button {
+  color: #9ca3af; /* Gris comme dans l'image */
+}
+
+.remove-button:hover {
+  color: #6b7280;
+}
+
+.accept-button {
+  color: #10b981;
+}
+
+.accept-button:hover {
+  color: #059669;
+}
+
+.reject-button {
+  color: #dc2626;
+}
+
+.reject-button:hover {
+  color: #b91c1c;
+}
+
+.notification-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+/* Bouton de suppression totale */
+.clear-button {
+  border-top: 1px solid #e5e7eb;
+  color: #dc2626;
+  font-weight: 600;
+  text-align: center;
+  padding: 1rem;
+  width: 100%;
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: color 0.3s ease, background-color 0.3s ease;
 }
 
 .clear-button:hover {
-  background-color: #ffe6e6;
+  color: #b91c1c;
+  background-color: #fee2e2;
+}
+
+/* Messages de chargement et d'erreur */
+.notification-loading,
+.notification-error {
+  padding: 2rem;
+  text-align: center;
+  color: #6b7280;
+  font-size: 1rem;
+}
+
+.notification-error {
+  color: #dc2626;
 }
 
 /* Responsivité */
 @media (max-width: 768px) {
   .dropdown-menu {
-    position: static;
-    width: 100%;
-    box-shadow: none;
+    position: fixed;
+    top: 60px;
+    right: 10px;
+    width: 380px;
+    max-height: 400px;
+  }
+
+  .nav-item {
+    font-size: 1.3rem;
+  }
+
+  .notification-count {
+    width: 20px;
+    height: 20px;
+    font-size: 0.8rem;
+  }
+
+  .dropdown-item {
+    font-size: 0.9rem;
+    padding: 0.75rem 1rem;
+    gap: 0.75rem;
+  }
+
+  .icon-group i {
+    font-size: 1.3rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .dropdown-menu {
+    width: 300px;
+    right: 5px;
+    max-height: 350px;
+  }
+
+  .nav-item {
+    font-size: 1.2rem;
+  }
+
+  .notification-count {
+    width: 18px;
+    height: 18px;
+    font-size: 0.7rem;
+  }
+
+  .dropdown-item {
+    font-size: 0.85rem;
+    padding: 0.5rem 0.75rem;
+    gap: 0.5rem;
+  }
+
+  .icon-group i {
+    font-size: 1.2rem;
+  }
+
+  .notification-actions {
+    gap: 0.5rem;
   }
 }

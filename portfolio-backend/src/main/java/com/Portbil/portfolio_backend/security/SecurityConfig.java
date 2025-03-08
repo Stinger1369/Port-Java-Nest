@@ -49,8 +49,9 @@ public class SecurityConfig {
                         .requestMatchers("/api/users/all").authenticated()
                         .requestMatchers("/api/users/**").authenticated()
                         .requestMatchers("/api/images/**").authenticated()
-                        .requestMatchers("/api/friends/**").authenticated() // Ajouté
+                        .requestMatchers("/api/friends/**").authenticated()
                         .requestMatchers("/api/chat/**").authenticated()
+                        .requestMatchers("/api/notifications/**").authenticated() // Ajout explicite
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

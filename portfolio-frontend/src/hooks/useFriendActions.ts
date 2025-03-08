@@ -1,5 +1,6 @@
+// src/hooks/useFriendActions.ts
 import { useDispatch, useSelector } from "react-redux";
-import { AppDispatch, RootState } from "../../store";
+import { AppDispatch, RootState } from "../redux/store";
 import {
   sendFriendRequest,
   acceptFriendRequest,
@@ -9,9 +10,8 @@ import {
   fetchFriends,
   fetchSentFriendRequests,
   fetchReceivedFriendRequests,
-} from "./friendSlice";
+} from "../redux/features/friendSlice";
 
-// Hook personnalisé pour gérer toutes les actions liées aux amis
 export const useFriendActions = () => {
   const dispatch = useDispatch<AppDispatch>();
   const { user } = useSelector((state: RootState) => state.user);
@@ -19,7 +19,6 @@ export const useFriendActions = () => {
     (state: RootState) => state.friend
   );
 
-  // Charger la liste des amis
   const loadFriends = () => {
     if (user?.id && status !== "loading" && friends.length === 0) {
       dispatch(fetchFriends(user.id))
@@ -28,7 +27,6 @@ export const useFriendActions = () => {
     }
   };
 
-  // Charger les demandes d'amis envoyées
   const loadSentFriendRequests = () => {
     if (user?.id && status !== "loading" && sentRequests.length === 0) {
       dispatch(fetchSentFriendRequests(user.id))
@@ -39,7 +37,6 @@ export const useFriendActions = () => {
     }
   };
 
-  // Charger les demandes d'amis reçues (avec flag pour éviter les appels multiples)
   const loadReceivedFriendRequests = () => {
     if (user?.id && status !== "loading" && receivedRequests.length === 0 && !loadReceivedFriendRequests.called) {
       loadReceivedFriendRequests.called = true;
@@ -54,24 +51,22 @@ export const useFriendActions = () => {
     }
   };
 
-  // Initialiser le flag statique
   if (typeof loadReceivedFriendRequests.called === "undefined") {
     loadReceivedFriendRequests.called = false;
   }
 
-  // Envoyer une demande d'ami avec gestion d'erreur utilisateur
   const handleSendFriendRequest = (receiverId: string, onError?: (message: string) => void) => {
     if (user?.id) {
       dispatch(sendFriendRequest({ senderId: user.id, receiverId }))
         .unwrap()
         .then(() => {
           console.log("✅ Demande d'ami envoyée avec succès !");
-          loadSentFriendRequests(); // Rafraîchir les demandes envoyées
+          loadSentFriendRequests();
         })
         .catch((err) => {
           console.error("❌ Erreur lors de l'envoi de la demande d'ami:", err);
-          if (onError && typeof err === "object" && "error" in err) {
-            onError(err.error || "Une erreur s'est produite.");
+          if (onError && typeof err === "string") {
+            onError(err);
           } else if (onError) {
             onError("Une erreur s'est produite lors de l'envoi de la demande.");
           }
@@ -79,56 +74,80 @@ export const useFriendActions = () => {
     }
   };
 
-  // Accepter une demande d'ami
-  const handleAcceptFriendRequest = (friendId: string) => {
+  const handleAcceptFriendRequest = (friendId: string, onError?: (message: string) => void) => {
     if (user?.id) {
       dispatch(acceptFriendRequest({ userId: user.id, friendId }))
         .unwrap()
         .then(() => {
           console.log("✅ Demande d'ami acceptée avec succès !");
-          loadFriends(); // Rafraîchir les amis
-          loadReceivedFriendRequests(); // Rafraîchir les demandes reçues
+          loadFriends();
+          loadReceivedFriendRequests();
         })
-        .catch((err) => console.error("❌ Erreur lors de l'acceptation de la demande d'ami:", err));
+        .catch((err) => {
+          console.error("❌ Erreur lors de l'acceptation de la demande d'ami:", err);
+          if (onError && typeof err === "string") {
+            onError(err);
+          } else if (onError) {
+            onError("Une erreur s'est produite lors de l'acceptation de la demande.");
+          }
+        });
     }
   };
 
-  // Refuser une demande d'ami
-  const handleRejectFriendRequest = (friendId: string) => {
+  const handleRejectFriendRequest = (friendId: string, onError?: (message: string) => void) => {
     if (user?.id) {
       dispatch(rejectFriendRequest({ userId: user.id, friendId }))
         .unwrap()
         .then(() => {
           console.log("✅ Demande d'ami refusée avec succès !");
-          loadReceivedFriendRequests(); // Rafraîchir les demandes reçues
+          loadReceivedFriendRequests();
         })
-        .catch((err) => console.error("❌ Erreur lors du refus de la demande d'ami:", err));
+        .catch((err) => {
+          console.error("❌ Erreur lors du refus de la demande d'ami:", err);
+          if (onError && typeof err === "string") {
+            onError(err);
+          } else if (onError) {
+            onError("Une erreur s'est produite lors du refus de la demande.");
+          }
+        });
     }
   };
 
-  // Supprimer un ami
-  const handleRemoveFriend = (friendId: string) => {
+  const handleRemoveFriend = (friendId: string, onError?: (message: string) => void) => {
     if (user?.id) {
       dispatch(removeFriend({ userId: user.id, friendId }))
         .unwrap()
         .then(() => {
           console.log("✅ Ami supprimé avec succès !");
-          loadFriends(); // Rafraîchir la liste des amis
+          loadFriends();
         })
-        .catch((err) => console.error("❌ Erreur lors de la suppression de l'ami:", err));
+        .catch((err) => {
+          console.error("❌ Erreur lors de la suppression de l'ami:", err);
+          if (onError && typeof err === "string") {
+            onError(err);
+          } else if (onError) {
+            onError("Une erreur s'est produite lors de la suppression de l'ami.");
+          }
+        });
     }
   };
 
-  // Annuler une demande d'ami envoyée
-  const handleCancelFriendRequest = (receiverId: string) => {
+  const handleCancelFriendRequest = (receiverId: string, onError?: (message: string) => void) => {
     if (user?.id) {
       dispatch(cancelFriendRequest({ senderId: user.id, receiverId }))
         .unwrap()
         .then(() => {
           console.log("✅ Demande d'ami annulée avec succès !");
-          loadSentFriendRequests(); // Rafraîchir les demandes envoyées
+          loadSentFriendRequests();
         })
-        .catch((err) => console.error("❌ Erreur lors de l'annulation de la demande d'ami:", err));
+        .catch((err) => {
+          console.error("❌ Erreur lors de l'annulation de la demande d'ami:", err);
+          if (onError && typeof err === "string") {
+            onError(err);
+          } else if (onError) {
+            onError("Une erreur s'est produite lors de l'annulation de la demande.");
+          }
+        });
     }
   };
 

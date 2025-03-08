@@ -30,7 +30,7 @@
 │   │   │               │   ├── ContactController.java
 │   │   │               │   ├── EducationController.java
 │   │   │               │   ├── ExperienceController.java
-│   │   │               │   ├── FriendRequestController.java
+│   │   │               │   ├── FriendController.java
 │   │   │               │   ├── GoogleMapsController.java
 │   │   │               │   ├── ImageController.java
 │   │   │               │   ├── InterestController.java
@@ -71,6 +71,7 @@
 │   │   │               │   ├── Interest.java
 │   │   │               │   ├── Language.java
 │   │   │               │   ├── Message.java
+│   │   │               │   ├── Notification.java
 │   │   │               │   ├── Portfolio.java
 │   │   │               │   ├── PortfolioCard.java
 │   │   │               │   ├── Project.java
@@ -94,6 +95,7 @@
 │   │   │               │   ├── InterestRepository.java
 │   │   │               │   ├── LanguageRepository.java
 │   │   │               │   ├── MessageRepository.java
+│   │   │               │   ├── NotificationRepository.java
 │   │   │               │   ├── PortfolioRepository.java
 │   │   │               │   ├── ProjectRepository.java
 │   │   │               │   ├── RecommendationRepository.java
@@ -160,7 +162,7 @@
 │   │   │           │   ├── ContactController.class
 │   │   │           │   ├── EducationController.class
 │   │   │           │   ├── ExperienceController.class
-│   │   │           │   ├── FriendRequestController.class
+│   │   │           │   ├── FriendController.class
 │   │   │           │   ├── GoogleMapsController.class
 │   │   │           │   ├── ImageController.class
 │   │   │           │   ├── InterestController.class
@@ -221,6 +223,8 @@
 │   │   │           │   ├── Language$LanguageBuilder.class
 │   │   │           │   ├── Message.class
 │   │   │           │   ├── Message$MessageBuilder.class
+│   │   │           │   ├── Notification.class
+│   │   │           │   ├── Notification$NotificationBuilder.class
 │   │   │           │   ├── Portfolio.class
 │   │   │           │   ├── Portfolio$PortfolioBuilder.class
 │   │   │           │   ├── PortfolioCard.class
@@ -251,6 +255,7 @@
 │   │   │           │   ├── InterestRepository.class
 │   │   │           │   ├── LanguageRepository.class
 │   │   │           │   ├── MessageRepository.class
+│   │   │           │   ├── NotificationRepository.class
 │   │   │           │   ├── PortfolioRepository.class
 │   │   │           │   ├── ProjectRepository.class
 │   │   │           │   ├── RecommendationRepository.class

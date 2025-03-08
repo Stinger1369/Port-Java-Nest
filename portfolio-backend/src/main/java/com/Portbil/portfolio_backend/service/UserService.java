@@ -730,37 +730,6 @@ public class UserService {
         System.out.println("✅ Demande d'ami refusée entre " + userId + " et " + friendId);
     }
 
-    /**
-     * Supprimer un ami
-     */
-    public void removeFriend(String userId, String friendId) {
-        if (userId == null || friendId == null || userId.trim().isEmpty() || friendId.trim().isEmpty()) {
-            throw new IllegalArgumentException("Les identifiants des utilisateurs ne peuvent pas être nuls ou vides.");
-        }
-
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("Utilisateur introuvable : " + userId));
-        User friend = userRepository.findById(friendId)
-                .orElseThrow(() -> new IllegalArgumentException("Ami introuvable : " + friendId));
-
-        // Vérifier si les listes sont initialisées
-        if (user.getFriendIds() == null || friend.getFriendIds() == null) {
-            throw new IllegalStateException("Aucune relation d'amitié n'existe entre ces utilisateurs.");
-        }
-
-        // Vérifier si les utilisateurs sont amis
-        if (!user.getFriendIds().contains(friendId) || !friend.getFriendIds().contains(userId)) {
-            throw new IllegalStateException("Ces utilisateurs ne sont pas amis.");
-        }
-
-        // Supprimer la relation d'amitié
-        user.getFriendIds().remove(friendId);
-        friend.getFriendIds().remove(userId);
-
-        userRepository.save(user);
-        userRepository.save(friend);
-        System.out.println("✅ Relation d'amitié supprimée entre " + userId + " et " + friendId);
-    }
 
     /**
      * Annuler une demande d'ami envoyée
