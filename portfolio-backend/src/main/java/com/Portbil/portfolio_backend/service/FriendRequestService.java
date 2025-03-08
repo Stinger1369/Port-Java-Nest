@@ -59,7 +59,7 @@ public class FriendRequestService {
         }
 
         FriendRequest friendRequest = FriendRequest.builder()
-                .id(UUID.randomUUID().toString()) // Générer un ID unique
+                .id(UUID.randomUUID().toString())
                 .sender(sender)
                 .receiver(receiver)
                 .status("PENDING")
@@ -76,15 +76,19 @@ public class FriendRequestService {
 
         try {
             Map<String, String> notificationData = new HashMap<>();
-            String requestId = friendRequest.getId();
-            notificationData.put("requestId", requestId);
-            notificationData.put("fromUserId", senderId);
+            notificationData.put("requestId", friendRequest.getId());
+            notificationData.put("fromUserId", sender.getId());
+            notificationData.put("firstName", sender.getFirstName());
+            notificationData.put("lastName", sender.getLastName());
+            notificationData.put("email", sender.getEmail());
+            notificationData.put("profilePictureUrl", sender.getProfilePictureUrl() != null ? sender.getProfilePictureUrl() : "");
 
             String receiverMessage = "Nouvelle demande d'ami reçue de " + sender.getFirstName() + " " + sender.getLastName();
             chatWebSocketHandler.sendNotification(receiverId, "friend_request_received", receiverMessage, notificationData);
             persistNotification(receiverId, "friend_request_received", receiverMessage, notificationData);
 
             String senderMessage = "Demande d'ami envoyée avec succès à " + receiver.getFirstName() + " " + receiver.getLastName();
+            notificationData.put("toUserId", receiverId); // Ajout pour le sender
             chatWebSocketHandler.sendNotification(senderId, "friend_request_sent", senderMessage, notificationData);
             persistNotification(senderId, "friend_request_sent", senderMessage, notificationData);
 
@@ -132,11 +136,21 @@ public class FriendRequestService {
         try {
             Map<String, String> notificationData = new HashMap<>();
             notificationData.put("requestId", requestId);
+            notificationData.put("fromUserId", receiver.getId());
+            notificationData.put("firstName", receiver.getFirstName());
+            notificationData.put("lastName", receiver.getLastName());
+            notificationData.put("email", receiver.getEmail());
+            notificationData.put("profilePictureUrl", receiver.getProfilePictureUrl() != null ? receiver.getProfilePictureUrl() : "");
 
             String senderMessage = "Votre demande d'ami a été acceptée par " + receiver.getFirstName() + " " + receiver.getLastName();
             chatWebSocketHandler.sendNotification(sender.getId(), "friend_request_accepted", senderMessage, notificationData);
             persistNotification(sender.getId(), "friend_request_accepted", senderMessage, notificationData);
 
+            notificationData.put("fromUserId", sender.getId());
+            notificationData.put("firstName", sender.getFirstName());
+            notificationData.put("lastName", sender.getLastName());
+            notificationData.put("email", sender.getEmail());
+            notificationData.put("profilePictureUrl", sender.getProfilePictureUrl() != null ? sender.getProfilePictureUrl() : "");
             String receiverMessage = "Vous avez accepté la demande d'ami de " + sender.getFirstName() + " " + sender.getLastName();
             chatWebSocketHandler.sendNotification(receiver.getId(), "friend_request_accepted", receiverMessage, notificationData);
             persistNotification(receiver.getId(), "friend_request_accepted", receiverMessage, notificationData);
@@ -155,7 +169,6 @@ public class FriendRequestService {
         User friend = userRepository.findById(friendId)
                 .orElseThrow(() -> new IllegalArgumentException("Ami introuvable : " + friendId));
 
-        // Trouver la demande d'ami dans friendRequestReceivedIds de l'utilisateur
         Optional<String> requestIdOpt = user.getFriendRequestReceivedIds().stream()
                 .filter(requestId -> {
                     Optional<FriendRequest> requestOpt = friendRequestRepository.findById(requestId);
@@ -200,11 +213,21 @@ public class FriendRequestService {
         try {
             Map<String, String> notificationData = new HashMap<>();
             notificationData.put("requestId", requestId);
+            notificationData.put("fromUserId", receiver.getId());
+            notificationData.put("firstName", receiver.getFirstName());
+            notificationData.put("lastName", receiver.getLastName());
+            notificationData.put("email", receiver.getEmail());
+            notificationData.put("profilePictureUrl", receiver.getProfilePictureUrl() != null ? receiver.getProfilePictureUrl() : "");
 
             String senderMessage = "Votre demande d'ami a été refusée par " + receiver.getFirstName() + " " + receiver.getLastName();
             chatWebSocketHandler.sendNotification(sender.getId(), "friend_request_rejected", senderMessage, notificationData);
             persistNotification(sender.getId(), "friend_request_rejected", senderMessage, notificationData);
 
+            notificationData.put("fromUserId", sender.getId());
+            notificationData.put("firstName", sender.getFirstName());
+            notificationData.put("lastName", sender.getLastName());
+            notificationData.put("email", sender.getEmail());
+            notificationData.put("profilePictureUrl", sender.getProfilePictureUrl() != null ? sender.getProfilePictureUrl() : "");
             String receiverMessage = "Vous avez refusé la demande d'ami de " + sender.getFirstName() + " " + sender.getLastName();
             chatWebSocketHandler.sendNotification(receiver.getId(), "friend_request_rejected", receiverMessage, notificationData);
             persistNotification(receiver.getId(), "friend_request_rejected", receiverMessage, notificationData);
@@ -223,7 +246,6 @@ public class FriendRequestService {
         User friend = userRepository.findById(friendId)
                 .orElseThrow(() -> new IllegalArgumentException("Ami introuvable : " + friendId));
 
-        // Trouver la demande d'ami dans friendRequestReceivedIds de l'utilisateur
         Optional<String> requestIdOpt = user.getFriendRequestReceivedIds().stream()
                 .filter(requestId -> {
                     Optional<FriendRequest> requestOpt = friendRequestRepository.findById(requestId);
@@ -268,11 +290,21 @@ public class FriendRequestService {
         try {
             Map<String, String> notificationData = new HashMap<>();
             notificationData.put("requestId", requestId);
+            notificationData.put("fromUserId", sender.getId());
+            notificationData.put("firstName", sender.getFirstName());
+            notificationData.put("lastName", sender.getLastName());
+            notificationData.put("email", sender.getEmail());
+            notificationData.put("profilePictureUrl", sender.getProfilePictureUrl() != null ? sender.getProfilePictureUrl() : "");
 
             String senderMessage = "Vous avez annulé votre demande d'ami envers " + receiver.getFirstName() + " " + receiver.getLastName();
             chatWebSocketHandler.sendNotification(sender.getId(), "friend_request_canceled", senderMessage, notificationData);
             persistNotification(sender.getId(), "friend_request_canceled", senderMessage, notificationData);
 
+            notificationData.put("fromUserId", receiver.getId());
+            notificationData.put("firstName", receiver.getFirstName());
+            notificationData.put("lastName", receiver.getLastName());
+            notificationData.put("email", receiver.getEmail());
+            notificationData.put("profilePictureUrl", receiver.getProfilePictureUrl() != null ? receiver.getProfilePictureUrl() : "");
             String receiverMessage = sender.getFirstName() + " " + sender.getLastName() + " a annulé sa demande d’ami.";
             chatWebSocketHandler.sendNotification(receiver.getId(), "friend_request_canceled", receiverMessage, notificationData);
             persistNotification(receiver.getId(), "friend_request_canceled", receiverMessage, notificationData);
@@ -321,14 +353,25 @@ public class FriendRequestService {
         try {
             Map<String, String> notificationData = new HashMap<>();
             notificationData.put("friendId", friendId);
+            notificationData.put("fromUserId", user.getId());
+            notificationData.put("firstName", user.getFirstName());
+            notificationData.put("lastName", user.getLastName());
+            notificationData.put("email", user.getEmail());
+            notificationData.put("profilePictureUrl", user.getProfilePictureUrl() != null ? user.getProfilePictureUrl() : "");
 
             String messageToUser = "Vous avez supprimé " + friend.getFirstName() + " " + friend.getLastName() + " de votre liste d'amis.";
-            chatWebSocketHandler.sendNotification(userId, "friendship_removed", messageToUser, notificationData);
-            persistNotification(userId, "friendship_removed", messageToUser, notificationData);
+            chatWebSocketHandler.sendNotification(userId, "friend_removed", messageToUser, notificationData);
+            persistNotification(userId, "friend_removed", messageToUser, notificationData);
 
+            notificationData.put("friendId", userId);
+            notificationData.put("fromUserId", friend.getId());
+            notificationData.put("firstName", friend.getFirstName());
+            notificationData.put("lastName", friend.getLastName());
+            notificationData.put("email", friend.getEmail());
+            notificationData.put("profilePictureUrl", friend.getProfilePictureUrl() != null ? friend.getProfilePictureUrl() : "");
             String messageToFriend = user.getFirstName() + " " + user.getLastName() + " vous a supprimé de sa liste d'amis.";
-            chatWebSocketHandler.sendNotification(friendId, "friendship_removed", messageToFriend, notificationData);
-            persistNotification(friendId, "friendship_removed", messageToFriend, notificationData);
+            chatWebSocketHandler.sendNotification(friendId, "friend_removed", messageToFriend, notificationData);
+            persistNotification(friendId, "friend_removed", messageToFriend, notificationData);
 
             System.out.println("📢 Notifications envoyées et persistantées pour removeFriend (userId: " + userId + ", friendId: " + friendId + ")");
         } catch (IOException e) {

@@ -1,9 +1,7 @@
-// src/redux/features/friendSlice.ts
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import axios from "axios";
 import { BASE_URL } from "../../config/hostname";
 
-// Interface pour représenter un ami ou une demande d'ami
 interface Friend {
   id: string;
   firstName: string;
@@ -12,7 +10,6 @@ interface Friend {
   profilePictureUrl: string | null;
 }
 
-// Interface pour l'état du slice
 interface FriendState {
   friends: Friend[];
   sentRequests: Friend[];
@@ -37,7 +34,7 @@ export const sendFriendRequest = createAsyncThunk(
   "friend/sendFriendRequest",
   async (
     { senderId, receiverId }: { senderId: string; receiverId: string },
-    { rejectWithValue, dispatch }
+    { rejectWithValue }
   ) => {
     try {
       const token = getAuthToken();
@@ -48,13 +45,10 @@ export const sendFriendRequest = createAsyncThunk(
       const response = await axios.post<string>(
         `${BASE_URL}/api/friends/request/${senderId}/${receiverId}`,
         null,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+        { headers: { Authorization: `Bearer ${token}` } }
       );
 
       console.log("✅ Demande d'ami envoyée:", response.data);
-      await dispatch(fetchSentFriendRequests(senderId));
       return { receiverId };
     } catch (error: any) {
       console.error("❌ Échec de sendFriendRequest:", error.response?.data || error.message);
@@ -67,7 +61,7 @@ export const acceptFriendRequest = createAsyncThunk(
   "friend/acceptFriendRequest",
   async (
     { userId, friendId }: { userId: string; friendId: string },
-    { rejectWithValue, dispatch }
+    { rejectWithValue }
   ) => {
     try {
       const token = getAuthToken();
@@ -78,14 +72,10 @@ export const acceptFriendRequest = createAsyncThunk(
       const response = await axios.post<string>(
         `${BASE_URL}/api/friends/accept/${userId}/${friendId}`,
         null,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+        { headers: { Authorization: `Bearer ${token}` } }
       );
 
       console.log("✅ Demande d'ami acceptée:", response.data);
-      await dispatch(fetchFriends(userId));
-      await dispatch(fetchReceivedFriendRequests(userId));
       return { friendId };
     } catch (error: any) {
       console.error("❌ Échec de acceptFriendRequest:", error.response?.data || error.message);
@@ -98,7 +88,7 @@ export const rejectFriendRequest = createAsyncThunk(
   "friend/rejectFriendRequest",
   async (
     { userId, friendId }: { userId: string; friendId: string },
-    { rejectWithValue, dispatch }
+    { rejectWithValue }
   ) => {
     try {
       const token = getAuthToken();
@@ -109,13 +99,10 @@ export const rejectFriendRequest = createAsyncThunk(
       const response = await axios.post<string>(
         `${BASE_URL}/api/friends/reject/${userId}/${friendId}`,
         null,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+        { headers: { Authorization: `Bearer ${token}` } }
       );
 
       console.log("✅ Demande d'ami refusée:", response.data);
-      await dispatch(fetchReceivedFriendRequests(userId));
       return { friendId };
     } catch (error: any) {
       console.error("❌ Échec de rejectFriendRequest:", error.response?.data || error.message);
@@ -128,7 +115,7 @@ export const removeFriend = createAsyncThunk(
   "friend/removeFriend",
   async (
     { userId, friendId }: { userId: string; friendId: string },
-    { rejectWithValue, dispatch }
+    { rejectWithValue }
   ) => {
     try {
       const token = getAuthToken();
@@ -138,13 +125,10 @@ export const removeFriend = createAsyncThunk(
 
       const response = await axios.delete<string>(
         `${BASE_URL}/api/friends/remove/${userId}/${friendId}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+        { headers: { Authorization: `Bearer ${token}` } }
       );
 
       console.log("✅ Ami supprimé:", response.data);
-      await dispatch(fetchFriends(userId));
       return { friendId };
     } catch (error: any) {
       console.error("❌ Échec de removeFriend:", error.response?.data || error.message);
@@ -157,7 +141,7 @@ export const cancelFriendRequest = createAsyncThunk(
   "friend/cancelFriendRequest",
   async (
     { senderId, receiverId }: { senderId: string; receiverId: string },
-    { rejectWithValue, dispatch }
+    { rejectWithValue }
   ) => {
     try {
       const token = getAuthToken();
@@ -167,13 +151,10 @@ export const cancelFriendRequest = createAsyncThunk(
 
       const response = await axios.delete<string>(
         `${BASE_URL}/api/friends/cancel/${senderId}/${receiverId}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+        { headers: { Authorization: `Bearer ${token}` } }
       );
 
       console.log("✅ Demande d'ami annulée:", response.data);
-      await dispatch(fetchSentFriendRequests(senderId));
       return { receiverId };
     } catch (error: any) {
       console.error("❌ Échec de cancelFriendRequest:", error.response?.data || error.message);
@@ -193,9 +174,7 @@ export const fetchFriends = createAsyncThunk(
 
       const response = await axios.get<Friend[]>(
         `${BASE_URL}/api/friends/${userId}/list`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+        { headers: { Authorization: `Bearer ${token}` } }
       );
 
       console.log("✅ Liste des amis récupérée:", response.data);
@@ -218,9 +197,7 @@ export const fetchSentFriendRequests = createAsyncThunk(
 
       const response = await axios.get<Friend[]>(
         `${BASE_URL}/api/friends/${userId}/sent`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+        { headers: { Authorization: `Bearer ${token}` } }
       );
 
       console.log("✅ Demandes d'amis envoyées récupérées:", response.data);
@@ -243,9 +220,7 @@ export const fetchReceivedFriendRequests = createAsyncThunk(
 
       const response = await axios.get<Friend[]>(
         `${BASE_URL}/api/friends/${userId}/received`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+        { headers: { Authorization: `Bearer ${token}` } }
       );
 
       console.log("✅ Demandes d'amis reçues récupérées:", response.data);
@@ -253,6 +228,29 @@ export const fetchReceivedFriendRequests = createAsyncThunk(
     } catch (error: any) {
       console.error("❌ Échec de fetchReceivedFriendRequests:", error.response?.data || error.message);
       return rejectWithValue(error.response?.data?.error || "Échec de la récupération des demandes reçues.");
+    }
+  }
+);
+
+export const fetchUserById = createAsyncThunk(
+  "friend/fetchUserById",
+  async (userId: string, { rejectWithValue }) => {
+    try {
+      const token = getAuthToken();
+      if (!token) {
+        return rejectWithValue("Token non trouvé, veuillez vous reconnecter.");
+      }
+
+      const response = await axios.get<Friend>(
+        `${BASE_URL}/api/users/${userId}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      console.log("✅ Détails de l'utilisateur récupérés:", response.data);
+      return response.data;
+    } catch (error: any) {
+      console.error("❌ Échec de fetchUserById:", error.response?.data || error.message);
+      return rejectWithValue(error.response?.data?.error || "Échec de la récupération des détails de l'utilisateur.");
     }
   }
 );
@@ -273,6 +271,39 @@ const friendSlice = createSlice({
       state.error = null;
       state.message = null;
     },
+    addSentRequest: (state, action: PayloadAction<Friend>) => {
+      const existingRequest = state.sentRequests.find((req) => req.id === action.payload.id);
+      if (!existingRequest) {
+        state.sentRequests.push(action.payload);
+        console.log("✅ Demande d'ami envoyée ajoutée à sentRequests:", action.payload.id, "Nouvel état:", state.sentRequests);
+      }
+    },
+    addReceivedRequest: (state, action: PayloadAction<Friend>) => {
+      const existingRequest = state.receivedRequests.find((req) => req.id === action.payload.id);
+      if (!existingRequest) {
+        state.receivedRequests.push(action.payload);
+        console.log("✅ Demande d'ami reçue ajoutée à receivedRequests:", action.payload, "Nouvel état:", state.receivedRequests);
+      }
+    },
+    removeSentRequest: (state, action: PayloadAction<string>) => {
+      state.sentRequests = state.sentRequests.filter((req) => req.id !== action.payload);
+      console.log("✅ Demande d'ami envoyée supprimée de sentRequests:", action.payload, "Nouvel état:", state.sentRequests);
+    },
+    removeReceivedRequest: (state, action: PayloadAction<string>) => {
+      state.receivedRequests = state.receivedRequests.filter((req) => req.id !== action.payload);
+      console.log("✅ Demande d'ami reçue supprimée de receivedRequests:", action.payload, "Nouvel état:", state.receivedRequests);
+    },
+    addFriend: (state, action: PayloadAction<Friend>) => {
+      const existingFriend = state.friends.find((friend) => friend.id === action.payload.id);
+      if (!existingFriend) {
+        state.friends.push(action.payload);
+        console.log("✅ Ami ajouté à friends:", action.payload.id, "Nouvel état:", state.friends);
+      }
+    },
+    removeFriendFromList: (state, action: PayloadAction<string>) => {
+      state.friends = state.friends.filter((friend) => friend.id !== action.payload);
+      console.log("✅ Ami supprimé de friends:", action.payload, "Nouvel état:", state.friends);
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -284,6 +315,7 @@ const friendSlice = createSlice({
       .addCase(sendFriendRequest.fulfilled, (state, action: PayloadAction<{ receiverId: string }>) => {
         state.status = "succeeded";
         state.message = "Demande d'ami envoyée avec succès !";
+        // Ne pas ajouter à sentRequests ici, car WebSocket le fera
       })
       .addCase(sendFriendRequest.rejected, (state, action) => {
         state.status = "failed";
@@ -297,14 +329,7 @@ const friendSlice = createSlice({
       .addCase(acceptFriendRequest.fulfilled, (state, action: PayloadAction<{ friendId: string }>) => {
         state.status = "succeeded";
         state.message = "Demande d'ami acceptée avec succès !";
-        const friendId = action.payload.friendId;
-        state.friends.push({
-          id: friendId,
-          firstName: "",
-          lastName: "",
-          email: "",
-          profilePictureUrl: null,
-        });
+        // Ne pas modifier l'état ici, WebSocket gère l'ajout à friends et la suppression de receivedRequests
       })
       .addCase(acceptFriendRequest.rejected, (state, action) => {
         state.status = "failed";
@@ -318,6 +343,7 @@ const friendSlice = createSlice({
       .addCase(rejectFriendRequest.fulfilled, (state, action: PayloadAction<{ friendId: string }>) => {
         state.status = "succeeded";
         state.message = "Demande d'ami refusée avec succès !";
+        // Ne pas modifier l'état ici, WebSocket gère la suppression de receivedRequests
       })
       .addCase(rejectFriendRequest.rejected, (state, action) => {
         state.status = "failed";
@@ -331,6 +357,7 @@ const friendSlice = createSlice({
       .addCase(removeFriend.fulfilled, (state, action: PayloadAction<{ friendId: string }>) => {
         state.status = "succeeded";
         state.message = "Ami supprimé avec succès !";
+        // Ne pas modifier l'état ici, WebSocket gère la suppression de friends
       })
       .addCase(removeFriend.rejected, (state, action) => {
         state.status = "failed";
@@ -344,6 +371,7 @@ const friendSlice = createSlice({
       .addCase(cancelFriendRequest.fulfilled, (state, action: PayloadAction<{ receiverId: string }>) => {
         state.status = "succeeded";
         state.message = "Demande d'ami annulée avec succès !";
+        // Ne pas modifier l'état ici, WebSocket gère la suppression de sentRequests
       })
       .addCase(cancelFriendRequest.rejected, (state, action) => {
         state.status = "failed";
@@ -383,13 +411,29 @@ const friendSlice = createSlice({
       .addCase(fetchReceivedFriendRequests.fulfilled, (state, action: PayloadAction<Friend[]>) => {
         state.status = "succeeded";
         state.receivedRequests = action.payload;
+        console.log("✅ receivedRequests mis à jour depuis le backend:", state.receivedRequests);
       })
       .addCase(fetchReceivedFriendRequests.rejected, (state, action) => {
         state.status = "failed";
+        state.error = action.payload as string;
+      })
+      .addCase(fetchUserById.fulfilled, (state, action: PayloadAction<Friend>) => {
+        console.log("✅ Détails de l'utilisateur récupérés pour mise à jour:", action.payload.id);
+      })
+      .addCase(fetchUserById.rejected, (state, action) => {
         state.error = action.payload as string;
       });
   },
 });
 
-export const { clearFriendState, clearFriendMessages } = friendSlice.actions;
+export const {
+  clearFriendState,
+  clearFriendMessages,
+  addSentRequest,
+  addReceivedRequest,
+  removeSentRequest,
+  removeReceivedRequest,
+  addFriend,
+  removeFriendFromList,
+} = friendSlice.actions;
 export default friendSlice.reducer;

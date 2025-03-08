@@ -1,5 +1,4 @@
-// src/components/MembersList.tsx
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState, AppDispatch } from "../../../redux/store";
 import { fetchAllUsers, User, fetchUserById } from "../../../redux/features/userSlice";
@@ -31,21 +30,15 @@ const MembersList: React.FC = () => {
 
   useEffect(() => {
     if (!token) {
-      console.log("🔴 Aucun token, redirection vers login");
       navigate("/login");
       return;
     }
 
     if (status === "idle") {
-      console.log("🔍 Chargement initial des membres...");
       dispatch(fetchAllUsers())
         .unwrap()
-        .then((result) => {
-          console.log("🔍 Utilisateurs chargés:", result.length, "membres");
-        })
-        .catch((err) => {
-          console.error("❌ Erreur lors du chargement des utilisateurs:", err);
-        });
+        .then((result) => console.log("✅ Utilisateurs chargés:", result.length))
+        .catch((err) => console.error("❌ Erreur chargement utilisateurs:", err));
     }
 
     if (user?.id && status !== "loading") {
@@ -62,27 +55,18 @@ const MembersList: React.FC = () => {
         .flatMap((member: User) => member.imageIds || [])
         .filter((id, index, self) => id && self.indexOf(id) === index);
       if (allImageIds.length > 0) {
-        console.log("🔍 Récupération des images de profil par IDs:", allImageIds);
         dispatch(getImagesByIds(allImageIds))
           .unwrap()
-          .then(() => {
-            console.log("✅ Toutes les images de profil des membres ont été chargées:", images);
-            setImagesLoaded(true);
-          })
+          .then(() => setImagesLoaded(true))
           .catch((err) => {
-            console.error("❌ Erreur lors du chargement des images de profil:", err);
+            console.error("❌ Erreur chargement images:", err);
             setImagesLoaded(true);
           });
       } else {
-        console.log("⚠️ Aucun imageIds trouvé pour les membres");
         setImagesLoaded(true);
       }
     }
   }, [members, imagesLoaded, dispatch, token]);
-
-  useEffect(() => {
-    console.log("🔍 Statut des images:", imageStatus, "Erreur:", imageError);
-  }, [imageStatus, imageError]);
 
   const getProfileImage = (userId: string): string | null => {
     const userImages = images.filter((img) => img.userId === userId);
@@ -90,37 +74,32 @@ const MembersList: React.FC = () => {
     return profileImg?.path || null;
   };
 
-  const memberCards = useMemo(() => {
-    return members.map((member) => (
+  const memberCards = members.map((member) => {
+    const profileImage = getProfileImage(member.id);
+    const key = `${member.id}-${friends.some(f => f.id === member.id)}-${sentRequests.some(s => s.id === member.id)}-${receivedRequests.some(r => r.id === member.id)}`;
+    return (
       <MemberCard
-        key={member.id}
+        key={key}
         member={member}
-        profileImage={getProfileImage(member.id)}
+        profileImage={profileImage}
         onClick={() => openModal(member)}
       />
-    ));
-  }, [members, images]);
+    );
+  });
 
   const openModal = async (member: User) => {
     setSelectedMember(member);
-    await dispatch(fetchUserById(member.id))
-      .unwrap()
-      .catch((err) => console.error("❌ Erreur lors de la récupération des détails du membre:", err));
-
+    await dispatch(fetchUserById(member.id)).unwrap().catch((err) => console.error("❌ Erreur détails membre:", err));
     if (member.id) {
       dispatch(getAllImagesByUserId(member.id))
         .unwrap()
         .then((result) => {
-          const allImages = [...result.images];
-          const sortedImages = allImages.sort((a: Image, b: Image) => {
-            if (a.isProfilePicture && !b.isProfilePicture) return -1;
-            if (!a.isProfilePicture && b.isProfilePicture) return 1;
-            return 0;
-          });
+          const sortedImages = [...result.images].sort((a: Image, b: Image) =>
+            a.isProfilePicture && !b.isProfilePicture ? -1 : !a.isProfilePicture && b.isProfilePicture ? 1 : 0
+          );
           setSelectedMemberImages(sortedImages);
-          console.log(`✅ Toutes les images chargées pour ${member.id}:`, sortedImages);
         })
-        .catch((err) => console.error(`❌ Erreur lors du chargement des images pour ${member.id}:`, err));
+        .catch((err) => console.error(`❌ Erreur images ${member.id}:`, err));
     }
   };
 
@@ -129,31 +108,19 @@ const MembersList: React.FC = () => {
     setSelectedMemberImages([]);
   };
 
-  const handleEditProfile = () => {
-    navigate("/edit-profile");
-  };
+  const handleEditProfile = () => navigate("/edit-profile");
 
-  const formatValue = (value: string | number | undefined | string[]): string => {
-    if (Array.isArray(value)) return value.length > 0 ? value.join(", ") : "Aucun";
-    return value?.toString() || "Non renseigné";
-  };
+  const formatValue = (value: string | number | undefined | string[]): string =>
+    Array.isArray(value) ? (value.length > 0 ? value.join(", ") : "Aucun") : value?.toString() || "Non renseigné";
 
-  const getUpdatedMember = () => {
-    if (!selectedMember) return null;
-    return members.find((m) => m.id === selectedMember.id) || selectedMember;
-  };
+  const getUpdatedMember = () => (selectedMember ? members.find((m) => m.id === selectedMember.id) || selectedMember : null);
 
   if (status === "loading" || imageStatus === "loading" || !imagesLoaded) {
-    return <p className="loading">⏳ Chargement des membres et des images...</p>;
+    return <p className="loading">⏳ Chargement...</p>;
   }
 
-  if (error) {
-    return <p className="error-message">❌ Erreur utilisateurs : {error}</p>;
-  }
-
-  if (imageError) {
-    return <p className="error-message">❌ Erreur images : {imageError}</p>;
-  }
+  if (error) return <p className="error-message">❌ Erreur : {error}</p>;
+  if (imageError) return <p className="error-message">❌ Erreur images : {imageError}</p>;
 
   if (members.length === 0) {
     return (
@@ -172,7 +139,6 @@ const MembersList: React.FC = () => {
     <div className="members-list-container">
       <h1>Liste des membres</h1>
       <div className="members-grid">{memberCards}</div>
-
       {displayedMember && (
         <div className="modal-overlay">
           <div className="modal-content">
@@ -209,7 +175,6 @@ const MembersList: React.FC = () => {
             <p><strong>Liké par :</strong> {formatValue(displayedMember.likerUserIds)}</p>
             <p><strong>A liké :</strong> {formatValue(displayedMember.likedUserIds)}</p>
             <p><strong>Image IDs :</strong> {formatValue(displayedMember.imageIds)}</p>
-
             <div className="modal-actions">
               {isCurrentUser && (
                 <button className="edit-profile-button" onClick={handleEditProfile}>

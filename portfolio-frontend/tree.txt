@@ -25,12 +25,14 @@ portfolio-frontend/
 │   │   │   ├── LanguageSelector.css
 │   │   │   └── LanguageSelector.tsx
 │   │   ├── MemberCard/
-│   │   │   ├── FriendRequestActions.tsx
 │   │   │   ├── MemberCard.css
 │   │   │   └── MemberCard.tsx
 │   │   ├── Navbar/
 │   │   │   ├── Navbar.css
 │   │   │   └── Navbar.tsx
+│   │   ├── NotificationDropdown/
+│   │   │   ├── NotificationDropdown.css
+│   │   │   └── NotificationDropdown.tsx
 │   │   ├── PhoneInput/
 │   │   │   ├── PhoneInputComponent.css
 │   │   │   └── PhoneInputComponent.tsx
@@ -46,15 +48,17 @@ portfolio-frontend/
 │   ├── config/
 │   │   └── hostname.ts
 │   ├── hooks/
-│   │   └── useGoogleMaps.ts
+│   │   ├── useFriendActions.ts
+│   │   ├── useGoogleMaps.ts
+│   │   ├── useNotificationActions.ts
+│   │   └── useWebSocket.ts
 │   ├── i18n.ts
 │   ├── index.css
 │   ├── main.tsx
 │   ├── pages/
 │   │   ├── Chat/
 │   │   │   ├── ChatPage.css
-│   │   │   ├── ChatPage.tsx
-│   │   │   └── useWebSocket.ts
+│   │   │   └── ChatPage.tsx
 │   │   ├── Home/
 │   │   │   ├── Home.css
 │   │   │   └── Home.tsx
@@ -175,7 +179,7 @@ portfolio-frontend/
 │   │   │   ├── contactSlice.ts
 │   │   │   ├── educationSlice.ts
 │   │   │   ├── experienceSlice.ts
-│   │   │   ├── friendRequestSlice.ts
+│   │   │   ├── friendSlice.ts
 │   │   │   ├── googleMapsSlice.ts
 │   │   │   ├── imageSlice.ts
 │   │   │   ├── interestSlice.ts
