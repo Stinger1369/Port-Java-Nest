@@ -1,0 +1,246 @@
+/* src/components/MobileRedirect.css */
+.mobile-redirect-container {
+  height: 100vh;
+  width: 100vw;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+  overflow: hidden;
+  position: relative;
+  font-family: "Orbitron", sans-serif;
+}
+
+.futuristic-overlay {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  padding: 20px;
+  animation: fadeIn 1.5s ease-in-out;
+}
+
+.language-selector {
+  position: absolute !important;
+  top: 10px !important;
+  right: 10px !important;
+  z-index: 10 !important;
+  display: flex;
+  align-items: center;
+}
+
+.language-selector .navbar-language {
+  position: absolute !important;
+  width: auto !important;
+}
+
+.language-selector .language-toggle {
+  background: none !important;
+  color: #00e6ff !important;
+  border: none !important;
+  padding: 5px 10px !important;
+  border-radius: 15px !important;
+  font-family: "Orbitron", sans-serif !important;
+  font-size: 1rem !important;
+  text-shadow: 0 0 5px #00e6ff, 0 0 10px #00e6ff !important;
+  transition: color 0.3s ease, text-shadow 0.3s ease !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 5px !important;
+}
+
+.language-selector .language-toggle:hover {
+  color: #ff00cc !important;
+  text-shadow: 0 0 10px #ff00cc, 0 0 20px #ff00cc !important;
+}
+
+.language-selector .language-toggle i {
+  font-size: 1.2rem !important;
+  color: #00e6ff !important;
+  text-shadow: 0 0 5px #00e6ff !important;
+}
+
+.language-selector .language-dropdown {
+  background: linear-gradient(135deg, #1a1a40 0%, #2b2b5e 100%) !important;
+  border-radius: 10px !important;
+  box-shadow: 0 0 15px rgba(0, 230, 255, 0.5) !important;
+  padding: 5px 0 !important;
+  min-width: 120px !important;
+  position: absolute !important;
+  top: 100% !important;
+  right: 0 !important;
+}
+
+.language-selector .language-dropdown button {
+  color: #e0e0e0 !important;
+  padding: 8px 12px !important;
+  font-family: "Orbitron", sans-serif !important;
+  width: 100% !important;
+  text-align: left !important;
+  background: none !important;
+  border: none !important;
+  transition: background 0.3s ease, color 0.3s ease !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+}
+
+.language-selector .language-dropdown button:hover {
+  background: rgba(0, 230, 255, 0.2) !important;
+  color: #00e6ff !important;
+}
+
+@media (max-width: 768px) {
+  .language-selector .navbar-language {
+    width: auto !important;
+  }
+  .language-selector .language-dropdown {
+    position: absolute !important;
+    width: auto !important;
+    box-shadow: 0 0 15px rgba(0, 230, 255, 0.5) !important;
+  }
+}
+
+.neon-title {
+  font-size: 2rem;
+  color: #00e6ff;
+  text-transform: uppercase;
+  text-shadow: 0 0 20px #00e6ff, 0 0 30px #00e6ff, 0 0 50px #00e6ff;
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+  animation: neonGlow 2s infinite alternate;
+}
+
+.futuristic-text {
+  font-size: 1.2rem;
+  color: #e0e0e0;
+  max-width: 80%;
+  margin: 0 auto 2rem;
+  text-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
+  animation: textFade 2s ease-in-out;
+}
+
+.feature-icons {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+}
+
+.feature-icon {
+  font-size: 1.8rem;
+  color: #00e6ff;
+  text-shadow: 0 0 10px #00e6ff;
+  animation: float 3s ease-in-out infinite;
+  transition: transform 0.3s ease, color 0.3s ease;
+}
+
+.feature-icon:hover {
+  transform: scale(1.2);
+  color: #ff00cc;
+  text-shadow: 0 0 15px #ff00cc;
+}
+
+.feature-icon.chat { animation-delay: 0s; }
+.feature-icon.friends { animation-delay: 0.2s; }
+.feature-icon.rencontre { animation-delay: 0.4s; }
+.feature-icon.portfolio { animation-delay: 0.6s; }
+.feature-icon.skills { animation-delay: 0.8s; }
+.feature-icon.experience { animation-delay: 1s; }
+.feature-icon.certif { animation-delay: 1.2s; }
+.feature-icon.social { animation-delay: 1.4s; }
+
+.store-links {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+.button-column {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.store-button, .info-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 12px 25px;
+  font-size: 1.1rem;
+  text-decoration: none;
+  color: #fff;
+  border-radius: 30px;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  background: linear-gradient(45deg, #00e6ff, #ff00cc);
+  box-shadow: 0 5px 15px rgba(0, 230, 255, 0.5);
+  border: none;
+  cursor: pointer;
+  width: 250px;
+}
+
+.store-button.ios {
+  background: linear-gradient(45deg, #000000, #555555);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.7);
+}
+
+.store-button.android {
+  background: linear-gradient(45deg, #3ddc84, #1a8f4a);
+  box-shadow: 0 5px 15px rgba(61, 220, 132, 0.7);
+}
+
+.store-button:hover, .info-button:hover {
+  transform: scale(1.05);
+  box-shadow: 0 10px 20px rgba(0, 230, 255, 0.8);
+}
+
+.store-button i, .info-button i {
+  font-size: 1.3rem;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  0% { opacity: 0; transform: translateY(20px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes neonGlow {
+  0% { text-shadow: 0 0 10px #00e6ff, 0 0 20px #00e6ff, 0 0 40px #00e6ff; }
+  100% { text-shadow: 0 0 15px #ff00cc, 0 0 30px #ff00cc, 0 0 60px #ff00cc; }
+}
+
+@keyframes textFade {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+@keyframes float {
+  0% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+  100% { transform: translateY(0); }
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); box-shadow: 0 5px 15px rgba(0, 230, 255, 0.5); }
+  50% { transform: scale(1.05); box-shadow: 0 10px 20px rgba(0, 230, 255, 0.8); }
+  100% { transform: scale(1); box-shadow: 0 5px 15px rgba(0, 230, 255, 0.5); }
+}
+
+.mobile-redirect-container::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='2' fill='rgba(255,255,255,0.1)'/%3E%3C/svg%3E");
+  animation: particleFlow 20s linear infinite;
+  opacity: 0.3;
+}
+
+@keyframes particleFlow {
+  0% { background-position: 0 0; }
+  100% { background-position: 100px 100px; }
+}

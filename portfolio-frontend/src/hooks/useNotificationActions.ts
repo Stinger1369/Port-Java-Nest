@@ -9,6 +9,7 @@ import {
   fetchNotifications,
   markNotificationAsRead,
   clearAllNotifications,
+  deleteNotification,
 } from "../redux/features/notificationSlice";
 import { useFriendActions } from "./useFriendActions";
 import { TFunction } from "i18next";
@@ -19,6 +20,7 @@ export const useNotificationActions = (t?: TFunction<"translation", undefined>) 
     (state: RootState) => state.notification
   );
   const { handleAcceptFriendRequest, handleRejectFriendRequest } = useFriendActions();
+  const userId = localStorage.getItem("userId") || ""; // Définir userId ici pour qu'il soit accessible partout
 
   const loadNotifications = (userId: string) => {
     console.log(
@@ -31,7 +33,6 @@ export const useNotificationActions = (t?: TFunction<"translation", undefined>) 
       "No Notifications:",
       notifications.length === 0
     );
-    // Ne charger que si le statut n'est pas "loading" et que le chargement est nécessaire
     if (status !== "loading" && status !== "succeeded") {
       dispatch(fetchNotifications(userId))
         .unwrap()
@@ -50,16 +51,54 @@ export const useNotificationActions = (t?: TFunction<"translation", undefined>) 
   };
 
   const handleMarkAsRead = (notificationId: string, userId: string) => {
-    dispatch(markNotificationAsRead({ notificationId, userId }))
-      .unwrap()
-      .then(() => {
-        console.log("✅ Notification marquée comme lue:", notificationId);
-      })
-      .catch((err) => console.error("❌ Erreur lors du marquage de la notification:", err));
+    const isLocalId = /^\d{13}$/.test(notificationId);
+    const notificationExists = notifications.some((notif) => notif.id === notificationId);
+
+    if (isLocalId && notificationExists) {
+      dispatch(markAsRead(notificationId));
+      console.log("✅ Notification locale marquée comme lue côté client:", notificationId);
+    } else if (notificationExists) {
+      dispatch(markNotificationAsRead({ notificationId, userId }))
+        .unwrap()
+        .then(() => {
+          console.log("✅ Notification marquée comme lue:", notificationId);
+        })
+        .catch((err) => {
+          console.error("❌ Erreur lors du marquage de la notification:", err);
+          if (err === "Invalid argument: Notification introuvable") {
+            dispatch(markAsRead(notificationId));
+            console.log("ℹ️ Notification introuvable côté serveur, marquée localement:", notificationId);
+          }
+        });
+    } else {
+      console.warn("⚠️ Notification non trouvée dans l'état local:", notificationId);
+    }
   };
 
-  const handleRemoveNotification = (notificationId: string) => {
-    dispatch(removeNotification(notificationId));
+  const handleRemoveNotification = (notificationId: string, userId: string) => {
+    const isLocalId = /^\d{13}$/.test(notificationId);
+    const notificationExists = notifications.some((notif) => notif.id === notificationId);
+
+    if (isLocalId && notificationExists) {
+      dispatch(removeNotification(notificationId));
+      console.log("✅ Notification locale supprimée côté client:", notificationId);
+      loadNotifications(userId); // Recharge après suppression locale
+    } else if (notificationExists) {
+      dispatch(deleteNotification({ notificationId, userId }))
+        .unwrap()
+        .then(() => {
+          console.log("✅ Notification supprimée du serveur:", notificationId);
+          loadNotifications(userId); // Recharge après suppression serveur
+        })
+        .catch((err) => {
+          console.error("❌ Erreur lors de la suppression de la notification:", err);
+          dispatch(removeNotification(notificationId));
+          console.log("ℹ️ Notification supprimée localement en cas d'échec serveur:", notificationId);
+          loadNotifications(userId); // Recharge même en cas d'échec pour synchroniser
+        });
+    } else {
+      console.warn("⚠️ Notification non trouvée dans l'état local:", notificationId);
+    }
   };
 
   const handleClearNotifications = (userId: string) => {
@@ -69,12 +108,12 @@ export const useNotificationActions = (t?: TFunction<"translation", undefined>) 
         .unwrap()
         .then(() => {
           console.log("✅ Toutes les notifications supprimées avec succès");
-          loadNotifications(userId); // Recharger une fois après suppression
+          loadNotifications(userId);
         })
         .catch((err) => {
           console.error("❌ Erreur lors de la suppression des notifications:", err);
           dispatch(clearNotifications());
-          loadNotifications(userId); // Réessayer une fois
+          loadNotifications(userId);
         });
     }
   };
@@ -106,7 +145,7 @@ export const useNotificationActions = (t?: TFunction<"translation", undefined>) 
     error,
     loadNotifications,
     handleMarkAsRead,
-    handleRemoveNotification,
+    handleRemoveNotification: (notificationId: string) => handleRemoveNotification(notificationId, userId),
     handleClearNotifications,
     handleNotificationAction,
   };

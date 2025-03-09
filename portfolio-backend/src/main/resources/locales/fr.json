@@ -17,6 +17,10 @@
     "contactHistory": "Historique des contacts"
   },
   "notification": {
+    "title": "Notifications",
+    "friends": "Amis",
+    "chat": "Tchat",
+    "viewAll": "Voir toutes les notifications",
     "noNotifications": "Aucune notification pour le moment",
     "loading": "Chargement des notifications...",
     "error": "Erreur lors du chargement des notifications",
@@ -203,5 +207,55 @@
     "sunset": "Coucher du soleil",
     "uvIndex": "Indice UV",
     "noData": "Aucune donnée météo disponible"
+  },
+  "member": {
+    "details": "Détails du membre",
+    "editProfile": "Modifier le profil",
+    "close": "Fermer"
+  },
+  "mobileRedirect": {
+    "title": "Site non disponible sur mobile",
+    "message": "Notre site web n’est pas accessible sur les appareils mobiles. Téléchargez notre application sur l’App Store ou Google Play pour une meilleure expérience !",
+    "ios": "Télécharger sur l’App Store",
+    "android": "Télécharger sur Google Play",
+    "about": "À propos de l’application"
+  },
+  "features": {
+    "chat": "Chat",
+    "friends": "Amis",
+    "rencontre": "Rencontres",
+    "portfolio": "Portfolio",
+    "skills": "Compétences",
+    "experience": "Expérience",
+    "certifications": "Certifications",
+    "social": "Réseaux sociaux"
+  },
+  "modal": {
+    "title": "À propos de Portfolio",
+    "technologies": "Technologies utilisées",
+    "frontend": "Frontend :",
+    "vite": "Framework de développement rapide et moderne",
+    "react": "Bibliothèque pour des interfaces utilisateur dynamiques",
+    "redux": "Gestion centralisée de l’état de l’application",
+    "websocket": "Communication en temps réel pour le chat",
+    "i18n": "Support multilingue (français, anglais, espagnol, arabe, chinois)",
+    "typescript": "Typage statique pour un code robuste",
+    "axios": "Requêtes HTTP simplifiées",
+    "fontawesome": "Icônes vectorielles stylisées",
+    "backend": "Backend :",
+    "spring": "Framework Java pour une API robuste",
+    "mongodb": "Base de données NoSQL pour une flexibilité maximale",
+    "jwt": "Authentification sécurisée via tokens",
+    "websocketBackend": "Support des WebSockets pour le chat en temps réel",
+    "springSecurity": "Sécurité avancée pour l’API",
+    "springData": "Accès simplifié à MongoDB",
+    "javamail": "Envoi d’emails pour notifications et vérifications",
+    "features": "Fonctionnalités offertes",
+    "featuresDesc": "Avec Portfolio, vous pouvez :",
+    "featurePortfolio": "Créer des portfolios personnalisés gratuitement avec une liberté de design totale",
+    "featureMeet": "Rencontrer des personnes partageant vos intérêts",
+    "featureChat": "Discuter en temps réel via un système de chat intégré",
+    "featureSocial": "Partager vos réseaux sociaux et vos projets",
+    "featureMultiLang": "Utiliser l’application dans plusieurs langues"
   }
 }

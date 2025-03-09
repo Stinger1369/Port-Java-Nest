@@ -186,6 +186,57 @@
     "sunset": "Sunset",
     "uvIndex": "UV Index",
     "noData": "No weather data available"
+  },
+  "mobileRedirect": {
+    "title": "Website not available on mobile",
+    "message": "Our website is not accessible on mobile devices. Download our app from the App Store or Google Play for a better experience!",
+    "ios": "Download on the App Store",
+    "android": "Download on Google Play"
+  },
+  "mobileRedirect": {
+    "title": "Website not available on mobile",
+    "message": "Our website is not accessible on mobile devices. Download our app from the App Store or Google Play for a better experience!",
+    "ios": "Download on the App Store",
+    "android": "Download on Google Play",
+    "about": "About the App"
+  },
+  "features": {
+    "chat": "Chat",
+    "friends": "Friends",
+    "rencontre": "Meet",
+    "portfolio": "Portfolio",
+    "skills": "Skills",
+    "experience": "Experience",
+    "certifications": "Certifications",
+    "social": "Social"
+  },
+  "modal": {
+    "title": "About Portfolio",
+    "technologies": "Technologies Used",
+    "frontend": "Frontend:",
+    "vite": "Fast and modern development framework",
+    "react": "Library for dynamic user interfaces",
+    "redux": "Centralized state management",
+    "websocket": "Real-time communication for chat",
+    "i18n": "Multilingual support (French, English, Spanish, Arabic, Chinese)",
+    "typescript": "Static typing for robust code",
+    "axios": "Simplified HTTP requests",
+    "fontawesome": "Stylized vector icons",
+    "backend": "Backend:",
+    "spring": "Java framework for a robust API",
+    "mongodb": "NoSQL database for maximum flexibility",
+    "jwt": "Secure token-based authentication",
+    "websocketBackend": "WebSocket support for real-time chat",
+    "springSecurity": "Advanced API security",
+    "springData": "Simplified MongoDB access",
+    "javamail": "Email sending for notifications and verifications",
+    "features": "Features Offered",
+    "featuresDesc": "With Portfolio, you can:",
+    "featurePortfolio": "Create personalized portfolios for free with complete design freedom",
+    "featureMeet": "Meet people with shared interests",
+    "featureChat": "Chat in real-time with an integrated system",
+    "featureSocial": "Share your social networks and projects",
+    "featureMultiLang": "Use the app in multiple languages"
   }
 
 }

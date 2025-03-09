@@ -1,3 +1,4 @@
+// src/main.tsx
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { Provider } from "react-redux";
@@ -5,7 +6,7 @@ import { store } from "./redux/store";
 import App from "./App";
 import "./index.css";
 import "./i18n"; // Initialisation de react-i18next
-import "@fortawesome/fontawesome-free/css/all.min.css";
+import "@fortawesome/fontawesome-free/css/all.min.css"; // Icônes FontAwesome
 
 // Vérifier si la clé API Google Maps est définie (pour le débogage)
 if (import.meta.env.VITE_GOOGLE_MAPS_API_KEY) {

@@ -7,6 +7,8 @@ import { useNotificationActions } from "../../hooks/useNotificationActions";
 import { useTranslation } from "react-i18next";
 import { useSelector } from "react-redux";
 import { useFriendActions } from "../../hooks/useFriendActions";
+import { fetchUserById } from "../../redux/features/userSlice";
+import { getAllImagesByUserId, Image } from "../../redux/features/imageSlice";
 import "./NotificationDropdown.css";
 import { resetStatus } from "../../redux/features/notificationSlice";
 
@@ -20,17 +22,19 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ isOpen, onT
   const { t } = useTranslation();
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
-  const { notifications, status, error, loadNotifications, handleMarkAsRead, handleRemoveNotification, handleClearNotifications, handleNotificationAction } =
+  const { notifications, status, error, loadNotifications, handleMarkAsRead, handleRemoveNotification, handleClearNotifications } =
     useNotificationActions(t);
-  const { friends, handleAcceptFriendRequest, handleRejectFriendRequest, handleRemoveFriend } = useFriendActions();
+  const { friends, receivedRequests, handleAcceptFriendRequest, handleRejectFriendRequest, handleRemoveFriend } = useFriendActions();
+  const { user: currentUser } = useSelector((state: RootState) => state.user);
   const userId = localStorage.getItem("userId") || "";
 
   const [refresh, setRefresh] = useState(false);
   const [noNotifications, setNoNotifications] = useState(false);
+  const [selectedMember, setSelectedMember] = useState<any | null>(null);
+  const [selectedMemberImages, setSelectedMemberImages] = useState<Image[]>([]);
   const isInitialMount = useRef(true);
   const lastFetchTimestamp = useRef<number | null>(null);
 
-  // Recharger les notifications uniquement au montage initial ou sur refresh explicite
   useEffect(() => {
     let mounted = true;
     if (mounted && (isInitialMount.current || refresh)) {
@@ -44,7 +48,6 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ isOpen, onT
     };
   }, [loadNotifications, userId, refresh]);
 
-  // Recharger à l'ouverture uniquement si nécessaire
   useEffect(() => {
     let mounted = true;
     if (mounted && isOpen && status !== "loading" && status !== "succeeded") {
@@ -56,7 +59,6 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ isOpen, onT
     };
   }, [loadNotifications, userId, isOpen, status]);
 
-  // Recharger périodiquement uniquement si nécessaire
   useEffect(() => {
     let mounted = true;
     const interval = setInterval(() => {
@@ -76,7 +78,6 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ isOpen, onT
     };
   }, [loadNotifications, userId, status, isOpen, noNotifications]);
 
-  // Mettre à jour noNotifications en fonction du state
   useEffect(() => {
     if (status === "succeeded") {
       const hasNoNotifications = notifications.length === 0;
@@ -102,7 +103,7 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ isOpen, onT
 
   const unreadCount = sortedNotifications.filter((notif) => !notif.isRead).length;
 
-  const handleNotificationClick = (notification: any) => {
+  const handleNotificationClick = async (notification: any) => {
     switch (notification.type) {
       case "new_chat":
       case "new_private_message":
@@ -113,7 +114,24 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ isOpen, onT
         break;
       case "friend_request_received":
       case "friend_request_accepted":
-        navigate("/member");
+      case "friend_request_rejected":
+      case "friend_removed":
+        const memberId = notification.data?.fromUserId || notification.data?.friendId;
+        if (memberId) {
+          try {
+            const member = await dispatch(fetchUserById(memberId)).unwrap();
+            setSelectedMember(member);
+            if (member.id) {
+              const imagesResult = await dispatch(getAllImagesByUserId(member.id)).unwrap();
+              const sortedImages = [...imagesResult.images].sort((a: Image, b: Image) =>
+                a.isProfilePicture && !b.isProfilePicture ? -1 : !a.isProfilePicture && b.isProfilePicture ? 1 : 0
+              );
+              setSelectedMemberImages(sortedImages);
+            }
+          } catch (err) {
+            console.error("❌ Erreur lors de la récupération du membre:", err);
+          }
+        }
         break;
       default:
         console.log("📩 Type de notification non géré:", notification.type);
@@ -128,6 +146,11 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ isOpen, onT
       // Optionnel : marquer toutes comme lues à l'ouverture
       // dispatch(markAllNotificationsAsRead());
     }
+  };
+
+  const handleViewAllNotifications = () => {
+    navigate("/notifications");
+    onClose();
   };
 
   const handleAccept = (e: React.MouseEvent, friendId: string) => {
@@ -151,6 +174,10 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ isOpen, onT
     });
   };
 
+  const isFriendRequestPending = (friendId: string) => {
+    return receivedRequests.some((request) => request.id === friendId);
+  };
+
   const isFriendRequestAccepted = (friendId: string) => {
     return friends.some((friend) => friend.id === friendId);
   };
@@ -167,6 +194,8 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ isOpen, onT
         return "fas fa-user-check";
       case "friend_request_rejected":
         return "fas fa-user-times";
+      case "friend_removed":
+        return "fas fa-user-slash";
       default:
         return "fas fa-info";
     }
@@ -177,6 +206,7 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ isOpen, onT
       case "friend_request_received":
       case "friend_request_accepted":
       case "friend_request_rejected":
+      case "friend_removed":
         return "fas fa-bell";
       case "new_chat":
       case "new_private_message":
@@ -186,6 +216,19 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ isOpen, onT
         return "fas fa-info-circle";
     }
   };
+
+  const closeModal = () => {
+    setSelectedMember(null);
+    setSelectedMemberImages([]);
+  };
+
+  const handleEditProfile = () => {
+    closeModal();
+    navigate("/edit-profile");
+  };
+
+  const formatValue = (value: string | number | undefined | string[]): string =>
+    Array.isArray(value) ? (value.length > 0 ? value.join(", ") : "Aucun") : value?.toString() || "Non renseigné";
 
   if (status === "loading") {
     return <div className="notification-loading">{t("notification.loading")}</div>;
@@ -212,6 +255,13 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ isOpen, onT
         {unreadCount > 0 && <span className="notification-count">{unreadCount}</span>}
       </button>
       <div className={`dropdown-menu ${isOpen ? "active" : ""}`}>
+        <button
+          className="dropdown-item view-all-button"
+          onClick={handleViewAllNotifications}
+        >
+          <i className="fas fa-list"></i> {t("notification.viewAll")}
+        </button>
+        <div className="notification-divider"></div>
         {noNotifications || unreadCount === 0 ? (
           <div className="dropdown-item no-notifications">
             <div className="icon-group">
@@ -222,7 +272,10 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ isOpen, onT
         ) : (
           <>
             {sortedNotifications.map((notification, index) => {
-              const isAccepted = notification.type === "friend_request_received" && isFriendRequestAccepted(notification.data?.fromUserId);
+              const friendId = notification.data?.fromUserId || notification.data?.friendId;
+              const isPending = notification.type === "friend_request_received" && friendId && isFriendRequestPending(friendId);
+              const isAccepted = friendId && isFriendRequestAccepted(friendId);
+
               return (
                 <div key={notification.id}>
                   {index > 0 && <div className="notification-divider"></div>}
@@ -257,34 +310,34 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ isOpen, onT
                         className="remove-button"
                         onClick={(e) => {
                           e.stopPropagation();
-                          handleRemoveNotification(notification.id);
+                          handleRemoveNotification(notification.id, userId);
                         }}
                         title={t("notification.remove")}
                       >
                         <i className="fas fa-trash-alt"></i>
                       </button>
-                      {notification.type === "friend_request_received" && notification.data?.fromUserId && !isAccepted && (
+                      {notification.type === "friend_request_received" && friendId && isPending && !isAccepted && (
                         <div className="notification-actions">
                           <button
                             className="accept-button"
-                            onClick={(e) => handleAccept(e, notification.data.fromUserId)}
+                            onClick={(e) => handleAccept(e, friendId)}
                             title={t("notification.accept")}
                           >
                             <i className="fas fa-check"></i>
                           </button>
                           <button
                             className="reject-button"
-                            onClick={(e) => handleReject(e, notification.data.fromUserId)}
+                            onClick={(e) => handleReject(e, friendId)}
                             title={t("notification.reject")}
                           >
                             <i className="fas fa-times"></i>
                           </button>
                         </div>
                       )}
-                      {notification.type === "friend_request_received" && notification.data?.fromUserId && isAccepted && (
+                      {notification.type === "friend_request_received" && friendId && isAccepted && (
                         <button
                           className="remove-friend-button"
-                          onClick={(e) => handleRemoveFriendAction(e, notification.data.fromUserId)}
+                          onClick={(e) => handleRemoveFriendAction(e, friendId)}
                           title={t("notification.removeFriend")}
                         >
                           <i className="fas fa-user-minus"></i>
@@ -305,6 +358,56 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ isOpen, onT
           </>
         )}
       </div>
+
+      {selectedMember && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <h2>{t("member.details")}</h2>
+            <div className="modal-avatar">
+              {selectedMemberImages.length > 0 ? (
+                <div className="modal-images">
+                  {selectedMemberImages.map((img) => (
+                    <img
+                      key={img.id}
+                      src={`http://localhost:7000/${img.path}`}
+                      alt={img.name}
+                      className="modal-image"
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="modal-avatar-placeholder">
+                  <i className="fas fa-user-circle"></i>
+                </div>
+              )}
+            </div>
+            <p><strong>ID :</strong> {formatValue(selectedMember.id)}</p>
+            <p><strong>Email :</strong> {formatValue(selectedMember.email)}</p>
+            <p><strong>Prénom :</strong> {formatValue(selectedMember.firstName)}</p>
+            <p><strong>Nom :</strong> {formatValue(selectedMember.lastName)}</p>
+            <p><strong>Téléphone :</strong> {formatValue(selectedMember.phone)}</p>
+            <p><strong>Adresse :</strong> {formatValue(selectedMember.address)}</p>
+            <p><strong>Sexe :</strong> {formatValue(selectedMember.sex)}</p>
+            <p><strong>Slug :</strong> {formatValue(selectedMember.slug)}</p>
+            <p><strong>Bio :</strong> {formatValue(selectedMember.bio)}</p>
+            <p><strong>Latitude :</strong> {formatValue(selectedMember.latitude)}</p>
+            <p><strong>Longitude :</strong> {formatValue(selectedMember.longitude)}</p>
+            <p><strong>Liké par :</strong> {formatValue(selectedMember.likerUserIds)}</p>
+            <p><strong>A liké :</strong> {formatValue(selectedMember.likedUserIds)}</p>
+            <p><strong>Image IDs :</strong> {formatValue(selectedMember.imageIds)}</p>
+            <div className="modal-actions">
+              {currentUser?.id === selectedMember.id && (
+                <button className="edit-profile-button" onClick={handleEditProfile}>
+                  <i className="fas fa-edit"></i> {t("member.editProfile")}
+                </button>
+              )}
+              <button className="close-button" onClick={closeModal}>
+                <i className="fas fa-times"></i> {t("member.close")}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

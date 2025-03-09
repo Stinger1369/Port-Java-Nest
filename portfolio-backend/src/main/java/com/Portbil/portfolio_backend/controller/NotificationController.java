@@ -44,4 +44,22 @@ public class NotificationController {
         notificationService.deleteAllNotifications(userId);
         return ResponseEntity.ok().build();
     }
+
+    // Nouvelle méthode pour supprimer une notification spécifique
+    @DeleteMapping("/{userId}/{notificationId}")
+    public ResponseEntity<Void> deleteNotification(
+            @PathVariable String userId,
+            @PathVariable String notificationId,
+            Authentication authentication) {
+        if (!authentication.getName().equals(userId)) {
+            return ResponseEntity.status(403).build();
+        }
+        NotificationDTO notification = notificationService.findById(notificationId)
+                .orElseThrow(() -> new IllegalArgumentException("Notification introuvable : " + notificationId));
+        if (!notification.getUserId().equals(userId)) {
+            return ResponseEntity.status(403).build();
+        }
+        notificationService.deleteNotification(notificationId);
+        return ResponseEntity.ok().build();
+    }
 }

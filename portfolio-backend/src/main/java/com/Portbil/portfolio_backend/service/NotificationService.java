@@ -33,9 +33,12 @@ public class NotificationService {
         notification.setIsRead(true);
         notificationRepository.save(notification);
     }
+    public void deleteNotification(String notificationId) {
+        notificationRepository.deleteById(notificationId);
+    }
 
     public void deleteAllNotifications(String userId) {
-        notificationRepository.deleteByUserId(userId); // Supposons que cette méthode existe ou soit ajoutée dans NotificationRepository
+        notificationRepository.deleteByUserId(userId);
     }
 
     private NotificationDTO mapToDTO(Notification notification) {

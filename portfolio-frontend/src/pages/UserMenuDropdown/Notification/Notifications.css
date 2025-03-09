@@ -1,16 +1,205 @@
-.notifications-page {
-  padding: 2rem;
-  max-width: 800px;
+/* src/pages/UserMenuDropdown/Notification/Notifications.css */
+.page-notifications-container {
+  padding: 30px;
+  max-width: 900px;
   margin: 0 auto;
+  font-family: 'Arial', sans-serif;
 }
 
-.notifications-page h1 {
-  font-size: 2rem;
-  color: #1e2a44;
-  margin-bottom: 1rem;
+.page-notifications-container h1 {
+  font-size: 28px;
+  font-weight: 600;
+  color: #2c3e50;
+  margin-bottom: 25px;
+  text-align: center;
+  letter-spacing: 1px;
 }
 
-.notifications-page p {
-  font-size: 1.1rem;
-  color: #666;
+.page-notification-filter-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.page-filter-button {
+  background-color: #ecf0f1;
+  color: #7f8c8d;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 25px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.page-filter-button i {
+  font-size: 16px;
+}
+
+.page-filter-button:hover {
+  background-color: #dfe6e9;
+  color: #2c3e50;
+}
+
+.page-filter-button.active {
+  background-color: #3498db;
+  color: white;
+  box-shadow: 0 4px 10px rgba(52, 152, 219, 0.3);
+}
+
+.page-filter-button.active:hover {
+  background-color: #2980b9;
+}
+
+.page-notifications-list {
+  background-color: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  padding: 15px;
+  animation: page-fadeIn 0.5s ease-in-out;
+}
+
+.page-notification-item {
+  padding: 15px;
+  border-bottom: 1px solid #f0f0f0;
+  transition: background-color 0.2s ease;
+}
+
+.page-notification-item:hover {
+  background-color: #f9f9f9;
+}
+
+.page-notification-item.page-unread {
+  background-color: #e9f4ff;
+}
+
+.page-notification-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: nowrap;
+}
+
+.page-notification-main {
+  display: flex;
+  align-items: center;
+  flex-grow: 1;
+  gap: 15px;
+}
+
+.page-notification-main i {
+  font-size: 22px;
+  color: #3498db;
+}
+
+.page-notification-message {
+  font-size: 16px;
+  color: #2c3e50;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.page-notification-time-wrapper {
+  margin-top: 5px;
+}
+
+.page-notification-time {
+  font-size: 12px;
+  color: #95a5a6;
+}
+
+.page-notification-actions {
+  display: flex;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.page-notification-actions button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 18px;
+  padding: 5px;
+  transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.page-notification-actions button:hover {
+  transform: scale(1.1);
+}
+
+.page-mark-read-button {
+  color: #2ecc71;
+}
+
+.page-remove-button {
+  color: #e74c3c;
+}
+
+.page-accept-button {
+  color: #2ecc71;
+}
+
+.page-reject-button {
+  color: #e74c3c;
+}
+
+.page-remove-friend-button {
+  color: #e74c3c;
+}
+
+.page-no-notifications {
+  text-align: center;
+  padding: 40px;
+  color: #7f8c8d;
+}
+
+.page-no-notifications i {
+  font-size: 50px;
+  margin-bottom: 15px;
+  color: #bdc3c7;
+}
+
+.page-clear-all-button {
+  display: block;
+  margin: 25px auto 0;
+  padding: 12px 25px;
+  background-color: #e74c3c;
+  color: white;
+  border: none;
+  border-radius: 25px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.page-clear-all-button:hover {
+  background-color: #c0392b;
+  transform: translateY(-2px);
+}
+
+.page-notifications-loading,
+.page-notifications-error {
+  text-align: center;
+  padding: 40px;
+  color: #7f8c8d;
+  font-size: 16px;
+}
+
+@keyframes page-fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }

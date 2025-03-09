@@ -34,6 +34,8 @@ import MembersList from "./pages/UserMenuDropdown/MembersList/MembersList";
 import ChatPage from "./pages/Chat/ChatPage";
 import Settings from "./pages/Settings/Settings";
 import ErrorBoundary from "./components/ErrorBoundary";
+import { isMobileDevice } from "./utils/detectMobile"; // Importer la détection mobile
+import MobileRedirect from "./components/Mobile/MobileRedirect"; // Importer le composant de redirection
 import "./App.css";
 
 const App = () => {
@@ -61,6 +63,12 @@ const App = () => {
     }
   }, [wsInstance, userId]);
 
+  // Si l'utilisateur est sur un appareil mobile, afficher la page de redirection
+  if (isMobileDevice()) {
+    return <MobileRedirect />;
+  }
+
+  // Sinon, afficher le site web normal
   return (
     <Router>
       <div className="app-container">
@@ -96,7 +104,7 @@ const App = () => {
               <Route path="/chat" element={<ErrorBoundary><ChatPage /></ErrorBoundary>} />
               <Route path="/chat/:type/:id" element={<ErrorBoundary><ChatPage /></ErrorBoundary>} />
               <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
-              {/* <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} /> */}
+              <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
             </Routes>
           </main>
         </Suspense>

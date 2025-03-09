@@ -7,11 +7,11 @@ import { BASE_URL } from "../../config/hostname";
 interface Notification {
   id: string;
   userId: string;
-  type: string; // e.g., "friend_request_received", "new_private_message", "friend_request_accepted"
+  type: string;
   message: string;
-  timestamp: string; // Convertir Instant en string pour compatibilité frontend
+  timestamp: string;
   isRead: boolean;
-  data?: Record<string, string>; // Champs supplémentaires (e.g., requestId, chatId)
+  data?: Record<string, string>;
 }
 
 interface NotificationState {
@@ -85,6 +85,22 @@ export const clearAllNotifications = createAsyncThunk(
   }
 );
 
+// Nouveau thunk pour supprimer une notification spécifique
+export const deleteNotification = createAsyncThunk(
+  "notification/deleteNotification",
+  async ({ notificationId, userId }: { notificationId: string; userId: string }, { rejectWithValue }) => {
+    try {
+      const token = localStorage.getItem("token") || "";
+      await axios.delete(`${BASE_URL}/api/notifications/${userId}/${notificationId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      return notificationId;
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.error || "Failed to delete notification");
+    }
+  }
+);
+
 const notificationSlice = createSlice({
   name: "notification",
   initialState,
@@ -114,7 +130,7 @@ const notificationSlice = createSlice({
       state.notifications = [];
     },
     resetStatus: (state) => {
-      state.status = "idle"; // Réinitialiser le statut manuellement
+      state.status = "idle";
       state.error = null;
     },
   },
@@ -154,6 +170,19 @@ const notificationSlice = createSlice({
         state.status = "failed";
         state.error = action.payload as string;
         console.error("❌ Échec de la suppression - Erreur:", state.error);
+      })
+      .addCase(deleteNotification.pending, (state) => {
+        state.status = "loading";
+      })
+      .addCase(deleteNotification.fulfilled, (state, action: PayloadAction<string>) => {
+        state.status = "succeeded";
+        state.notifications = state.notifications.filter((notif) => notif.id !== action.payload);
+        console.log("✅ Notification supprimée avec succès:", action.payload);
+      })
+      .addCase(deleteNotification.rejected, (state, action) => {
+        state.status = "failed";
+        state.error = action.payload as string;
+        console.error("❌ Échec de la suppression de la notification:", state.error);
       });
   },
 });

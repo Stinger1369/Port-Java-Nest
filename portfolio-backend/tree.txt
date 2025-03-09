@@ -10,8 +10,6 @@
 ├── .mvn/
 │   └── wrapper/
 │       └── maven-wrapper.properties
-├── node_modules/
-│   └── .yarn-integrity
 ├── src/
 │   ├── main/
 │   │   ├── java/
@@ -35,6 +33,7 @@
 │   │   │               │   ├── ImageController.java
 │   │   │               │   ├── InterestController.java
 │   │   │               │   ├── LanguageController.java
+│   │   │               │   ├── NotificationController.java
 │   │   │               │   ├── PortfolioController.java
 │   │   │               │   ├── ProjectController.java
 │   │   │               │   ├── RecommendationController.java
@@ -53,6 +52,7 @@
 │   │   │               │   ├── ImageDTO.java
 │   │   │               │   ├── InterestDTO.java
 │   │   │               │   ├── LanguageDTO.java
+│   │   │               │   ├── NotificationDTO.java
 │   │   │               │   ├── PortfolioDTO.java
 │   │   │               │   ├── ProjectDTO.java
 │   │   │               │   ├── RecommendationDTO.java
@@ -119,6 +119,7 @@
 │   │   │               │   ├── ImageService.java
 │   │   │               │   ├── InterestService.java
 │   │   │               │   ├── LanguageService.java
+│   │   │               │   ├── NotificationService.java
 │   │   │               │   ├── PortfolioService.java
 │   │   │               │   ├── ProjectService.java
 │   │   │               │   ├── RecommendationService.java
@@ -167,6 +168,7 @@
 │   │   │           │   ├── ImageController.class
 │   │   │           │   ├── InterestController.class
 │   │   │           │   ├── LanguageController.class
+│   │   │           │   ├── NotificationController.class
 │   │   │           │   ├── PortfolioController.class
 │   │   │           │   ├── ProjectController.class
 │   │   │           │   ├── RecommendationController.class
@@ -191,6 +193,8 @@
 │   │   │           │   ├── InterestDTO$InterestDTOBuilder.class
 │   │   │           │   ├── LanguageDTO.class
 │   │   │           │   ├── LanguageDTO$LanguageDTOBuilder.class
+│   │   │           │   ├── NotificationDTO.class
+│   │   │           │   ├── NotificationDTO$NotificationDTOBuilder.class
 │   │   │           │   ├── PortfolioDTO.class
 │   │   │           │   ├── PortfolioDTO$PortfolioDTOBuilder.class
 │   │   │           │   ├── ProjectDTO.class
@@ -279,6 +283,7 @@
 │   │   │           │   ├── ImageService.class
 │   │   │           │   ├── InterestService.class
 │   │   │           │   ├── LanguageService.class
+│   │   │           │   ├── NotificationService.class
 │   │   │           │   ├── PortfolioService.class
 │   │   │           │   ├── ProjectService.class
 │   │   │           │   ├── RecommendationService.class

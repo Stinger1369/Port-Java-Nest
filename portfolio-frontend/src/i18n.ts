@@ -3,6 +3,7 @@ import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
 import LanguageDetector from "i18next-browser-languagedetector";
 import HttpBackend from "i18next-http-backend";
+import { BASE_URL } from "./config/hostname"; // Importer BASE_URL
 
 i18n
   .use(HttpBackend) // Charge les traductions via HTTP depuis le backend
@@ -15,7 +16,7 @@ i18n
       escapeValue: false, // React gère déjà l’échappement
     },
     backend: {
-      loadPath: "http://localhost:8080/api/translations/{{lng}}", // URL de votre API Spring Boot
+      loadPath: `${BASE_URL}/api/translations/{{lng}}`, // Utiliser BASE_URL dynamiquement
       requestOptions: {
         cache: "default", // Utilise le cache du navigateur
       },
@@ -28,6 +29,7 @@ i18n
         }
       },
       load: (options, url, payload, callback) => {
+        console.log("🔹 Chargement des traductions depuis:", url); // Log pour vérifier l'URL
         fetch(url)
           .then((response) => {
             if (!response.ok) throw new Error(`HTTP error ${response.status}`);
@@ -50,8 +52,8 @@ i18n
   });
 
 // Ajouter l'écouteur pour gérer la direction du texte
-i18n.on('languageChanged', (lng) => {
-  document.documentElement.dir = lng === 'ar' ? 'rtl' : 'ltr';
+i18n.on("languageChanged", (lng) => {
+  document.documentElement.dir = lng === "ar" ? "rtl" : "ltr";
 });
 
 export default i18n;

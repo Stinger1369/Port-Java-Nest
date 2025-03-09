@@ -1,0 +1,103 @@
+/* src/components/ModalMobile.css */
+.modal-mobile-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  animation: modalFadeIn 0.5s ease-in-out;
+}
+
+.modal-mobile-content {
+  background: linear-gradient(135deg, #1a1a40 0%, #2b2b5e 100%);
+  padding: 20px;
+  border-radius: 15px;
+  max-width: 600px;
+  width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+  position: relative;
+  box-shadow: 0 0 20px rgba(0, 230, 255, 0.5);
+  animation: modalSlideIn 0.5s ease-in-out;
+}
+
+/* Nouveau conteneur pour le header */
+.modal-mobile-header {
+  display: flex;
+  justify-content: flex-end; /* Aligner le bouton à droite */
+  margin-bottom: 10px; /* Espacement entre le header et le titre */
+}
+
+/* Style du bouton de fermeture */
+.modal-mobile-close {
+  background: none;
+  border: none;
+  color: #ff00cc;
+  font-size: 1.5rem;
+  cursor: pointer;
+  transition: color 0.3s ease;
+  padding: 5px;
+  line-height: 1;
+}
+
+.modal-mobile-close:hover {
+  color: #00e6ff;
+}
+
+.modal-mobile-title {
+  font-size: 2rem;
+  color: #00e6ff;
+  text-shadow: 0 0 10px #00e6ff;
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.modal-mobile-section {
+  margin-bottom: 1.5rem;
+}
+
+.modal-mobile-section h3 {
+  font-size: 1.5rem;
+  color: #ff00cc;
+  margin-bottom: 0.5rem;
+}
+
+.modal-mobile-section p {
+  color: #e0e0e0;
+  margin-bottom: 0.5rem;
+}
+
+.modal-mobile-section ul {
+  list-style: none;
+  padding-left: 0;
+}
+
+.modal-mobile-section li {
+  color: #e0e0e0;
+  margin-bottom: 0.5rem;
+  padding-left: 1rem;
+  position: relative;
+}
+
+.modal-mobile-section li:before {
+  content: "▹";
+  color: #00e6ff;
+  position: absolute;
+  left: 0;
+}
+
+/* Animations spécifiques au modal */
+@keyframes modalFadeIn {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+@keyframes modalSlideIn {
+  0% { transform: scale(0.8); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}

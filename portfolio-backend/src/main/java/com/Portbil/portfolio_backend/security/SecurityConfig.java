@@ -30,7 +30,7 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         System.out.println("🔹 Configuring SecurityFilterChain");
         http
-                .cors(cors -> cors.configurationSource(corsConfigurationSource())) // Appliquer CORS en premier
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
@@ -41,17 +41,17 @@ public class SecurityConfig {
                                 "/api/auth/reset-password",
                                 "/api/translations/**",
                                 "/api/contacts/request",
-                                "/chat" // WebSocket endpoint
+                                "/chat"
                         ).permitAll()
                         .requestMatchers("/api/portfolio/public/**").permitAll()
-                        .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll() // Autoriser OPTIONS
+                        .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/api/users/*/like/*", "/api/users/*/unlike/*").authenticated()
                         .requestMatchers("/api/users/all").authenticated()
                         .requestMatchers("/api/users/**").authenticated()
                         .requestMatchers("/api/images/**").authenticated()
                         .requestMatchers("/api/friends/**").authenticated()
                         .requestMatchers("/api/chat/**").authenticated()
-                        .requestMatchers("/api/notifications/**").authenticated() // Ajout explicite
+                        .requestMatchers("/api/notifications/**").authenticated()
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -79,15 +79,18 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         System.out.println("🔹 Applying CORS configuration");
         CorsConfiguration corsConfig = new CorsConfiguration();
-        corsConfig.setAllowedOrigins(List.of("http://localhost:5173")); // Origine spécifique
-        corsConfig.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS")); // Inclut OPTIONS
-        corsConfig.setAllowedHeaders(List.of("*")); // Autorise tous les en-têtes pour débogage
+        corsConfig.setAllowedOrigins(List.of(
+                "http://localhost:5173",         // Développement local
+                "http://192.168.1.184:5173"      // Accès réseau depuis ton téléphone
+        ));
+        corsConfig.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        corsConfig.setAllowedHeaders(List.of("*"));
         corsConfig.setExposedHeaders(List.of("Authorization"));
-        corsConfig.setAllowCredentials(true); // Nécessaire pour les cookies/authentification
+        corsConfig.setAllowCredentials(true);
         corsConfig.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", corsConfig); // Applique à toutes les routes
+        source.registerCorsConfiguration("/**", corsConfig);
         return source;
     }
 

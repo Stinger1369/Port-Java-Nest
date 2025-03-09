@@ -27,6 +27,9 @@ portfolio-frontend/
 │   │   ├── MemberCard/
 │   │   │   ├── MemberCard.css
 │   │   │   └── MemberCard.tsx
+│   │   ├── Mobile/
+│   │   │   ├── MobileRedirect.css
+│   │   │   └── MobileRedirect.tsx
 │   │   ├── Navbar/
 │   │   │   ├── Navbar.css
 │   │   │   └── Navbar.tsx
@@ -193,6 +196,9 @@ portfolio-frontend/
 │   │   │   ├── userSlice.ts
 │   │   │   └── weatherSlice.ts
 │   │   └── store.ts
+│   ├── utils/
+│   │   ├── detectMobile.ts
+│   │   └── friendButtonUtils.ts
 │   └── vite-env.d.ts
 ├── tree.js
 ├── tsconfig.app.json
