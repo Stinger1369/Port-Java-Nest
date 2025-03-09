@@ -50,8 +50,8 @@ public class ProjectService {
         return projectRepository.findById(id).map(existingProject -> {
             existingProject.setTitle(updatedProject.getTitle());
             existingProject.setDescription(updatedProject.getDescription());
-            existingProject.setRepositoryUrl(updatedProject.getRepositoryUrl());
-            existingProject.setLiveDemoUrl(updatedProject.getLiveDemoUrl());
+            existingProject.setRepositoryUrl(updatedProject.getRepositoryUrl() != null ? updatedProject.getRepositoryUrl() : updatedProject.getRepository()); // Mapper repository si repositoryUrl est absent
+            existingProject.setLiveDemoUrl(updatedProject.getLiveDemoUrl() != null ? updatedProject.getLiveDemoUrl() : updatedProject.getLink());
             existingProject.setStartDate(updatedProject.getStartDate());
             existingProject.setEndDate(updatedProject.getEndDate());
             existingProject.setCurrentlyWorkingOn(updatedProject.isCurrentlyWorkingOn());

@@ -37,8 +37,8 @@ const Projects = () => {
                 <strong>{project.title}</strong> - {project.startDate} à {project.endDate || "En cours"}
                 <p>{project.description}</p>
                 <p>Technologies: {project.technologies.join(", ")}</p>
-                {project.link && <a href={project.link} target="_blank" rel="noopener noreferrer">🔗 Voir le projet</a>}
-                {project.repository && <a href={project.repository} target="_blank" rel="noopener noreferrer">📁 Code source</a>}
+                {project.liveDemoUrl && <a href={project.liveDemoUrl} target="_blank" rel="noopener noreferrer">🔗 Voir le projet</a>}
+                {project.repositoryUrl && <a href={project.repositoryUrl} target="_blank" rel="noopener noreferrer">📁 Code source</a>}
                 <button className="edit-button" onClick={() => setSelectedProject(project)}>✏️</button>
                 <button className="delete-button" onClick={() => dispatch(deleteProject(project.id))}>🗑️</button>
               </div>

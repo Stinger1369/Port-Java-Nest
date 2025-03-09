@@ -7,6 +7,7 @@ import App from "./App";
 import "./index.css";
 import "./i18n"; // Initialisation de react-i18next
 import "@fortawesome/fontawesome-free/css/all.min.css"; // Icônes FontAwesome
+import "react-datepicker/dist/react-datepicker.css"; // Importer ici
 
 // Vérifier si la clé API Google Maps est définie (pour le débogage)
 if (import.meta.env.VITE_GOOGLE_MAPS_API_KEY) {

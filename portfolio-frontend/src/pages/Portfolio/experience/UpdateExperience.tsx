@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "../../../redux/store";
 import { updateExperience } from "../../../redux/features/experienceSlice";
+import DatePicker from "../../../components/common/DatePicker";
+import "./Experience.css";
 
 interface Props {
   experience: {
@@ -19,7 +21,6 @@ interface Props {
 const UpdateExperience = ({ experience, onClose }: Props) => {
   const dispatch = useDispatch<AppDispatch>();
 
-  // ✅ Initialisation correcte des valeurs pour éviter undefined
   const [updatedExperience, setUpdatedExperience] = useState({
     id: experience.id,
     companyName: experience.companyName || "",
@@ -52,6 +53,13 @@ const UpdateExperience = ({ experience, onClose }: Props) => {
     }));
   };
 
+  const handleDateChange = (name: string, value: string) => {
+    setUpdatedExperience((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     dispatch(updateExperience({ id: updatedExperience.id, experienceData: updatedExperience }));
@@ -60,38 +68,49 @@ const UpdateExperience = ({ experience, onClose }: Props) => {
 
   return (
     <div className="modal">
-      <div className="modal-content">
-        <h3>Modifier l'Expérience</h3>
+      <div className="experience-form-container">
+        <h3 className="experience-form-title">Modifier l'Expérience</h3>
         <form onSubmit={handleSubmit}>
+          <label className="experience-label">Nom de l'entreprise *</label>
           <input
             type="text"
             name="companyName"
             value={updatedExperience.companyName}
             onChange={handleChange}
             required
+            className="experience-input"
           />
+
+          <label className="experience-label">Poste *</label>
           <input
             type="text"
             name="position"
             value={updatedExperience.position}
             onChange={handleChange}
             required
+            className="experience-input"
           />
-          <input
-            type="date"
+
+          <label className="experience-label">Date de début *</label>
+          <DatePicker
             name="startDate"
             value={updatedExperience.startDate}
-            onChange={handleChange}
+            onChange={handleDateChange}
             required
+            className="experience-date-picker"
           />
-          <input
-            type="date"
+
+          <label className="experience-label">Date de fin</label>
+          <DatePicker
             name="endDate"
-            value={updatedExperience.endDate}
-            onChange={handleChange}
+            value={updatedExperience.endDate || ""}
+            onChange={handleDateChange}
             disabled={updatedExperience.currentlyWorking}
+            minDate={updatedExperience.startDate}
+            className="experience-date-picker"
           />
-          <label>
+
+          <label className="experience-checkbox-label">
             <input
               type="checkbox"
               name="currentlyWorking"
@@ -100,13 +119,23 @@ const UpdateExperience = ({ experience, onClose }: Props) => {
             />
             Actuellement en poste
           </label>
+
+          <label className="experience-label">Description</label>
           <textarea
             name="description"
             value={updatedExperience.description}
             onChange={handleChange}
+            className="experience-textarea"
           />
-          <button type="submit">Mettre à jour</button>
-          <button type="button" onClick={onClose}>
+
+          <button type="submit" className="experience-button experience-button-submit">
+            Mettre à jour
+          </button>
+          <button
+            type="button"
+            onClick={onClose}
+            className="experience-button experience-button-cancel"
+          >
             Annuler
           </button>
         </form>

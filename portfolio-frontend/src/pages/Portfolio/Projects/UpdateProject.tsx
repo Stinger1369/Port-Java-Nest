@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "../../../redux/store";
 import { updateProject } from "../../../redux/features/projectSlice";
+import DatePicker from "../../../components/common/DatePicker";
+import "./Projects.css"; // Importer les styles
 
 interface Props {
   project: {
@@ -9,11 +11,11 @@ interface Props {
     title: string;
     description: string;
     technologies: string[];
-    link?: string;
-    repository?: string;
+    liveDemoUrl?: string;
+    repositoryUrl?: string;
     startDate: string;
     endDate?: string;
-    currentlyWorking: boolean;
+    currentlyWorkingOn: boolean;
   };
   onClose: () => void;
 }
@@ -22,6 +24,7 @@ const UpdateProject = ({ project, onClose }: Props) => {
   const dispatch = useDispatch<AppDispatch>();
 
   const [updatedProject, setUpdatedProject] = useState(project);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     setUpdatedProject(project);
@@ -33,32 +36,108 @@ const UpdateProject = ({ project, onClose }: Props) => {
       ...prev,
       [name]: type === "checkbox" ? checked : value,
     }));
+    setError(null);
+  };
+
+  const handleDateChange = (name: string, value: string) => {
+    setUpdatedProject((prev) => {
+      const updated = { ...prev, [name]: value };
+      if (name === "endDate" && value && updated.startDate) {
+        const start = new Date(updated.startDate);
+        const end = new Date(value);
+        if (end < start) {
+          setError("La date de fin ne peut pas être antérieure à la date de début.");
+          return prev;
+        }
+      }
+      setError(null);
+      return updated;
+    });
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!updatedProject.startDate) {
+      setError("La date de début est requise.");
+      return;
+    }
+    if (!updatedProject.currentlyWorkingOn && !updatedProject.endDate) {
+      setError("La date de fin est requise si le projet n'est pas en cours.");
+      return;
+    }
     dispatch(updateProject({ id: updatedProject.id, projectData: updatedProject }));
     onClose();
   };
 
   return (
     <div className="modal">
-      <div className="modal-content">
-        <h3>Modifier le Projet</h3>
+      <div className="project-form-container">
+        <h3 className="project-form-title">Modifier le Projet</h3>
         <form onSubmit={handleSubmit}>
-          <input type="text" name="title" value={updatedProject.title} onChange={handleChange} required />
-          <textarea name="description" value={updatedProject.description} onChange={handleChange} />
-          <input type="text" name="technologies" value={updatedProject.technologies.join(", ")} onChange={handleChange} />
-          <input type="text" name="link" value={updatedProject.link} onChange={handleChange} />
-          <input type="text" name="repository" value={updatedProject.repository} onChange={handleChange} />
-          <input type="date" name="startDate" value={updatedProject.startDate} onChange={handleChange} required />
-          <input type="date" name="endDate" value={updatedProject.endDate} onChange={handleChange} disabled={updatedProject.currentlyWorking} />
-          <label>
-            <input type="checkbox" name="currentlyWorking" checked={updatedProject.currentlyWorking} onChange={handleChange} />
+          <input
+            type="text"
+            name="title"
+            value={updatedProject.title}
+            onChange={handleChange}
+            required
+            className="project-input"
+          />
+          <textarea
+            name="description"
+            value={updatedProject.description}
+            onChange={handleChange}
+            className="project-textarea"
+          />
+          <input
+            type="text"
+            name="technologies"
+            value={updatedProject.technologies.join(", ")}
+            onChange={handleChange}
+            className="project-input"
+          />
+          <input
+            type="text"
+            name="liveDemoUrl"
+            value={updatedProject.liveDemoUrl || ""}
+            onChange={handleChange}
+            className="project-input"
+          />
+          <input
+            type="text"
+            name="repositoryUrl"
+            value={updatedProject.repositoryUrl || ""}
+            onChange={handleChange}
+            className="project-input"
+          />
+          <DatePicker
+            name="startDate"
+            value={updatedProject.startDate}
+            onChange={handleDateChange}
+            label="Date de début"
+            required
+            className="project-date-picker"
+          />
+          <DatePicker
+            name="endDate"
+            value={updatedProject.endDate || ""}
+            onChange={handleDateChange}
+            label="Date de fin"
+            disabled={updatedProject.currentlyWorkingOn}
+            minDate={updatedProject.startDate}
+            className="project-date-picker"
+          />
+          <label className="project-checkbox-label">
+            <input
+              type="checkbox"
+              name="currentlyWorkingOn"
+              checked={updatedProject.currentlyWorkingOn}
+              onChange={handleChange}
+            />
             Projet en cours
           </label>
-          <button type="submit">Mettre à jour</button>
-          <button type="button" onClick={onClose}>Annuler</button>
+          {error && <p className="project-error-message">{error}</p>}
+          <button type="submit" className="project-button project-button-submit">Mettre à jour</button>
+          <button type="button" className="project-button project-button-cancel" onClick={onClose}>Annuler</button>
         </form>
       </div>
     </div>

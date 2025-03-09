@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "../../../redux/store";
 import { updateSkill } from "../../../redux/features/skillSlice";
+import "./Skills.css";
 
 interface Props {
   skill: {
@@ -37,14 +38,51 @@ const UpdateSkill = ({ skill, onClose }: Props) => {
 
   return (
     <div className="modal">
-      <h3>Modifier la Compétence</h3>
-      <form onSubmit={handleSubmit}>
-        <input type="text" name="name" value={updatedSkill.name} onChange={handleChange} required />
-        <input type="number" name="level" value={updatedSkill.level} onChange={handleChange} min="0" max="100" required />
-        <textarea name="description" value={updatedSkill.description} onChange={handleChange} />
-        <button type="submit">Mettre à jour</button>
-        <button type="button" onClick={onClose}>Annuler</button>
-      </form>
+      <div className="skill-form-container">
+        <h3 className="skill-form-title">Modifier la Compétence</h3>
+        <form onSubmit={handleSubmit}>
+          <label className="skill-label">Nom de la compétence *</label>
+          <input
+            type="text"
+            name="name"
+            value={updatedSkill.name}
+            onChange={handleChange}
+            required
+            className="skill-input"
+          />
+
+          <label className="skill-label">Niveau (0-100) *</label>
+          <input
+            type="number"
+            name="level"
+            value={updatedSkill.level}
+            onChange={handleChange}
+            min="0"
+            max="100"
+            required
+            className="skill-input"
+          />
+
+          <label className="skill-label">Description</label>
+          <textarea
+            name="description"
+            value={updatedSkill.description}
+            onChange={handleChange}
+            className="skill-textarea"
+          />
+
+          <button type="submit" className="skill-button skill-button-submit">
+            Mettre à jour
+          </button>
+          <button
+            type="button"
+            onClick={onClose}
+            className="skill-button skill-button-cancel"
+          >
+            Annuler
+          </button>
+        </form>
+      </div>
     </div>
   );
 };

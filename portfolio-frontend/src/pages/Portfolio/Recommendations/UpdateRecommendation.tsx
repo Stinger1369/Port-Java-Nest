@@ -2,8 +2,10 @@ import { useState, useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "../../../redux/store";
 import { updateRecommendation } from "../../../redux/features/recommendationSlice";
+import DatePicker from "../../../components/common/DatePicker";
+import "./Recommendations.css"; // Importer les styles
 
-// ✅ **Alignement avec le backend (RecommendationDTO)**
+// Alignement avec le backend (RecommendationDTO)
 interface Recommendation {
   id: string;
   userId: string;
@@ -13,7 +15,7 @@ interface Recommendation {
 }
 
 interface Props {
-  recommendation?: Recommendation; // ✅ Peut être undefined au début
+  recommendation?: Recommendation;
   onClose: () => void;
 }
 
@@ -28,7 +30,7 @@ const UpdateRecommendation = ({ recommendation, onClose }: Props) => {
     content: recommendation?.content || "",
     createdAt: recommendation?.createdAt
       ? recommendation.createdAt.split("T")[0]
-      : new Date().toISOString().split("T")[0], // ✅ Format YYYY-MM-DD
+      : new Date().toISOString().split("T")[0], // Format YYYY-MM-DD
   });
 
   useEffect(() => {
@@ -53,6 +55,13 @@ const UpdateRecommendation = ({ recommendation, onClose }: Props) => {
     }));
   };
 
+  const handleDateChange = (name: string, value: string) => {
+    setUpdatedRecommendation((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -64,7 +73,9 @@ const UpdateRecommendation = ({ recommendation, onClose }: Props) => {
     setIsSubmitting(true);
 
     try {
-      await dispatch(updateRecommendation({ id: updatedRecommendation.id, recommendationData: updatedRecommendation })).unwrap();
+      await dispatch(
+        updateRecommendation({ id: updatedRecommendation.id, recommendationData: updatedRecommendation })
+      ).unwrap();
       console.log("✅ Recommandation mise à jour avec succès !");
       onClose();
     } catch (error) {
@@ -80,48 +91,60 @@ const UpdateRecommendation = ({ recommendation, onClose }: Props) => {
 
   return (
     <div className="modal">
-      <div className="modal-content">
-        <h3>Modifier la Recommandation</h3>
+      <div className="recommendation-form-container">
+        <h3 className="recommendation-form-title">Modifier la Recommandation</h3>
         <form onSubmit={handleSubmit}>
-          <label>ID de l'utilisateur *</label>
+          <label className="recommendation-label">ID de l'utilisateur *</label>
           <input
             type="text"
             name="userId"
             value={updatedRecommendation.userId}
             onChange={handleChange}
             required
+            className="recommendation-input"
           />
 
-          <label>ID du recommendeur *</label>
+          <label className="recommendation-label">ID du recommendeur *</label>
           <input
             type="text"
             name="recommenderId"
             value={updatedRecommendation.recommenderId}
             onChange={handleChange}
             required
+            className="recommendation-input"
           />
 
-          <label>Texte de recommandation *</label>
+          <label className="recommendation-label">Texte de recommandation *</label>
           <textarea
             name="content"
             value={updatedRecommendation.content}
             onChange={handleChange}
             required
+            className="recommendation-textarea"
           />
 
-          <label>Date de création *</label>
-          <input
-            type="date"
+          <label className="recommendation-label">Date de création *</label>
+          <DatePicker
             name="createdAt"
             value={updatedRecommendation.createdAt}
-            onChange={handleChange}
+            onChange={handleDateChange}
             required
+            className="recommendation-date-picker"
           />
 
-          <button type="submit" disabled={isSubmitting}>
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="recommendation-button recommendation-button-submit"
+          >
             {isSubmitting ? "Mise à jour en cours..." : "Mettre à jour"}
           </button>
-          <button type="button" onClick={onClose} disabled={isSubmitting}>
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={isSubmitting}
+            className="recommendation-button recommendation-button-cancel"
+          >
             Annuler
           </button>
         </form>

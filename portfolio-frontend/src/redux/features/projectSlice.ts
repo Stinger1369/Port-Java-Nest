@@ -8,11 +8,11 @@ interface Project {
   title: string;
   description: string;
   technologies: string[];
-  link?: string;         // Correspond à `liveDemoUrl` du backend
-  repository?: string;   // Correspond à `repositoryUrl` du backend
+  liveDemoUrl?: string;   // Remplacer "link" par "liveDemoUrl"
+  repositoryUrl?: string; // Remplacer "repository" par "repositoryUrl"
   startDate: string;
   endDate?: string;
-  currentlyWorking: boolean;  // Correspond à `currentlyWorkingOn` du backend
+  currentlyWorkingOn: boolean; // Remplacer "currentlyWorking" par "currentlyWorkingOn"
 }
 
 interface ProjectState {
@@ -49,11 +49,11 @@ export const fetchProjectsByUser = createAsyncThunk(
         title: proj.title,
         description: proj.description,
         technologies: proj.technologies || [],
-        link: proj.liveDemoUrl || "",
-        repository: proj.repositoryUrl || "",
-        startDate: proj.startDate,
-        endDate: proj.endDate,
-        currentlyWorking: proj.currentlyWorkingOn || false,
+        liveDemoUrl: proj.liveDemoUrl || "",
+        repositoryUrl: proj.repositoryUrl || "",
+        startDate: proj.startDate.toString(), // Convertir LocalDate en string
+        endDate: proj.endDate?.toString() || "",
+        currentlyWorkingOn: proj.currentlyWorkingOn || false,
       }));
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || "Échec du chargement des projets.");
@@ -77,18 +77,15 @@ export const addProject = createAsyncThunk(
         {
           ...projectData,
           userId,
-          liveDemoUrl: projectData.link, // Mapper link -> liveDemoUrl pour le backend
-          repositoryUrl: projectData.repository, // Mapper repository -> repositoryUrl pour le backend
-          currentlyWorkingOn: projectData.currentlyWorking, // Mapper currentlyWorking -> currentlyWorkingOn pour le backend
         },
         { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } }
       );
 
       return {
         ...response.data,
-        link: response.data.liveDemoUrl || "",
-        repository: response.data.repositoryUrl || "",
-        currentlyWorking: response.data.currentlyWorkingOn || false,
+        liveDemoUrl: response.data.liveDemoUrl || "",
+        repositoryUrl: response.data.repositoryUrl || "",
+        currentlyWorkingOn: response.data.currentlyWorkingOn || false,
       };
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || "Échec de l'ajout du projet.");
@@ -108,18 +105,15 @@ export const updateProject = createAsyncThunk(
         `${BASE_URL}/api/projects/${id}`,
         {
           ...projectData,
-          liveDemoUrl: projectData.link, // Mapper link -> liveDemoUrl pour le backend
-          repositoryUrl: projectData.repository, // Mapper repository -> repositoryUrl pour le backend
-          currentlyWorkingOn: projectData.currentlyWorking, // Mapper currentlyWorking -> currentlyWorkingOn pour le backend
         },
         { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } }
       );
 
       return {
         ...response.data,
-        link: response.data.liveDemoUrl || "",
-        repository: response.data.repositoryUrl || "",
-        currentlyWorking: response.data.currentlyWorkingOn || false,
+        liveDemoUrl: response.data.liveDemoUrl || "",
+        repositoryUrl: response.data.repositoryUrl || "",
+        currentlyWorkingOn: response.data.currentlyWorkingOn || false,
       };
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || "Échec de la mise à jour du projet.");

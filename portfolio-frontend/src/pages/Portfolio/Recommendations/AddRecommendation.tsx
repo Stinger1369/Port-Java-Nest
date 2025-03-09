@@ -2,6 +2,8 @@ import { useState } from "react";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "../../../redux/store";
 import { addRecommendation } from "../../../redux/features/recommendationSlice";
+import DatePicker from "../../../components/common/DatePicker";
+import "./Recommendations.css"; // Importer les styles
 
 interface Props {
   onClose: () => void;
@@ -12,14 +14,21 @@ const AddRecommendation = ({ onClose }: Props) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [recommendation, setRecommendation] = useState({
-    userId: localStorage.getItem("userId") || "", // ✅ Récupération automatique de l'userId
+    userId: localStorage.getItem("userId") || "",
     recommenderId: "",
     content: "",
-    createdAt: new Date().toISOString().split("T")[0], // ✅ Format YYYY-MM-DD
+    createdAt: new Date().toISOString().split("T")[0], // Format YYYY-MM-DD
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
+    setRecommendation((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleDateChange = (name: string, value: string) => {
     setRecommendation((prev) => ({
       ...prev,
       [name]: value,
@@ -54,25 +63,61 @@ const AddRecommendation = ({ onClose }: Props) => {
 
   return (
     <div className="modal">
-      <div className="modal-content">
-        <h3>Ajouter une Recommandation</h3>
+      <div className="recommendation-form-container">
+        <h3 className="recommendation-form-title">Ajouter une Recommandation</h3>
         <form onSubmit={handleSubmit}>
-          <label>ID de l'utilisateur *</label>
-          <input type="text" name="userId" value={recommendation.userId} onChange={handleChange} required readOnly />
+          <label className="recommendation-label">ID de l'utilisateur *</label>
+          <input
+            type="text"
+            name="userId"
+            value={recommendation.userId}
+            onChange={handleChange}
+            required
+            readOnly
+            className="recommendation-input"
+          />
 
-          <label>ID du recommendeur *</label>
-          <input type="text" name="recommenderId" value={recommendation.recommenderId} onChange={handleChange} required />
+          <label className="recommendation-label">ID du recommendeur *</label>
+          <input
+            type="text"
+            name="recommenderId"
+            value={recommendation.recommenderId}
+            onChange={handleChange}
+            required
+            className="recommendation-input"
+          />
 
-          <label>Texte de recommandation *</label>
-          <textarea name="content" value={recommendation.content} onChange={handleChange} required />
+          <label className="recommendation-label">Texte de recommandation *</label>
+          <textarea
+            name="content"
+            value={recommendation.content}
+            onChange={handleChange}
+            required
+            className="recommendation-textarea"
+          />
 
-          <label>Date de création *</label>
-          <input type="date" name="createdAt" value={recommendation.createdAt} onChange={handleChange} required />
+          <label className="recommendation-label">Date de création *</label>
+          <DatePicker
+            name="createdAt"
+            value={recommendation.createdAt}
+            onChange={handleDateChange}
+            required
+            className="recommendation-date-picker"
+          />
 
-          <button type="submit" disabled={isSubmitting}>
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="recommendation-button recommendation-button-submit"
+          >
             {isSubmitting ? "Ajout en cours..." : "Ajouter"}
           </button>
-          <button type="button" onClick={onClose} disabled={isSubmitting}>
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={isSubmitting}
+            className="recommendation-button recommendation-button-cancel"
+          >
             Annuler
           </button>
         </form>

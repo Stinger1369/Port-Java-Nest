@@ -1,3 +1,6 @@
+/* src/components/common/Skills.css */
+
+/* Conteneur principal de la liste des compétences */
 .skills-container {
   max-width: 600px;
   margin: 20px auto;
@@ -7,10 +10,28 @@
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
 
+/* Titre principal */
 h2 {
   text-align: center;
+  color: #8e44ad; /* Violet pour un look créatif */
+  font-size: 1.8rem;
+  margin-bottom: 1.5rem;
 }
 
+/* Messages d'état */
+.loading-text,
+.error-text,
+.no-skills-text {
+  text-align: center;
+  font-size: 14px;
+  color: #7f8c8d;
+}
+
+.error-text {
+  color: #e74c3c; /* Rouge pour les erreurs */
+}
+
+/* Liste des compétences */
 .skills-list {
   list-style: none;
   padding: 0;
@@ -21,12 +42,63 @@ h2 {
   padding: 15px;
   margin-bottom: 10px;
   border-radius: 5px;
-  border-left: 5px solid #007bff;
+  border-left: 5px solid #9b59b6; /* Violet foncé pour les compétences */
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   display: flex;
   justify-content: space-between;
+  align-items: center;
+  transition: transform 0.2s ease;
 }
 
+.skill-item:hover {
+  transform: translateY(-2px); /* Effet de soulèvement au survol */
+}
+
+/* Boutons d'action dans la liste */
+.add-button,
+.edit-button,
+.delete-button {
+  cursor: pointer;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 5px;
+  font-size: 16px;
+  transition: background-color 0.3s ease;
+}
+
+.add-button {
+  background-color: #9b59b6;
+  color: white;
+  display: block;
+  margin: 10px auto;
+  text-align: center;
+}
+
+.add-button:hover {
+  background-color: #8e44ad;
+}
+
+.edit-button {
+  background-color: #f1c40f;
+  color: black;
+  margin-left: 0.5rem;
+}
+
+.edit-button:hover {
+  background-color: #d4ac0d;
+}
+
+.delete-button {
+  background-color: #e74c3c;
+  color: white;
+  margin-left: 0.5rem;
+}
+
+.delete-button:hover {
+  background-color: #c0392b;
+}
+
+/* Modal */
 .modal {
   background: rgba(0, 0, 0, 0.5);
   position: fixed;
@@ -37,10 +109,136 @@ h2 {
   display: flex;
   justify-content: center;
   align-items: center;
+  z-index: 1000;
 }
 
-.modal form {
-  background: white;
+/* Conteneur principal du formulaire */
+.skill-form-container {
+  background: #ffffff;
   padding: 20px;
   border-radius: 8px;
+  width: 400px;
+  max-width: 90%;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Titre du formulaire */
+.skill-form-title {
+  text-align: center;
+  color: #8e44ad;
+  font-size: 1.8rem;
+  margin-bottom: 1.5rem;
+  font-weight: 600;
+}
+
+/* Style des champs d'entrée */
+.skill-input {
+  width: 100%;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  border: 2px solid #d7bde2; /* Violet clair */
+  border-radius: 5px;
+  font-size: 1rem;
+  background-color: #f4ecf7; /* Fond violet très clair */
+  transition: border-color 0.3s ease;
+}
+
+.skill-input:focus {
+  border-color: #9b59b6; /* Violet foncé au focus */
+  outline: none;
+}
+
+/* Style de la textarea */
+.skill-textarea {
+  width: 100%;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  border: 2px solid #d7bde2;
+  border-radius: 5px;
+  font-size: 1rem;
+  background-color: #f4ecf7;
+  transition: border-color 0.3s ease;
+  resize: vertical;
+}
+
+.skill-textarea:focus {
+  border-color: #9b59b6;
+  outline: none;
+}
+
+/* Style des labels */
+.skill-label {
+  font-size: 1rem;
+  font-weight: 500;
+  color: #8e44ad;
+  margin-bottom: 0.5rem;
+  display: block;
+}
+
+/* Style des boutons du formulaire */
+.skill-button {
+  width: 100%;
+  padding: 0.75rem;
+  margin-top: 0.5rem;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 500;
+  transition: background-color 0.3s ease;
+}
+
+.skill-button-submit {
+  background-color: #9b59b6;
+  color: #ffffff;
+}
+
+.skill-button-submit:hover {
+  background-color: #8e44ad;
+}
+
+.skill-button-cancel {
+  background-color: #d7bde2;
+  color: #8e44ad;
+}
+
+.skill-button-cancel:hover {
+  background-color: #c9a9d0;
+}
+
+/* Style responsif */
+@media (max-width: 480px) {
+  .skills-container {
+    padding: 15px;
+  }
+
+  h2 {
+    font-size: 1.5rem;
+  }
+
+  .skill-item {
+    padding: 10px;
+  }
+
+  .add-button,
+  .edit-button,
+  .delete-button {
+    padding: 6px 10px;
+    font-size: 14px;
+  }
+
+  .skill-form-container {
+    width: 100%;
+    padding: 15px;
+  }
+
+  .skill-form-title {
+    font-size: 1.5rem;
+  }
+
+  .skill-input,
+  .skill-textarea,
+  .skill-button {
+    font-size: 0.9rem;
+  }
 }

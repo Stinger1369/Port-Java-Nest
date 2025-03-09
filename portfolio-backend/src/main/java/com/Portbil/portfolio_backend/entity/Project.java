@@ -19,14 +19,14 @@ public class Project {
     private String id;
 
     private String userId; // ✅ ID de l'utilisateur propriétaire du projet
-
     private String title; // ✅ Nom du projet
     private String description; // ✅ Description du projet
     private String repositoryUrl; // ✅ Lien vers le repo GitHub ou GitLab
     private String liveDemoUrl; // ✅ Lien vers la version en ligne (optionnel)
+    private String link; // ✅ Champ existant (optionnel)
+    private String repository; // ✅ Nouveau champ pour mapper "repository" du frontend
     private LocalDate startDate; // ✅ Date de début du projet
     private LocalDate endDate; // ✅ Date de fin (optionnel)
     private boolean currentlyWorkingOn; // ✅ Indique si le projet est encore en cours
-
     private List<String> technologies; // ✅ Liste des technologies utilisées
 }

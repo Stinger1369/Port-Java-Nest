@@ -1,4 +1,7 @@
-.modal-overlay {
+/* src/components/common/UpdateEducation/UpdateEducation.css */
+
+/* Overlay du modal */
+.education-modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
@@ -8,48 +11,178 @@
   display: flex;
   justify-content: center;
   align-items: center;
+  z-index: 1000;
+  transition: opacity 0.3s ease;
 }
 
-.modal-content {
-  background: white;
+/* Conteneur principal du formulaire */
+.education-form-container {
+  background: #ffffff;
   padding: 20px;
   border-radius: 8px;
   width: 400px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  max-width: 90%;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transition: transform 0.3s ease;
 }
 
-h3 {
+.education-form-container:hover {
+  transform: scale(1.01); /* Légère agrandissement au survol */
+}
+
+/* Titre du formulaire */
+.education-form-title {
   text-align: center;
-  margin-bottom: 10px;
+  color: #27ae60; /* Vert pour l'éducation */
+  font-size: 1.8rem;
+  margin-bottom: 1.5rem;
+  font-weight: 600;
 }
 
-.modal-buttons {
+/* Style des champs d'entrée */
+.education-input {
+  width: 100%;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  border: 2px solid #d5f5e3; /* Vert clair */
+  border-radius: 5px;
+  font-size: 1rem;
+  background-color: #f1f8f3; /* Fond vert très clair */
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.education-input:focus {
+  border-color: #27ae60;
+  box-shadow: 0 0 5px rgba(39, 174, 96, 0.5); /* Ombre verte au focus */
+  outline: none;
+}
+
+/* Style de la textarea */
+.education-textarea {
+  width: 100%;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  border: 2px solid #d5f5e3;
+  border-radius: 5px;
+  font-size: 1rem;
+  background-color: #f1f8f3;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  resize: vertical;
+}
+
+.education-textarea:focus {
+  border-color: #27ae60;
+  box-shadow: 0 0 5px rgba(39, 174, 96, 0.5);
+  outline: none;
+}
+
+/* Style des labels */
+.education-label {
+  font-size: 1rem;
+  font-weight: 500;
+  color: #27ae60;
+  margin-bottom: 0.5rem;
+  display: block;
+}
+
+/* Style du DatePicker spécifique */
+.education-date-picker {
+  margin-bottom: 1rem;
+}
+
+.education-date-picker .date-picker-input {
+  padding: 0.75rem 3rem 0.75rem 0.75rem;
+  border: 2px solid #d5f5e3;
+  border-radius: 5px;
+  font-size: 1rem;
+  width: 100%;
+  box-sizing: border-box;
+  background-color: #f1f8f3;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.education-date-picker .date-picker-input:focus {
+  border-color: #27ae60;
+  box-shadow: 0 0 5px rgba(39, 174, 96, 0.5);
+  outline: none;
+}
+
+.education-date-picker .date-picker-input:not(:placeholder-shown) {
+  background-color: #e8f4ea; /* Vert très clair pour indiquer une date sélectionnée */
+}
+
+/* Style de la case à cocher */
+.education-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  color: #27ae60;
+}
+
+.education-checkbox-label input[type="checkbox"] {
+  width: 1.2rem;
+  height: 1.2rem;
+  accent-color: #27ae60;
+  transition: transform 0.2s ease;
+}
+
+.education-checkbox-label input[type="checkbox"]:hover {
+  transform: scale(1.1); /* Légère agrandissement au survol */
+}
+
+/* Style des boutons du formulaire */
+.education-buttons {
   display: flex;
   justify-content: space-between;
+  gap: 10px;
 }
 
-.update-btn {
-  background-color: #28a745;
-  color: white;
-  padding: 8px 12px;
+.education-button {
+  flex: 1;
+  padding: 0.75rem;
   border: none;
-  cursor: pointer;
   border-radius: 5px;
-}
-
-.cancel-btn {
-  background-color: #dc3545;
-  color: white;
-  padding: 8px 12px;
-  border: none;
   cursor: pointer;
-  border-radius: 5px;
+  font-size: 1rem;
+  font-weight: 500;
+  transition: background-color 0.3s ease, transform 0.2s ease;
 }
 
-.cancel-btn:hover {
-  background-color: #c82333;
+.education-button-submit {
+  background-color: #27ae60;
+  color: #ffffff;
 }
 
-.update-btn:hover {
-  background-color: #218838;
+.education-button-submit:hover {
+  background-color: #219653;
+  transform: scale(1.05); /* Agrandissement au survol */
+}
+
+.education-button-cancel {
+  background-color: #e0e0e0;
+  color: #333;
+}
+
+.education-button-cancel:hover {
+  background-color: #ccc;
+  transform: scale(1.05);
+}
+
+/* Style responsif */
+@media (max-width: 480px) {
+  .education-form-container {
+    width: 100%;
+    padding: 15px;
+  }
+
+  .education-form-title {
+    font-size: 1.5rem;
+  }
+
+  .education-input,
+  .education-textarea,
+  .education-button {
+    font-size: 0.9rem;
+  }
 }

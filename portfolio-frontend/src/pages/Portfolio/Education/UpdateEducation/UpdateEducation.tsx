@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "../../../../redux/store";
 import { updateEducation } from "../../../../redux/features/educationSlice";
+import DatePicker from "../../../../components/common/DatePicker";
 import "./UpdateEducation.css"; // ✅ Import du CSS
 
 interface Props {
@@ -35,6 +36,13 @@ const UpdateEducation = ({ education, onClose }: Props) => {
     }));
   };
 
+  const handleDateChange = (name: string, value: string) => {
+    setUpdatedEducation((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     dispatch(updateEducation({ id: updatedEducation.id, educationData: updatedEducation }));
@@ -43,9 +51,10 @@ const UpdateEducation = ({ education, onClose }: Props) => {
 
   return (
     <div className="modal-overlay">
-      <div className="modal-content">
-        <h3>Modifier la Formation</h3>
+      <div className="education-form-container">
+        <h3 className="education-form-title">Modifier la Formation</h3>
         <form onSubmit={handleSubmit}>
+          <label className="education-label">Nom de l'école *</label>
           <input
             type="text"
             name="schoolName"
@@ -53,7 +62,10 @@ const UpdateEducation = ({ education, onClose }: Props) => {
             onChange={handleChange}
             placeholder="Nom de l'école"
             required
+            className="education-input"
           />
+
+          <label className="education-label">Diplôme *</label>
           <input
             type="text"
             name="degree"
@@ -61,7 +73,10 @@ const UpdateEducation = ({ education, onClose }: Props) => {
             onChange={handleChange}
             placeholder="Diplôme"
             required
+            className="education-input"
           />
+
+          <label className="education-label">Domaine d'étude *</label>
           <input
             type="text"
             name="fieldOfStudy"
@@ -69,22 +84,29 @@ const UpdateEducation = ({ education, onClose }: Props) => {
             onChange={handleChange}
             placeholder="Domaine d'étude"
             required
+            className="education-input"
           />
-          <input
-            type="date"
+
+          <label className="education-label">Date de début *</label>
+          <DatePicker
             name="startDate"
             value={updatedEducation.startDate}
-            onChange={handleChange}
+            onChange={handleDateChange}
             required
+            className="education-date-picker"
           />
-          <input
-            type="date"
+
+          <label className="education-label">Date de fin</label>
+          <DatePicker
             name="endDate"
-            value={updatedEducation.endDate}
-            onChange={handleChange}
+            value={updatedEducation.endDate || ""}
+            onChange={handleDateChange}
             disabled={updatedEducation.currentlyStudying}
+            minDate={updatedEducation.startDate}
+            className="education-date-picker"
           />
-          <label>
+
+          <label className="education-checkbox-label">
             <input
               type="checkbox"
               name="currentlyStudying"
@@ -93,15 +115,27 @@ const UpdateEducation = ({ education, onClose }: Props) => {
             />
             Actuellement en cours
           </label>
+
+          <label className="education-label">Description</label>
           <textarea
             name="description"
             value={updatedEducation.description}
             onChange={handleChange}
             placeholder="Description"
+            className="education-textarea"
           />
-          <div className="modal-buttons">
-            <button type="submit" className="update-btn">Mettre à jour</button>
-            <button type="button" className="cancel-btn" onClick={onClose}>Annuler</button>
+
+          <div className="education-buttons">
+            <button type="submit" className="education-button education-button-submit">
+              Mettre à jour
+            </button>
+            <button
+              type="button"
+              onClick={onClose}
+              className="education-button education-button-cancel"
+            >
+              Annuler
+            </button>
           </div>
         </form>
       </div>

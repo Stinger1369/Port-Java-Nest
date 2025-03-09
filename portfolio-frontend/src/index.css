@@ -41,6 +41,10 @@ h1 {
   line-height: 1.1;
 }
 
+.react-datepicker-popper {
+  z-index: 20000 !important; /* Très élevé pour confirmer */
+}
+
 button {
   border-radius: 8px;
   border: 1px solid transparent;
@@ -56,7 +60,9 @@ button {
 button:hover {
   border-color: #646cff;
 }
-
+.modal-content {
+  z-index: 100 !important; /* Réduit pour tester */
+}
 button:focus,
 button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;

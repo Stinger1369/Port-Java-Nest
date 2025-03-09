@@ -1,3 +1,6 @@
+/* src/components/common/Experience.css */
+
+/* Conteneur principal de la liste des expériences */
 .experience-container {
   max-width: 600px;
   margin: 20px auto;
@@ -5,24 +8,36 @@
   background-color: #f9f9f9;
   border-radius: 8px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  transition: box-shadow 0.3s ease; /* Transition douce pour l'ombre */
 }
 
+.experience-container:hover {
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2); /* Ombre plus prononcée au survol */
+}
+
+/* Titre principal */
 h2 {
   text-align: center;
-  color: #333;
+  color: #2c3e50; /* Bleu foncé */
+  font-size: 1.8rem;
+  margin-bottom: 1.5rem;
+  font-weight: 700;
 }
 
+/* Messages d'état */
 .loading-text,
 .error-text,
 .no-experience-text {
   text-align: center;
   font-size: 14px;
+  color: #7f8c8d; /* Gris moyen */
 }
 
 .error-text {
-  color: red;
+  color: #e74c3c; /* Rouge vif */
 }
 
+/* Liste des expériences */
 .experience-list {
   list-style: none;
   padding: 0;
@@ -33,18 +48,30 @@ h2 {
   padding: 15px;
   margin-bottom: 10px;
   border-radius: 5px;
-  border-left: 5px solid #007bff;
+  border-left: 5px solid #3498db; /* Bleu clair */
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   display: flex;
   justify-content: space-between;
   align-items: center;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.experience-item:hover {
+  transform: translateY(-2px); /* Effet de soulèvement */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15); /* Ombre plus marquée au survol */
 }
 
 .experience-info p {
   margin: 5px 0;
   color: #666;
+  transition: color 0.3s ease;
 }
 
+.experience-info p:hover {
+  color: #2c3e50; /* Texte plus sombre au survol */
+}
+
+/* Boutons d'action dans la liste */
 .add-button,
 .edit-button,
 .delete-button {
@@ -53,11 +80,11 @@ h2 {
   padding: 8px 12px;
   border-radius: 5px;
   font-size: 16px;
-  transition: background-color 0.3s;
+  transition: background-color 0.3s ease, transform 0.2s ease;
 }
 
 .add-button {
-  background-color: #007bff;
+  background-color: #3498db;
   color: white;
   display: block;
   margin: 10px auto;
@@ -65,28 +92,33 @@ h2 {
 }
 
 .add-button:hover {
-  background-color: #0056b3;
+  background-color: #2980b9;
+  transform: scale(1.05); /* Légère agrandissement au survol */
 }
 
 .edit-button {
-  background-color: #ffcc00;
+  background-color: #f1c40f;
   color: black;
+  margin-left: 0.5rem;
 }
 
 .edit-button:hover {
-  background-color: #e6b800;
+  background-color: #d4ac0d;
+  transform: scale(1.05);
 }
 
 .delete-button {
-  background-color: #ff4d4d;
+  background-color: #e74c3c;
   color: white;
+  margin-left: 0.5rem;
 }
 
 .delete-button:hover {
-  background-color: #cc0000;
+  background-color: #c0392b;
+  transform: scale(1.05);
 }
 
-/* ✅ Modal Styles */
+/* Modal */
 .modal {
   background: rgba(0, 0, 0, 0.5);
   position: fixed;
@@ -98,66 +130,199 @@ h2 {
   justify-content: center;
   align-items: center;
   z-index: 1000;
+  transition: opacity 0.3s ease; /* Transition pour l'apparition du modal */
 }
 
-.modal-content {
-  background: white;
+.modal.fade-in {
+  opacity: 1;
+}
+
+.modal.fade-out {
+  opacity: 0;
+}
+
+/* Conteneur principal du formulaire */
+.experience-form-container {
+  background: #ffffff;
   padding: 20px;
   border-radius: 8px;
   width: 400px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  max-width: 90%;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transition: transform 0.3s ease; /* Transition pour l'animation */
 }
 
-.modal-content h3 {
+.experience-form-container:hover {
+  transform: scale(1.01); /* Légère agrandissement au survol */
+}
+
+/* Titre du formulaire */
+.experience-form-title {
   text-align: center;
-  margin-bottom: 10px;
+  color: #2c3e50;
+  font-size: 1.8rem;
+  margin-bottom: 1.5rem;
+  font-weight: 600;
 }
 
-.modal-content form {
-  display: flex;
-  flex-direction: column;
-}
-
-.modal-content input,
-.modal-content textarea {
+/* Style des champs d'entrée */
+.experience-input {
   width: 100%;
-  margin-bottom: 10px;
-  padding: 8px;
-  border: 1px solid #ddd;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  border: 2px solid #dcdde1;
   border-radius: 5px;
+  font-size: 1rem;
+  background-color: #f5f6f5;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
-.modal-content label {
+.experience-input:focus {
+  border-color: #3498db;
+  box-shadow: 0 0 5px rgba(52, 152, 219, 0.5); /* Ombre bleue au focus */
+  outline: none;
+}
+
+/* Style de la textarea */
+.experience-textarea {
+  width: 100%;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  border: 2px solid #dcdde1;
+  border-radius: 5px;
+  font-size: 1rem;
+  background-color: #f5f6f5;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  resize: vertical;
+}
+
+.experience-textarea:focus {
+  border-color: #3498db;
+  box-shadow: 0 0 5px rgba(52, 152, 219, 0.5);
+  outline: none;
+}
+
+/* Style des labels */
+.experience-label {
+  font-size: 1rem;
+  font-weight: 500;
+  color: #2c3e50;
+  margin-bottom: 0.5rem;
+  display: block;
+}
+
+/* Style du DatePicker spécifique */
+.experience-date-picker {
+  margin-bottom: 1rem;
+}
+
+.experience-date-picker .date-picker-input {
+  padding: 0.75rem 3rem 0.75rem 0.75rem;
+  border: 2px solid #dcdde1;
+  border-radius: 5px;
+  font-size: 1rem;
+  width: 100%;
+  box-sizing: border-box;
+  background-color: #f5f6f5;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.experience-date-picker .date-picker-input:focus {
+  border-color: #3498db;
+  box-shadow: 0 0 5px rgba(52, 152, 219, 0.5);
+  outline: none;
+}
+
+.experience-date-picker .date-picker-input:not(:placeholder-shown) {
+  background-color: #e6f0fa;
+}
+
+/* Style de la case à cocher */
+.experience-checkbox-label {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-bottom: 10px;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  color: #2c3e50;
 }
 
-.modal-content button {
+.experience-checkbox-label input[type="checkbox"] {
+  width: 1.2rem;
+  height: 1.2rem;
+  accent-color: #3498db;
+  transition: transform 0.2s ease;
+}
+
+.experience-checkbox-label input[type="checkbox"]:hover {
+  transform: scale(1.1); /* Légère agrandissement au survol */
+}
+
+/* Style des boutons du formulaire */
+.experience-button {
   width: 100%;
-  padding: 10px;
-  margin-top: 10px;
+  padding: 0.75rem;
+  margin-top: 0.5rem;
   border: none;
   border-radius: 5px;
   cursor: pointer;
-  font-size: 14px;
+  font-size: 1rem;
+  font-weight: 500;
+  transition: background-color 0.3s ease, transform 0.2s ease;
 }
 
-.modal-content button[type="submit"] {
-  background-color: #007bff;
-  color: white;
+.experience-button-submit {
+  background-color: #3498db;
+  color: #ffffff;
 }
 
-.modal-content button[type="submit"]:hover {
-  background-color: #0056b3;
+.experience-button-submit:hover {
+  background-color: #2980b9;
+  transform: scale(1.05); /* Agrandissement au survol */
 }
 
-.modal-content button[type="button"] {
-  background-color: #ccc;
-  color: black;
+.experience-button-cancel {
+  background-color: #dfe4ea;
+  color: #2c3e50;
 }
 
-.modal-content button[type="button"]:hover {
-  background-color: #aaa;
+.experience-button-cancel:hover {
+  background-color: #ced6e0;
+  transform: scale(1.05);
+}
+
+/* Style responsif */
+@media (max-width: 480px) {
+  .experience-container {
+    padding: 15px;
+  }
+
+  h2 {
+    font-size: 1.5rem;
+  }
+
+  .experience-item {
+    padding: 10px;
+  }
+
+  .add-button,
+  .edit-button,
+  .delete-button {
+    padding: 6px 10px;
+    font-size: 14px;
+  }
+
+  .experience-form-container {
+    width: 100%;
+    padding: 15px;
+  }
+
+  .experience-form-title {
+    font-size: 1.5rem;
+  }
+
+  .experience-input,
+  .experience-textarea,
+  .experience-button {
+    font-size: 0.9rem;
+  }
 }

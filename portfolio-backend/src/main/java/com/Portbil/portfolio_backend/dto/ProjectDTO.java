@@ -17,6 +17,7 @@ public class ProjectDTO {
     private String description;
     private String repositoryUrl;
     private String liveDemoUrl;
+    private String link; // ✅ Nouveau champ ajouté
     private LocalDate startDate;
     private LocalDate endDate;
     private boolean currentlyWorkingOn;

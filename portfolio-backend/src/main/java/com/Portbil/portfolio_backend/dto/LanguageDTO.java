@@ -12,4 +12,5 @@ public class LanguageDTO {
     private String userId;
     private String name;
     private String level;
+    private String proficiencyLevel;
 }

@@ -2,6 +2,8 @@ import { useState } from "react";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "../../../redux/store";
 import { addCertification } from "../../../redux/features/certificationSlice";
+import DatePicker from "../../../components/common/DatePicker";
+import "./Certifications.css";
 
 interface Props {
   onClose: () => void;
@@ -26,6 +28,13 @@ const AddCertification = ({ onClose }: Props) => {
     }));
   };
 
+  const handleDateChange = (name: string, value: string) => {
+    setCertification((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -46,21 +55,72 @@ const AddCertification = ({ onClose }: Props) => {
 
   return (
     <div className="modal">
-      <div className="modal-content">
-        <h3>Ajouter une Certification</h3>
+      <div className="certification-form-container">
+        <h3 className="certification-form-title">Ajouter une Certification</h3>
         <form onSubmit={handleSubmit}>
-          <input type="text" name="name" value={certification.name} onChange={handleChange} placeholder="Nom de la certification" required />
-          <input type="text" name="organization" value={certification.organization} onChange={handleChange} placeholder="Organisme" required />
-          <input type="date" name="dateObtained" value={certification.dateObtained} onChange={handleChange} required />
+          <label className="certification-label">Nom de la certification *</label>
+          <input
+            type="text"
+            name="name"
+            value={certification.name}
+            onChange={handleChange}
+            placeholder="Nom de la certification"
+            required
+            className="certification-input"
+          />
+
+          <label className="certification-label">Organisme *</label>
+          <input
+            type="text"
+            name="organization"
+            value={certification.organization}
+            onChange={handleChange}
+            placeholder="Organisme"
+            required
+            className="certification-input"
+          />
+
+          <label className="certification-label">Date d'obtention *</label>
+          <DatePicker
+            name="dateObtained"
+            value={certification.dateObtained}
+            onChange={handleDateChange}
+            required
+            className="certification-date-picker"
+          />
+
           {!certification.doesNotExpire && (
-            <input type="date" name="expirationDate" value={certification.expirationDate} onChange={handleChange} placeholder="Date d'expiration" />
+            <>
+              <label className="certification-label">Date d'expiration</label>
+              <DatePicker
+                name="expirationDate"
+                value={certification.expirationDate}
+                onChange={handleDateChange}
+                className="certification-date-picker"
+              />
+            </>
           )}
-          <label>
-            <input type="checkbox" name="doesNotExpire" checked={certification.doesNotExpire} onChange={handleChange} />
+
+          <label className="certification-checkbox-label">
+            <input
+              type="checkbox"
+              name="doesNotExpire"
+              checked={certification.doesNotExpire}
+              onChange={handleChange}
+            />
             Cette certification n'expire pas
           </label>
-          <button type="submit">Ajouter</button>
-          <button type="button" onClick={onClose}>Annuler</button>
+
+          <button type="submit" className="certification-button certification-button-submit">
+            Ajouter
+          </button>
+          <button
+            type="button"
+            onClick={onClose}
+            className="certification-button certification-button-cancel"
+          >
+            Annuler
+          </button>
         </form>
       </div>
     </div>

@@ -1,0 +1,132 @@
+/* src/components/common/DatePicker.css */
+
+/* Conteneur principal du DatePicker */
+.date-picker-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+/* Label du DatePicker */
+.date-picker-container label {
+  font-size: 1rem;
+  font-weight: 500;
+  color: #333;
+}
+
+/* Wrapper pour l'input et les icônes */
+.date-picker-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+/* Input du DatePicker */
+.date-picker-input {
+  padding: 0.5rem 3rem 0.5rem 0.75rem; /* Ajusté pour inclure l'icône de suppression à droite */
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 1rem;
+  width: 100%;
+  box-sizing: border-box;
+  background-color: #f0f0f0;
+  transition: border-color 0.3s ease, background-color 0.3s ease;
+}
+
+.date-picker-input:focus {
+  border-color: #3b82f6;
+  outline: none;
+}
+
+.date-picker-input:disabled {
+  background-color: #f0f0f0;
+  cursor: not-allowed;
+}
+
+.date-picker-input:not(:placeholder-shown) {
+  background-color: #e6f3ff;
+}
+
+/* Icône de calendrier */
+.calendar-icon {
+  position: absolute;
+  right: 0.75rem;
+  color: #666;
+  font-size: 1.2rem;
+  pointer-events: none;
+}
+
+/* Wrapper pour le calendrier (react-datepicker) */
+.react-datepicker-wrapper {
+  width: 100%;
+}
+
+/* Styles pour le calendrier et le sélecteur d'année */
+.react-datepicker {
+  font-family: inherit;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  z-index: 20000 !important;
+}
+
+.react-datepicker__header {
+  background-color: #f0f0f0;
+  border-bottom: 1px solid #ccc;
+  padding: 8px 0;
+  position: relative;
+  z-index: 20002 !important;
+}
+
+.react-datepicker__year-dropdown {
+  display: block !important;
+  background-color: #fff !important;
+  border: 1px solid #ccc !important;
+  border-radius: 4px;
+  max-height: 200px;
+  overflow-y: auto;
+  z-index: 20001 !important;
+}
+
+.react-datepicker__year-dropdown-container {
+  padding: 0.5rem;
+  z-index: 20003 !important;
+}
+
+.react-datepicker__input-container input {
+  width: 100%;
+  padding: 0.5rem;
+}
+
+/* Style et repositionnement de l'icône de suppression */
+.react-datepicker__close-icon {
+  position: absolute;
+  right: 2.5rem; /* Positionné à gauche de l'icône de calendrier */
+  top: 50%;
+  transform: translateY(-50%); /* Centrage vertical parfait */
+  padding: 0;
+  background: transparent !important;
+  border: none;
+  cursor: pointer;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 20004 !important; /* Assure qu'elle est au-dessus de tout */
+}
+
+.react-datepicker__close-icon::after {
+  content: "×";
+  color: #dc2626; /* Rouge pour la croix */
+  font-size: 18px; /* Légèrement réduit pour une apparence discrète */
+  font-weight: 700;
+  line-height: 1;
+  background: transparent !important;
+}
+
+/* Désactiver l'effet de survol pour une expérience plus fluide */
+.react-datepicker__close-icon:hover {
+  background: none !important;
+  opacity: 0.8; /* Légère réduction de l'opacité au survol pour feedback */
+}

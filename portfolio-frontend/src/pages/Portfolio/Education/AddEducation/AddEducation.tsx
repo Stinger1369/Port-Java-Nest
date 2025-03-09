@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "../../../../redux/store";
 import { addEducation } from "../../../../redux/features/educationSlice";
+import DatePicker from "../../../../components/common/DatePicker";
 import "./AddEducation.css"; // ✅ Import du CSS
 
 interface Props {
@@ -29,6 +30,13 @@ const AddEducation = ({ onClose }: Props) => {
     }));
   };
 
+  const handleDateChange = (name: string, value: string) => {
+    setEducation((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -45,9 +53,10 @@ const AddEducation = ({ onClose }: Props) => {
 
   return (
     <div className="modal-overlay">
-      <div className="modal-content">
-        <h3>Ajouter une Formation</h3>
+      <div className="education-form-container">
+        <h3 className="education-form-title">Ajouter une Formation</h3>
         <form onSubmit={handleSubmit}>
+          <label className="education-label">Nom de l'école *</label>
           <input
             type="text"
             name="schoolName"
@@ -55,7 +64,10 @@ const AddEducation = ({ onClose }: Props) => {
             onChange={handleChange}
             placeholder="Nom de l'école"
             required
+            className="education-input"
           />
+
+          <label className="education-label">Diplôme *</label>
           <input
             type="text"
             name="degree"
@@ -63,7 +75,10 @@ const AddEducation = ({ onClose }: Props) => {
             onChange={handleChange}
             placeholder="Diplôme"
             required
+            className="education-input"
           />
+
+          <label className="education-label">Domaine d'étude *</label>
           <input
             type="text"
             name="fieldOfStudy"
@@ -71,22 +86,29 @@ const AddEducation = ({ onClose }: Props) => {
             onChange={handleChange}
             placeholder="Domaine d'étude"
             required
+            className="education-input"
           />
-          <input
-            type="date"
+
+          <label className="education-label">Date de début *</label>
+          <DatePicker
             name="startDate"
             value={education.startDate}
-            onChange={handleChange}
+            onChange={handleDateChange}
             required
+            className="education-date-picker"
           />
-          <input
-            type="date"
+
+          <label className="education-label">Date de fin</label>
+          <DatePicker
             name="endDate"
             value={education.endDate}
-            onChange={handleChange}
+            onChange={handleDateChange}
             disabled={education.currentlyStudying}
+            minDate={education.startDate}
+            className="education-date-picker"
           />
-          <label>
+
+          <label className="education-checkbox-label">
             <input
               type="checkbox"
               name="currentlyStudying"
@@ -95,15 +117,27 @@ const AddEducation = ({ onClose }: Props) => {
             />
             Actuellement en cours
           </label>
+
+          <label className="education-label">Description</label>
           <textarea
             name="description"
             value={education.description}
             onChange={handleChange}
             placeholder="Description"
+            className="education-textarea"
           />
-          <div className="modal-buttons">
-            <button type="submit" className="add-btn">Ajouter</button>
-            <button type="button" className="cancel-btn" onClick={onClose}>Annuler</button>
+
+          <div className="education-buttons">
+            <button type="submit" className="education-button education-button-submit">
+              Ajouter
+            </button>
+            <button
+              type="button"
+              onClick={onClose}
+              className="education-button education-button-cancel"
+            >
+              Annuler
+            </button>
           </div>
         </form>
       </div>

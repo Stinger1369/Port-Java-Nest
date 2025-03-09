@@ -18,4 +18,5 @@ public class Language {
     private String userId; // ✅ ID de l'utilisateur propriétaire de la langue
     private String name; // ✅ Nom de la langue (ex: Français, Anglais, Espagnol)
     private String level; // ✅ Niveau (ex: Débutant, Intermédiaire, Avancé, Courant, Natif)
+    private String proficiencyLevel;
 }

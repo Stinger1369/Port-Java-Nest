@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "../../../redux/store";
 import { updateCertification } from "../../../redux/features/certificationSlice";
+import DatePicker from "../../../components/common/DatePicker";
+import "./Certifications.css";
 
 interface Certification {
   id: string;
@@ -50,6 +52,13 @@ const UpdateCertification = ({ certification, onClose }: Props) => {
     }));
   };
 
+  const handleDateChange = (name: string, value: string) => {
+    setUpdatedCertification((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     dispatch(updateCertification({ id: updatedCertification.id, certificationData: updatedCertification }));
@@ -58,21 +67,72 @@ const UpdateCertification = ({ certification, onClose }: Props) => {
 
   return (
     <div className="modal">
-      <div className="modal-content">
-        <h3>Modifier la Certification</h3>
+      <div className="certification-form-container">
+        <h3 className="certification-form-title">Modifier la Certification</h3>
         <form onSubmit={handleSubmit}>
-          <input type="text" name="name" value={updatedCertification.name} onChange={handleChange} required placeholder="Nom de la certification" />
-          <input type="text" name="organization" value={updatedCertification.organization} onChange={handleChange} required placeholder="Organisme" />
-          <input type="date" name="dateObtained" value={updatedCertification.dateObtained} onChange={handleChange} required />
+          <label className="certification-label">Nom de la certification *</label>
+          <input
+            type="text"
+            name="name"
+            value={updatedCertification.name}
+            onChange={handleChange}
+            required
+            placeholder="Nom de la certification"
+            className="certification-input"
+          />
+
+          <label className="certification-label">Organisme *</label>
+          <input
+            type="text"
+            name="organization"
+            value={updatedCertification.organization}
+            onChange={handleChange}
+            required
+            placeholder="Organisme"
+            className="certification-input"
+          />
+
+          <label className="certification-label">Date d'obtention *</label>
+          <DatePicker
+            name="dateObtained"
+            value={updatedCertification.dateObtained}
+            onChange={handleDateChange}
+            required
+            className="certification-date-picker"
+          />
+
           {!updatedCertification.doesNotExpire && (
-            <input type="date" name="expirationDate" value={updatedCertification.expirationDate || ""} onChange={handleChange} placeholder="Date d'expiration" />
+            <>
+              <label className="certification-label">Date d'expiration</label>
+              <DatePicker
+                name="expirationDate"
+                value={updatedCertification.expirationDate || ""}
+                onChange={handleDateChange}
+                className="certification-date-picker"
+              />
+            </>
           )}
-          <label>
-            <input type="checkbox" name="doesNotExpire" checked={updatedCertification.doesNotExpire} onChange={handleChange} />
+
+          <label className="certification-checkbox-label">
+            <input
+              type="checkbox"
+              name="doesNotExpire"
+              checked={updatedCertification.doesNotExpire}
+              onChange={handleChange}
+            />
             Cette certification n'expire pas
           </label>
-          <button type="submit">Mettre à jour</button>
-          <button type="button" onClick={onClose}>Annuler</button>
+
+          <button type="submit" className="certification-button certification-button-submit">
+            Mettre à jour
+          </button>
+          <button
+            type="button"
+            onClick={onClose}
+            className="certification-button certification-button-cancel"
+          >
+            Annuler
+          </button>
         </form>
       </div>
     </div>
