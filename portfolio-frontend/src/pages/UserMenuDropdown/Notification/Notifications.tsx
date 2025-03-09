@@ -14,7 +14,7 @@ const Notifications: React.FC = () => {
   const { notifications, status, error, loadNotifications, handleMarkAsRead, handleRemoveNotification, handleClearNotifications } =
     useNotificationActions(t);
   const { friends, receivedRequests, handleAcceptFriendRequest, handleRejectFriendRequest, handleRemoveFriend } = useFriendActions();
-  const [filter, setFilter] = useState<"all" | "friends" | "chat">("all");
+  const [filter, setFilter] = useState<"all" | "friends" | "chat" | "likes">("all");
 
   useEffect(() => {
     if (status !== "loading") {
@@ -43,6 +43,9 @@ const Notifications: React.FC = () => {
         notification.type === "new_private_message" ||
         notification.type === "new_group_message"
       );
+    }
+    if (filter === "likes") {
+      return notification.type === "user_like" || notification.type === "user_unlike";
     }
     return false;
   });
@@ -84,6 +87,10 @@ const Notifications: React.FC = () => {
         return "fas fa-user-times";
       case "friend_removed":
         return "fas fa-user-slash";
+      case "user_like":
+        return "fas fa-thumbs-up";
+      case "user_unlike":
+        return "fas fa-thumbs-down";
       default:
         return "fas fa-info";
     }
@@ -124,6 +131,12 @@ const Notifications: React.FC = () => {
         >
           <i className="fas fa-comments"></i> {t("notification.chat")}
         </button>
+        <button
+          className={`page-filter-button ${filter === "likes" ? "active" : ""}`}
+          onClick={() => setFilter("likes")}
+        >
+          <i className="fas fa-thumbs-up"></i> {t("notification.likes")}
+        </button>
       </div>
       {filteredNotifications.length === 0 ? (
         <div className="page-no-notifications">
@@ -133,7 +146,7 @@ const Notifications: React.FC = () => {
       ) : (
         <div className="page-notifications-list">
           {filteredNotifications.map((notification, index) => {
-            const friendId = notification.data?.fromUserId || notification.data?.friendId;
+            const friendId = notification.data?.fromUserId || notification.data?.friendId || notification.data?.likerId;
             const isPending = notification.type === "friend_request_received" && friendId && isFriendRequestPending(friendId);
             const isAccepted = friendId && isFriendRequestAccepted(friendId);
 

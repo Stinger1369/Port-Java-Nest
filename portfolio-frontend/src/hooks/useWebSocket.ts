@@ -1,3 +1,4 @@
+// src/hooks/useWebSocket.ts
 import { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "../redux/store";
@@ -12,6 +13,7 @@ import {
   removeFriendFromList,
 } from "../redux/features/friendSlice";
 import { BASE_URL } from "../config/hostname";
+import { v4 as uuidv4 } from "uuid"; // Ajout d'uuid pour générer des identifiants uniques
 
 export const useWebSocket = (token: string | null) => {
   const dispatch = useDispatch<AppDispatch>();
@@ -24,6 +26,7 @@ export const useWebSocket = (token: string | null) => {
   const normalizeTimestamp = (timestamp: any): string => {
     if (timestamp?.$date) return timestamp.$date;
     if (typeof timestamp === "string" && timestamp.includes("Z")) return timestamp;
+    if (timestamp instanceof Date) return timestamp.toISOString();
     console.warn("⚠️ Timestamp invalide:", timestamp);
     return new Date().toISOString();
   };
@@ -54,7 +57,7 @@ export const useWebSocket = (token: string | null) => {
       const normalizedTimestamp = normalizeTimestamp(message.timestamp || new Date());
       const normalizedMessage = {
         ...message,
-        id: message.id || message._id || Date.now().toString(),
+        id: message.id || message._id || uuidv4(), // Utilisation d'uuidv4 au lieu de Date.now()
         timestamp: normalizedTimestamp,
         chatId: message.chatId || (message.toUserId ? `${message.fromUserId}-${message.toUserId}` : message.groupId),
         userId: message.userId || userId || "",
@@ -78,13 +81,13 @@ export const useWebSocket = (token: string | null) => {
         const toUserId = message.toUserId || (message.data?.toUserId ? message.data.toUserId : "");
         const friendId = message.friendId || (userId === fromUserId ? toUserId : fromUserId);
 
-        if (!friendId) {
+        if (!friendId && (normalizedMessage.notificationType === "friend_request_received" || normalizedMessage.notificationType === "friend_request_accepted" || normalizedMessage.notificationType === "friend_request_rejected" || normalizedMessage.notificationType === "friend_removed")) {
           console.error("❌ friendId non déterminé:", message);
           return;
         }
 
         const friendData = {
-          id: friendId,
+          id: friendId || "",
           firstName: message.firstName || "",
           lastName: message.lastName || "",
           email: message.email || "",
@@ -121,17 +124,13 @@ export const useWebSocket = (token: string | null) => {
 
           case "friend_request_rejected":
             console.log("🔍 Traitement de friend_request_rejected - userId:", userId, "friendId:", friendId, "fromUserId:", fromUserId, "toUserId:", toUserId);
-            // Nettoyer les états en fonction du rôle de l'utilisateur
             if (userId === friendId) {
-              // Utilisateur qui rejette la demande (destinataire)
               dispatch(removeReceivedRequest(fromUserId));
               console.log("✅ Demande rejetée (destinataire), supprimée de receivedRequests:", fromUserId, "État actuel:", receivedRequests);
             } else if (userId !== friendId && userId !== fromUserId) {
-              // Utilisateur qui a envoyé la demande (expéditeur)
               dispatch(removeSentRequest(friendId));
               console.log("✅ Demande rejetée (expéditeur), supprimée de sentRequests:", friendId, "État actuel:", sentRequests);
             }
-            // Log de l'état final après nettoyage
             console.log("✅ État après rejet - friendId:", friendId, "sentRequests:", sentRequests, "receivedRequests:", receivedRequests);
             break;
 
@@ -151,6 +150,42 @@ export const useWebSocket = (token: string | null) => {
               dispatch(removeReceivedRequest(friendId));
               console.log("✅ Demande annulée, supprimée de receivedRequests:", friendId);
             }
+            break;
+
+          case "user_like":
+            console.log("🔍 Traitement de user_like - userId:", userId, "fromUserId:", fromUserId);
+            if (userId === normalizedMessage.userId) {
+              dispatch(addNotification({
+                id: normalizedMessage.id,
+                userId: normalizedMessage.userId,
+                type: "user_like",
+                message: message.message || "Quelqu'un a aimé votre profil !",
+                timestamp: normalizedTimestamp,
+                isRead: false,
+                data: normalizedMessage.data,
+              }));
+              console.log("✅ Notification user_like ajoutée:", normalizedMessage);
+            }
+            break;
+
+          case "user_unlike":
+            console.log("🔍 Traitement de user_unlike - userId:", userId, "fromUserId:", fromUserId);
+            if (userId === normalizedMessage.userId) {
+              dispatch(addNotification({
+                id: normalizedMessage.id,
+                userId: normalizedMessage.userId,
+                type: "user_unlike",
+                message: message.message || "Quelqu'un a retiré son like de votre profil !",
+                timestamp: normalizedTimestamp,
+                isRead: false,
+                data: normalizedMessage.data,
+              }));
+              console.log("✅ Notification user_unlike ajoutée:", normalizedMessage);
+            }
+            break;
+
+          case "connected":
+            console.log("✅ Connexion WebSocket confirmée pour userId:", userId);
             break;
 
           default:

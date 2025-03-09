@@ -82,7 +82,7 @@
 
 /* Item de notification */
 .dropdown-item {
-  padding: 0.75rem 1rem; /* Réduction du padding pour une apparence plus compacte */
+  padding: 0.75rem 1rem;
   font-size: 0.95rem;
   color: #1e293b;
   cursor: pointer;
@@ -105,11 +105,11 @@
 .icon-group {
   display: flex;
   align-items: center;
-  gap: 0.25rem; /* Espacement réduit entre les icônes */
+  gap: 0.25rem;
 }
 
 .icon-group i {
-  font-size: 1.4rem; /* Taille augmentée pour une meilleure visibilité */
+  font-size: 1.4rem;
   color: #3b82f6;
   background: none;
 }
@@ -125,13 +125,13 @@
   font-weight: 500;
   color: #1e293b;
   word-break: break-word;
-  white-space: normal; /* Permet le retour à la ligne si nécessaire */
+  white-space: normal;
 }
 
 .notification-time {
   font-size: 0.85rem;
   color: #6b7280;
-  margin-top: 2px; /* Espacement réduit */
+  margin-top: 2px;
 }
 
 /* Conteneur des boutons d'action à droite */
@@ -182,6 +182,7 @@
 /* Boutons d'action */
 .mark-read-button,
 .remove-button,
+.view-profile-button,
 .accept-button,
 .reject-button {
   background: none;
@@ -194,21 +195,30 @@
 
 .mark-read-button:hover,
 .remove-button:hover,
+.view-profile-button:hover,
 .accept-button:hover,
 .reject-button:hover {
   transform: scale(1.2);
 }
 
 .mark-read-button {
-  color: #3b82f6; /* Bleu comme dans l'image */
+  color: #3b82f6;
 }
 
 .mark-read-button:hover {
   color: #2563eb;
 }
 
+.view-profile-button {
+  color: #10b981;
+}
+
+.view-profile-button:hover {
+  color: #059669;
+}
+
 .remove-button {
-  color: #9ca3af; /* Gris comme dans l'image */
+  color: #9ca3af;
 }
 
 .remove-button:hover {
@@ -329,7 +339,9 @@
   .notification-actions {
     gap: 0.5rem;
   }
-  /* Ajout des styles pour la modale */
+}
+
+/* Ajout des styles pour la modale */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -426,5 +438,4 @@
 
 .close-button:hover {
   background-color: #c0392b;
-}
 }

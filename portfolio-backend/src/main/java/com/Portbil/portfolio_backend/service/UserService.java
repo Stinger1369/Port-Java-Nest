@@ -1,5 +1,6 @@
 package com.Portbil.portfolio_backend.service;
 
+import com.Portbil.portfolio_backend.config.ChatWebSocketHandler;
 import com.Portbil.portfolio_backend.dto.UserCoordinatesDTO;
 import com.Portbil.portfolio_backend.dto.UserDTO;
 import com.Portbil.portfolio_backend.dto.WeatherDTO;
@@ -26,7 +27,7 @@ public class UserService {
     private final GoogleMapsService googleMapsService;
     private final EmailTemplateService emailTemplateService;
     private final ImageRepository imageRepository;
-
+    private final ChatWebSocketHandler chatWebSocketHandler;
     private final String DEVELOPER_ID = "developer-id-here";
     private final String DEVELOPER_EMAIL = "developer-email@example.com";
 
@@ -545,6 +546,30 @@ public class UserService {
         userRepository.save(liker);
         userRepository.save(liked);
         System.out.println("✅ Utilisateur " + likerId + " a liké " + likedId);
+
+        // Envoyer une notification via WebSocket
+        try {
+            Map<String, String> notificationData = new HashMap<>();
+            notificationData.put("likerId", likerId);
+            String likerName = Optional.ofNullable(liker.getFirstName())
+                    .map(fn -> fn + " " + Optional.ofNullable(liker.getLastName()).orElse(""))
+                    .orElse("Utilisateur inconnu");
+            chatWebSocketHandler.sendNotification(
+                    likedId,
+                    "user_like",
+                    likerName + " a liké votre profil !",
+                    notificationData
+            );
+            // Persister la notification dans MongoDB
+            chatWebSocketHandler.persistNotification(
+                    likedId,
+                    "user_like",
+                    likerName + " a liké votre profil !",
+                    notificationData
+            );
+        } catch (Exception e) {
+            System.err.println("❌ Erreur lors de l'envoi de la notification de like : " + e.getMessage());
+        }
     }
 
     /**
@@ -570,11 +595,35 @@ public class UserService {
         }
 
         liker.getLikedUserIds().remove(likedId);
-        liked.getLikerUserIds().remove(likedId);
+        liked.getLikerUserIds().remove(likerId);
 
         userRepository.save(liker);
         userRepository.save(liked);
         System.out.println("✅ Utilisateur " + likerId + " a retiré son like de " + likedId);
+
+        // Envoyer une notification via WebSocket pour informer du "unlike" (facultatif, selon tes besoins)
+        try {
+            Map<String, String> notificationData = new HashMap<>();
+            notificationData.put("likerId", likerId);
+            String likerName = Optional.ofNullable(liker.getFirstName())
+                    .map(fn -> fn + " " + Optional.ofNullable(liker.getLastName()).orElse(""))
+                    .orElse("Utilisateur inconnu");
+            chatWebSocketHandler.sendNotification(
+                    likedId,
+                    "user_unlike",
+                    likerName + " a retiré son like de votre profil.",
+                    notificationData
+            );
+            // Persister la notification dans MongoDB
+            chatWebSocketHandler.persistNotification(
+                    likedId,
+                    "user_unlike",
+                    likerName + " a retiré son like de votre profil.",
+                    notificationData
+            );
+        } catch (Exception e) {
+            System.err.println("❌ Erreur lors de l'envoi de la notification de unlike : " + e.getMessage());
+        }
     }
 
     /**

@@ -103,6 +103,26 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ isOpen, onT
 
   const unreadCount = sortedNotifications.filter((notif) => !notif.isRead).length;
 
+  const handleViewProfile = async (notification: any) => {
+    const memberId = notification.data?.fromUserId || notification.data?.friendId || notification.data?.likerId;
+    if (memberId) {
+      try {
+        const member = await dispatch(fetchUserById(memberId)).unwrap();
+        setSelectedMember(member);
+        if (member.id) {
+          const imagesResult = await dispatch(getAllImagesByUserId(member.id)).unwrap();
+          const sortedImages = [...imagesResult.images].sort((a: Image, b: Image) =>
+            a.isProfilePicture && !b.isProfilePicture ? -1 : !a.isProfilePicture && b.isProfilePicture ? 1 : 0
+          );
+          setSelectedMemberImages(sortedImages);
+        }
+      } catch (err) {
+        console.error("❌ Erreur lors de la récupération du membre:", err);
+      }
+    }
+    onClose();
+  };
+
   const handleNotificationClick = async (notification: any) => {
     switch (notification.type) {
       case "new_chat":
@@ -112,31 +132,12 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ isOpen, onT
       case "new_group_message":
         navigate(`/chat/group/${notification.data?.groupId || "default"}`);
         break;
-      case "friend_request_received":
-      case "friend_request_accepted":
-      case "friend_request_rejected":
-      case "friend_removed":
-        const memberId = notification.data?.fromUserId || notification.data?.friendId;
-        if (memberId) {
-          try {
-            const member = await dispatch(fetchUserById(memberId)).unwrap();
-            setSelectedMember(member);
-            if (member.id) {
-              const imagesResult = await dispatch(getAllImagesByUserId(member.id)).unwrap();
-              const sortedImages = [...imagesResult.images].sort((a: Image, b: Image) =>
-                a.isProfilePicture && !b.isProfilePicture ? -1 : !a.isProfilePicture && b.isProfilePicture ? 1 : 0
-              );
-              setSelectedMemberImages(sortedImages);
-            }
-          } catch (err) {
-            console.error("❌ Erreur lors de la récupération du membre:", err);
-          }
-        }
-        break;
       default:
-        console.log("📩 Type de notification non géré:", notification.type);
+        // Par défaut, ne rien faire (la navigation est gérée par le bouton "Voir le profil")
+        break;
     }
     handleMarkAsRead(notification.id, userId);
+    loadNotifications(userId); // S'assurer que l'état est synchronisé après le clic
     onClose();
   };
 
@@ -196,6 +197,10 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ isOpen, onT
         return "fas fa-user-times";
       case "friend_removed":
         return "fas fa-user-slash";
+      case "user_like":
+        return "fas fa-thumbs-up";
+      case "user_unlike":
+        return "fas fa-thumbs-down";
       default:
         return "fas fa-info";
     }
@@ -207,6 +212,8 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ isOpen, onT
       case "friend_request_accepted":
       case "friend_request_rejected":
       case "friend_removed":
+      case "user_like":
+      case "user_unlike":
         return "fas fa-bell";
       case "new_chat":
       case "new_private_message":
@@ -272,7 +279,7 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ isOpen, onT
         ) : (
           <>
             {sortedNotifications.map((notification, index) => {
-              const friendId = notification.data?.fromUserId || notification.data?.friendId;
+              const friendId = notification.data?.fromUserId || notification.data?.friendId || notification.data?.likerId;
               const isPending = notification.type === "friend_request_received" && friendId && isFriendRequestPending(friendId);
               const isAccepted = friendId && isFriendRequestAccepted(friendId);
 
@@ -304,6 +311,18 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ isOpen, onT
                           title={t("notification.markAsRead")}
                         >
                           <i className="fas fa-check-circle"></i>
+                        </button>
+                      )}
+                      {friendId && (
+                        <button
+                          className="view-profile-button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleViewProfile(notification);
+                          }}
+                          title={t("notification.viewProfile")}
+                        >
+                          <i className="fas fa-user"></i>
                         </button>
                       )}
                       <button

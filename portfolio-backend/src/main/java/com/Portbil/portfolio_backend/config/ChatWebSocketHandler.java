@@ -279,8 +279,8 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
         }
     }
 
-    // Persister une notification dans MongoDB
-    private void persistNotification(String toUserId, String notificationType, String messageContent, Map<String, String> additionalData) {
+    // Persister une notification dans MongoDB (maintenant public)
+    public void persistNotification(String toUserId, String notificationType, String messageContent, Map<String, String> additionalData) {
         try {
             Notification notification = Notification.builder()
                     .id(UUID.randomUUID().toString())

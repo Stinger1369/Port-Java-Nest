@@ -31,7 +31,8 @@
     "removeFriend": "Supprimer l'ami",
     "clearAll": "Effacer tout",
     "confirmClear": "Voulez-vous effacer toutes les notifications ?",
-    "confirmFriendRequest": "Voulez-vous accepter la demande d'ami de {{message}} ?"
+    "confirmFriendRequest": "Voulez-vous accepter la demande d'ami de {{message}} ?",
+    "viewProfile": "Voir le profil"
   },
   "profile": {
     "title": "Mon Profil",

@@ -20,7 +20,7 @@ export const useNotificationActions = (t?: TFunction<"translation", undefined>) 
     (state: RootState) => state.notification
   );
   const { handleAcceptFriendRequest, handleRejectFriendRequest } = useFriendActions();
-  const userId = localStorage.getItem("userId") || ""; // Définir userId ici pour qu'il soit accessible partout
+  const userId = localStorage.getItem("userId") || "";
 
   const loadNotifications = (userId: string) => {
     console.log(
@@ -51,17 +51,28 @@ export const useNotificationActions = (t?: TFunction<"translation", undefined>) 
   };
 
   const handleMarkAsRead = (notificationId: string, userId: string) => {
-    const isLocalId = /^\d{13}$/.test(notificationId);
     const notificationExists = notifications.some((notif) => notif.id === notificationId);
 
-    if (isLocalId && notificationExists) {
+    if (!notificationExists) {
+      console.warn("⚠️ Notification non trouvée dans l'état local:", notificationId);
+      return;
+    }
+
+    // Vérifier si la notification est locale (non persistante côté serveur)
+    const isLocalId = !notificationId.includes("-"); // Les ID locaux générés par uuid contiennent des tirets
+
+    if (isLocalId) {
+      // Marquer localement et recharger les notifications pour synchroniser
       dispatch(markAsRead(notificationId));
       console.log("✅ Notification locale marquée comme lue côté client:", notificationId);
-    } else if (notificationExists) {
+      loadNotifications(userId); // Recharge pour synchroniser avec le serveur
+    } else {
+      // Marquer côté serveur
       dispatch(markNotificationAsRead({ notificationId, userId }))
         .unwrap()
         .then(() => {
           console.log("✅ Notification marquée comme lue:", notificationId);
+          dispatch(markAsRead(notificationId)); // S'assurer que l'état local est synchronisé
         })
         .catch((err) => {
           console.error("❌ Erreur lors du marquage de la notification:", err);
@@ -69,32 +80,31 @@ export const useNotificationActions = (t?: TFunction<"translation", undefined>) 
             dispatch(markAsRead(notificationId));
             console.log("ℹ️ Notification introuvable côté serveur, marquée localement:", notificationId);
           }
+          loadNotifications(userId); // Recharge pour synchroniser
         });
-    } else {
-      console.warn("⚠️ Notification non trouvée dans l'état local:", notificationId);
     }
   };
 
   const handleRemoveNotification = (notificationId: string, userId: string) => {
-    const isLocalId = /^\d{13}$/.test(notificationId);
+    const isLocalId = !notificationId.includes("-");
     const notificationExists = notifications.some((notif) => notif.id === notificationId);
 
     if (isLocalId && notificationExists) {
       dispatch(removeNotification(notificationId));
       console.log("✅ Notification locale supprimée côté client:", notificationId);
-      loadNotifications(userId); // Recharge après suppression locale
+      loadNotifications(userId);
     } else if (notificationExists) {
       dispatch(deleteNotification({ notificationId, userId }))
         .unwrap()
         .then(() => {
           console.log("✅ Notification supprimée du serveur:", notificationId);
-          loadNotifications(userId); // Recharge après suppression serveur
+          loadNotifications(userId);
         })
         .catch((err) => {
           console.error("❌ Erreur lors de la suppression de la notification:", err);
           dispatch(removeNotification(notificationId));
           console.log("ℹ️ Notification supprimée localement en cas d'échec serveur:", notificationId);
-          loadNotifications(userId); // Recharge même en cas d'échec pour synchroniser
+          loadNotifications(userId);
         });
     } else {
       console.warn("⚠️ Notification non trouvée dans l'état local:", notificationId);
