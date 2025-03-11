@@ -141,12 +141,19 @@ export const cancelFriendRequest = createAsyncThunk(
   "friend/cancelFriendRequest",
   async (
     { senderId, receiverId }: { senderId: string; receiverId: string },
-    { rejectWithValue }
+    { dispatch, getState, rejectWithValue }
   ) => {
     try {
       const token = getAuthToken();
       if (!token) {
         return rejectWithValue("Token non trouvé, veuillez vous reconnecter.");
+      }
+
+      const state = getState() as RootState;
+      const hasSentRequest = state.friend.sentRequests.some((req) => req.id === receiverId);
+      if (!hasSentRequest) {
+        console.warn("⚠️ Aucune demande en attente trouvée pour annulation:", receiverId);
+        return rejectWithValue("Aucune demande en attente trouvée pour annulation.");
       }
 
       const response = await axios.delete<string>(
@@ -155,6 +162,10 @@ export const cancelFriendRequest = createAsyncThunk(
       );
 
       console.log("✅ Demande d'ami annulée:", response.data);
+
+      // Synchronisation explicite pour le receiver
+      dispatch(fetchReceivedFriendRequests(receiverId));
+
       return { receiverId };
     } catch (error: any) {
       console.error("❌ Échec de cancelFriendRequest:", error.response?.data || error.message);
@@ -282,7 +293,7 @@ const friendSlice = createSlice({
       const existingRequest = state.receivedRequests.find((req) => req.id === action.payload.id);
       if (!existingRequest) {
         state.receivedRequests.push(action.payload);
-        console.log("✅ Demande d'ami reçue ajoutée à receivedRequests:", action.payload, "Nouvel état:", state.receivedRequests);
+        console.log("✅ Demande d'ami reçue ajoutée à receivedRequests:", action.payload.id, "Nouvel état:", state.receivedRequests);
       }
     },
     removeSentRequest: (state, action: PayloadAction<string>) => {
@@ -315,7 +326,6 @@ const friendSlice = createSlice({
       .addCase(sendFriendRequest.fulfilled, (state, action: PayloadAction<{ receiverId: string }>) => {
         state.status = "succeeded";
         state.message = "Demande d'ami envoyée avec succès !";
-        // Ne pas ajouter à sentRequests ici, car WebSocket le fera
       })
       .addCase(sendFriendRequest.rejected, (state, action) => {
         state.status = "failed";
@@ -329,7 +339,7 @@ const friendSlice = createSlice({
       .addCase(acceptFriendRequest.fulfilled, (state, action: PayloadAction<{ friendId: string }>) => {
         state.status = "succeeded";
         state.message = "Demande d'ami acceptée avec succès !";
-        // Ne pas modifier l'état ici, WebSocket gère l'ajout à friends et la suppression de receivedRequests
+        state.receivedRequests = state.receivedRequests.filter((req) => req.id !== action.payload.friendId);
       })
       .addCase(acceptFriendRequest.rejected, (state, action) => {
         state.status = "failed";
@@ -343,7 +353,7 @@ const friendSlice = createSlice({
       .addCase(rejectFriendRequest.fulfilled, (state, action: PayloadAction<{ friendId: string }>) => {
         state.status = "succeeded";
         state.message = "Demande d'ami refusée avec succès !";
-        // Ne pas modifier l'état ici, WebSocket gère la suppression de receivedRequests
+        state.receivedRequests = state.receivedRequests.filter((req) => req.id !== action.payload.friendId);
       })
       .addCase(rejectFriendRequest.rejected, (state, action) => {
         state.status = "failed";
@@ -357,7 +367,7 @@ const friendSlice = createSlice({
       .addCase(removeFriend.fulfilled, (state, action: PayloadAction<{ friendId: string }>) => {
         state.status = "succeeded";
         state.message = "Ami supprimé avec succès !";
-        // Ne pas modifier l'état ici, WebSocket gère la suppression de friends
+        state.friends = state.friends.filter((friend) => friend.id !== action.payload.friendId);
       })
       .addCase(removeFriend.rejected, (state, action) => {
         state.status = "failed";
@@ -371,7 +381,8 @@ const friendSlice = createSlice({
       .addCase(cancelFriendRequest.fulfilled, (state, action: PayloadAction<{ receiverId: string }>) => {
         state.status = "succeeded";
         state.message = "Demande d'ami annulée avec succès !";
-        // Ne pas modifier l'état ici, WebSocket gère la suppression de sentRequests
+        state.sentRequests = state.sentRequests.filter((req) => req.id !== action.payload.receiverId);
+        console.log("✅ sentRequests mis à jour après annulation:", state.sentRequests);
       })
       .addCase(cancelFriendRequest.rejected, (state, action) => {
         state.status = "failed";
@@ -385,6 +396,7 @@ const friendSlice = createSlice({
       .addCase(fetchFriends.fulfilled, (state, action: PayloadAction<Friend[]>) => {
         state.status = "succeeded";
         state.friends = action.payload;
+        console.log("✅ friends mis à jour:", state.friends);
       })
       .addCase(fetchFriends.rejected, (state, action) => {
         state.status = "failed";
@@ -398,6 +410,7 @@ const friendSlice = createSlice({
       .addCase(fetchSentFriendRequests.fulfilled, (state, action: PayloadAction<Friend[]>) => {
         state.status = "succeeded";
         state.sentRequests = action.payload;
+        console.log("✅ sentRequests mis à jour:", state.sentRequests);
       })
       .addCase(fetchSentFriendRequests.rejected, (state, action) => {
         state.status = "failed";
@@ -411,7 +424,7 @@ const friendSlice = createSlice({
       .addCase(fetchReceivedFriendRequests.fulfilled, (state, action: PayloadAction<Friend[]>) => {
         state.status = "succeeded";
         state.receivedRequests = action.payload;
-        console.log("✅ receivedRequests mis à jour depuis le backend:", state.receivedRequests);
+        console.log("✅ receivedRequests mis à jour:", state.receivedRequests);
       })
       .addCase(fetchReceivedFriendRequests.rejected, (state, action) => {
         state.status = "failed";

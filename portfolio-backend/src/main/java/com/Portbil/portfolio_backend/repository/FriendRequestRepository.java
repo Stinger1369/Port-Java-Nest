@@ -3,6 +3,7 @@ package com.Portbil.portfolio_backend.repository;
 import com.Portbil.portfolio_backend.entity.FriendRequest;
 import com.Portbil.portfolio_backend.entity.User;
 import org.springframework.data.mongodb.repository.MongoRepository;
+import org.springframework.data.mongodb.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -20,6 +21,7 @@ public interface FriendRequestRepository extends MongoRepository<FriendRequest, 
     // Vérifier si une demande existe entre deux utilisateurs
     boolean existsBySenderAndReceiverAndStatus(User sender, User receiver, String status);
 
-    // Ajout de la méthode manquante pour trouver une demande spécifique
-    Optional<FriendRequest> findBySenderAndReceiverAndStatus(User sender, User receiver, String status);
+    // Nouvelle méthode pour rechercher par IDs directement
+    @Query("{ 'sender._id': ?0, 'receiver._id': ?1, 'status': ?2 }")
+    Optional<FriendRequest> findBySenderIdAndReceiverIdAndStatus(String senderId, String receiverId, String status);
 }

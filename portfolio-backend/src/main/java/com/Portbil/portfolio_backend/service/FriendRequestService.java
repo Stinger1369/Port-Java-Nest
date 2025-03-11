@@ -50,7 +50,7 @@ public class FriendRequestService {
         User receiver = userRepository.findById(receiverId)
                 .orElseThrow(() -> new IllegalArgumentException("Utilisateur destinataire introuvable : " + receiverId));
 
-        if (friendRequestRepository.existsBySenderAndReceiverAndStatus(sender, receiver, "PENDING")) {
+        if (friendRequestRepository.findBySenderIdAndReceiverIdAndStatus(senderId, receiverId, "PENDING").isPresent()) {
             throw new IllegalStateException("Une demande d'ami en attente existe déjà entre ces utilisateurs.");
         }
 
@@ -69,10 +69,18 @@ public class FriendRequestService {
 
         friendRequest = friendRequestRepository.save(friendRequest);
 
-        sender.getFriendRequestSentIds().add(friendRequest.getId());
-        receiver.getFriendRequestReceivedIds().add(friendRequest.getId());
-        userRepository.save(sender);
-        userRepository.save(receiver);
+        // Ajouter l'ID de la demande aux listes des utilisateurs
+        String requestId = friendRequest.getId();
+        if (!sender.getFriendRequestSentIds().contains(requestId)) {
+            sender.getFriendRequestSentIds().add(requestId);
+            userRepository.save(sender);
+            System.out.println("✅ Ajouté " + requestId + " à friendRequestSentIds de " + senderId);
+        }
+        if (!receiver.getFriendRequestReceivedIds().contains(requestId)) {
+            receiver.getFriendRequestReceivedIds().add(requestId);
+            userRepository.save(receiver);
+            System.out.println("✅ Ajouté " + requestId + " à friendRequestReceivedIds de " + receiverId);
+        }
 
         try {
             Map<String, String> notificationData = new HashMap<>();
@@ -88,7 +96,7 @@ public class FriendRequestService {
             persistNotification(receiverId, "friend_request_received", receiverMessage, notificationData);
 
             String senderMessage = "Demande d'ami envoyée avec succès à " + receiver.getFirstName() + " " + receiver.getLastName();
-            notificationData.put("toUserId", receiverId); // Ajout pour le sender
+            notificationData.put("toUserId", receiverId);
             chatWebSocketHandler.sendNotification(senderId, "friend_request_sent", senderMessage, notificationData);
             persistNotification(senderId, "friend_request_sent", senderMessage, notificationData);
 
@@ -211,26 +219,32 @@ public class FriendRequestService {
         userRepository.save(receiver);
 
         try {
-            Map<String, String> notificationData = new HashMap<>();
-            notificationData.put("requestId", requestId);
-            notificationData.put("fromUserId", receiver.getId());
-            notificationData.put("firstName", receiver.getFirstName());
-            notificationData.put("lastName", receiver.getLastName());
-            notificationData.put("email", receiver.getEmail());
-            notificationData.put("profilePictureUrl", receiver.getProfilePictureUrl() != null ? receiver.getProfilePictureUrl() : "");
+            // Notification pour le sender
+            Map<String, String> senderNotificationData = new HashMap<>();
+            senderNotificationData.put("requestId", requestId);
+            senderNotificationData.put("fromUserId", receiver.getId());
+            senderNotificationData.put("toUserId", sender.getId()); // Ajout de toUserId
+            senderNotificationData.put("firstName", receiver.getFirstName());
+            senderNotificationData.put("lastName", receiver.getLastName());
+            senderNotificationData.put("email", receiver.getEmail());
+            senderNotificationData.put("profilePictureUrl", receiver.getProfilePictureUrl() != null ? receiver.getProfilePictureUrl() : "");
 
             String senderMessage = "Votre demande d'ami a été refusée par " + receiver.getFirstName() + " " + receiver.getLastName();
-            chatWebSocketHandler.sendNotification(sender.getId(), "friend_request_rejected", senderMessage, notificationData);
-            persistNotification(sender.getId(), "friend_request_rejected", senderMessage, notificationData);
+            chatWebSocketHandler.sendNotification(sender.getId(), "friend_request_rejected", senderMessage, senderNotificationData);
+            persistNotification(sender.getId(), "friend_request_rejected", senderMessage, senderNotificationData);
 
-            notificationData.put("fromUserId", sender.getId());
-            notificationData.put("firstName", sender.getFirstName());
-            notificationData.put("lastName", sender.getLastName());
-            notificationData.put("email", sender.getEmail());
-            notificationData.put("profilePictureUrl", sender.getProfilePictureUrl() != null ? sender.getProfilePictureUrl() : "");
+            // Notification pour le receiver
+            Map<String, String> receiverNotificationData = new HashMap<>();
+            receiverNotificationData.put("requestId", requestId);
+            receiverNotificationData.put("fromUserId", sender.getId());
+            receiverNotificationData.put("toUserId", receiver.getId()); // Ajout de toUserId
+            receiverNotificationData.put("firstName", sender.getFirstName());
+            receiverNotificationData.put("lastName", sender.getLastName());
+            receiverNotificationData.put("email", sender.getEmail());
+            receiverNotificationData.put("profilePictureUrl", sender.getProfilePictureUrl() != null ? sender.getProfilePictureUrl() : "");
             String receiverMessage = "Vous avez refusé la demande d'ami de " + sender.getFirstName() + " " + sender.getLastName();
-            chatWebSocketHandler.sendNotification(receiver.getId(), "friend_request_rejected", receiverMessage, notificationData);
-            persistNotification(receiver.getId(), "friend_request_rejected", receiverMessage, notificationData);
+            chatWebSocketHandler.sendNotification(receiver.getId(), "friend_request_rejected", receiverMessage, receiverNotificationData);
+            persistNotification(receiver.getId(), "friend_request_rejected", receiverMessage, receiverNotificationData);
 
             System.out.println("📢 Notifications envoyées et persistantées pour rejectFriendRequest (requestId: " + requestId + ")");
         } catch (IOException e) {
@@ -288,26 +302,32 @@ public class FriendRequestService {
         userRepository.save(receiver);
 
         try {
-            Map<String, String> notificationData = new HashMap<>();
-            notificationData.put("requestId", requestId);
-            notificationData.put("fromUserId", sender.getId());
-            notificationData.put("firstName", sender.getFirstName());
-            notificationData.put("lastName", sender.getLastName());
-            notificationData.put("email", sender.getEmail());
-            notificationData.put("profilePictureUrl", sender.getProfilePictureUrl() != null ? sender.getProfilePictureUrl() : "");
+            // Notification pour le sender
+            Map<String, String> senderNotificationData = new HashMap<>();
+            senderNotificationData.put("requestId", requestId);
+            senderNotificationData.put("fromUserId", sender.getId());
+            senderNotificationData.put("toUserId", receiver.getId()); // Ajout de toUserId
+            senderNotificationData.put("firstName", sender.getFirstName());
+            senderNotificationData.put("lastName", sender.getLastName());
+            senderNotificationData.put("email", sender.getEmail());
+            senderNotificationData.put("profilePictureUrl", sender.getProfilePictureUrl() != null ? sender.getProfilePictureUrl() : "");
 
             String senderMessage = "Vous avez annulé votre demande d'ami envers " + receiver.getFirstName() + " " + receiver.getLastName();
-            chatWebSocketHandler.sendNotification(sender.getId(), "friend_request_canceled", senderMessage, notificationData);
-            persistNotification(sender.getId(), "friend_request_canceled", senderMessage, notificationData);
+            chatWebSocketHandler.sendNotification(sender.getId(), "friend_request_canceled", senderMessage, senderNotificationData);
+            persistNotification(sender.getId(), "friend_request_canceled", senderMessage, senderNotificationData);
 
-            notificationData.put("fromUserId", receiver.getId());
-            notificationData.put("firstName", receiver.getFirstName());
-            notificationData.put("lastName", receiver.getLastName());
-            notificationData.put("email", receiver.getEmail());
-            notificationData.put("profilePictureUrl", receiver.getProfilePictureUrl() != null ? receiver.getProfilePictureUrl() : "");
+            // Notification pour le receiver
+            Map<String, String> receiverNotificationData = new HashMap<>();
+            receiverNotificationData.put("requestId", requestId);
+            receiverNotificationData.put("fromUserId", sender.getId()); // Corriger ici : fromUserId doit être sender
+            receiverNotificationData.put("toUserId", receiver.getId()); // Ajout de toUserId
+            receiverNotificationData.put("firstName", sender.getFirstName());
+            receiverNotificationData.put("lastName", sender.getLastName());
+            receiverNotificationData.put("email", sender.getEmail());
+            receiverNotificationData.put("profilePictureUrl", sender.getProfilePictureUrl() != null ? sender.getProfilePictureUrl() : "");
             String receiverMessage = sender.getFirstName() + " " + sender.getLastName() + " a annulé sa demande d’ami.";
-            chatWebSocketHandler.sendNotification(receiver.getId(), "friend_request_canceled", receiverMessage, notificationData);
-            persistNotification(receiver.getId(), "friend_request_canceled", receiverMessage, notificationData);
+            chatWebSocketHandler.sendNotification(receiver.getId(), "friend_request_canceled", receiverMessage, receiverNotificationData);
+            persistNotification(receiver.getId(), "friend_request_canceled", receiverMessage, receiverNotificationData);
 
             System.out.println("📢 Notifications envoyées et persistantées pour cancelFriendRequest (requestId: " + requestId + ")");
         } catch (IOException e) {
@@ -323,8 +343,9 @@ public class FriendRequestService {
         User receiver = userRepository.findById(receiverId)
                 .orElseThrow(() -> new IllegalArgumentException("Utilisateur destinataire introuvable : " + receiverId));
 
-        Optional<FriendRequest> friendRequestOpt = friendRequestRepository.findBySenderAndReceiverAndStatus(sender, receiver, "PENDING");
+        Optional<FriendRequest> friendRequestOpt = friendRequestRepository.findBySenderIdAndReceiverIdAndStatus(senderId, receiverId, "PENDING");
         if (friendRequestOpt.isEmpty()) {
+            System.out.println("⚠️ Aucune demande PENDING trouvée pour sender: " + senderId + ", receiver: " + receiverId + ". Vérifiez les friendRequestSentIds et friendRequestReceivedIds.");
             throw new IllegalArgumentException("Demande d'ami non trouvée ou déjà traitée.");
         }
 

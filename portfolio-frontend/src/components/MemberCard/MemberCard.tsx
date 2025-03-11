@@ -98,10 +98,15 @@ const MemberCard: React.FC<MemberCardProps> = ({ member, profileImage, onClick }
   const handleFriendAction = useCallback(
     (e: React.MouseEvent) => {
       e.stopPropagation();
+      if (!currentUser || isCurrentUser) return;
+
       if (isFriend) {
         handleRemoveFriend(member.id, (errorMessage) => alert(errorMessage));
-      } else if (hasSentRequest) {
+      } else if (hasSentRequest) { // Annulation si une demande a été envoyée par l'utilisateur courant
         handleCancelFriendRequest(member.id, (errorMessage) => alert(errorMessage));
+      } else if (hasReceivedRequest) {
+        handleAcceptFriendRequest(member.id, (errorMessage) => alert(errorMessage));
+        // handleRejectFriendRequest(member.id, (errorMessage) => alert(errorMessage)); // Décommenter si besoin
       } else {
         handleSendFriendRequest(member.id, (errorMessage) => alert(errorMessage));
       }
@@ -109,9 +114,14 @@ const MemberCard: React.FC<MemberCardProps> = ({ member, profileImage, onClick }
     [
       isFriend,
       hasSentRequest,
+      hasReceivedRequest,
       member.id,
+      currentUser,
+      isCurrentUser,
       handleRemoveFriend,
       handleCancelFriendRequest,
+      handleAcceptFriendRequest,
+      handleRejectFriendRequest,
       handleSendFriendRequest,
     ]
   );

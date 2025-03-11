@@ -55,7 +55,8 @@ export const useFriendActions = () => {
         .unwrap()
         .then(() => {
           console.log("✅ Demande d'ami envoyée avec succès !");
-          // Pas de fetch ici, WebSocket mettra à jour sentRequests
+          loadSentFriendRequests();
+          dispatch(fetchReceivedFriendRequests(receiverId));
         })
         .catch((err) => {
           console.error("❌ Erreur lors de l'envoi de la demande d'ami:", err);
@@ -74,7 +75,9 @@ export const useFriendActions = () => {
         .unwrap()
         .then(() => {
           console.log("✅ Demande d'ami acceptée avec succès !");
-          // Pas de fetch ici, WebSocket mettra à jour friends et receivedRequests
+          loadFriends();
+          loadReceivedFriendRequests();
+          dispatch(fetchSentFriendRequests(friendId));
         })
         .catch((err) => {
           console.error("❌ Erreur lors de l'acceptation de la demande d'ami:", err);
@@ -93,10 +96,14 @@ export const useFriendActions = () => {
         .unwrap()
         .then(() => {
           console.log("✅ Demande d'ami refusée avec succès !");
-          // Pas de fetch ici, WebSocket mettra à jour receivedRequests
+          loadReceivedFriendRequests();
+          dispatch(fetchSentFriendRequests(friendId)); // Synchronisation pour l'expéditeur
+          loadSentFriendRequests(); // Synchronisation pour le sender si c'est lui qui rejette
         })
         .catch((err) => {
           console.error("❌ Erreur lors du refus de la demande d'ami:", err);
+          loadReceivedFriendRequests();
+          dispatch(fetchSentFriendRequests(friendId));
           if (onError && typeof err === "string") {
             onError(err);
           } else if (onError) {
@@ -112,7 +119,10 @@ export const useFriendActions = () => {
         .unwrap()
         .then(() => {
           console.log("✅ Ami supprimé avec succès !");
-          // Pas de fetch ici, WebSocket mettra à jour friends
+          loadFriends();
+          loadSentFriendRequests();
+          dispatch(fetchFriends(friendId));
+          dispatch(fetchReceivedFriendRequests(friendId));
         })
         .catch((err) => {
           console.error("❌ Erreur lors de la suppression de l'ami:", err);
@@ -131,10 +141,13 @@ export const useFriendActions = () => {
         .unwrap()
         .then(() => {
           console.log("✅ Demande d'ami annulée avec succès !");
-          // Pas de fetch ici, WebSocket mettra à jour sentRequests
+          loadSentFriendRequests();
+          dispatch(fetchReceivedFriendRequests(receiverId));
         })
         .catch((err) => {
           console.error("❌ Erreur lors de l'annulation de la demande d'ami:", err);
+          loadSentFriendRequests();
+          dispatch(fetchReceivedFriendRequests(receiverId));
           if (onError && typeof err === "string") {
             onError(err);
           } else if (onError) {

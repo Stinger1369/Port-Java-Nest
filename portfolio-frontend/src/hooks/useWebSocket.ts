@@ -1,19 +1,11 @@
-// src/hooks/useWebSocket.ts
 import { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "../redux/store";
 import { addMessage, addGroup } from "../redux/features/chatSlice";
 import { addNotification } from "../redux/features/notificationSlice";
-import {
-  addSentRequest,
-  addReceivedRequest,
-  addFriend,
-  removeReceivedRequest,
-  removeSentRequest,
-  removeFriendFromList,
-} from "../redux/features/friendSlice";
 import { BASE_URL } from "../config/hostname";
-import { v4 as uuidv4 } from "uuid"; // Ajout d'uuid pour générer des identifiants uniques
+import { v4 as uuidv4 } from "uuid";
+import { handleFriendNotifications } from "./handleFriendNotifications";
 
 export const useWebSocket = (token: string | null) => {
   const dispatch = useDispatch<AppDispatch>();
@@ -57,7 +49,7 @@ export const useWebSocket = (token: string | null) => {
       const normalizedTimestamp = normalizeTimestamp(message.timestamp || new Date());
       const normalizedMessage = {
         ...message,
-        id: message.id || message._id || uuidv4(), // Utilisation d'uuidv4 au lieu de Date.now()
+        id: message.id || message._id || uuidv4(),
         timestamp: normalizedTimestamp,
         chatId: message.chatId || (message.toUserId ? `${message.fromUserId}-${message.toUserId}` : message.groupId),
         userId: message.userId || userId || "",
@@ -77,119 +69,96 @@ export const useWebSocket = (token: string | null) => {
           data: normalizedMessage.data,
         }));
 
-        const fromUserId = message.fromUserId || (message.data?.fromUserId ? message.data.fromUserId : "");
-        const toUserId = message.toUserId || (message.data?.toUserId ? message.data.toUserId : "");
-        const friendId = message.friendId || (userId === fromUserId ? toUserId : fromUserId);
+        const fromUserId = message.fromUserId || message.data?.fromUserId || "";
+        const toUserId = message.toUserId || message.data?.toUserId || "";
+        const explicitFriendId = message.friendId || message.data?.friendId || "";
 
-        if (!friendId && (normalizedMessage.notificationType === "friend_request_received" || normalizedMessage.notificationType === "friend_request_accepted" || normalizedMessage.notificationType === "friend_request_rejected" || normalizedMessage.notificationType === "friend_removed")) {
-          console.error("❌ friendId non déterminé:", message);
+        let friendId;
+        switch (normalizedMessage.notificationType) {
+          case "friend_request_canceled":
+          case "friend_request_rejected":
+          case "friend_request_accepted":
+            if (userId === fromUserId) {
+              friendId = toUserId || explicitFriendId; // Sender: friendId est le receiver
+            } else {
+              friendId = fromUserId; // Receiver: friendId est le sender
+            }
+            if (!friendId && !toUserId && !explicitFriendId) {
+              console.warn("⚠️ toUserId et friendId manquants, déduction impossible:", message);
+              friendId = userId === fromUserId ? "" : fromUserId;
+            }
+            break;
+
+          case "friend_removed":
+            friendId = explicitFriendId || (userId === fromUserId ? toUserId : fromUserId);
+            if (!friendId) {
+              console.warn("⚠️ friendId ou toUserId manquant, tentative de déduction:", message);
+              friendId = userId === fromUserId ? "" : fromUserId;
+            }
+            break;
+
+          default:
+            friendId = userId === fromUserId ? toUserId : fromUserId;
+        }
+
+        if (!friendId && (normalizedMessage.notificationType === "friend_request_received" ||
+                          normalizedMessage.notificationType === "friend_request_accepted" ||
+                          normalizedMessage.notificationType === "friend_request_rejected" ||
+                          normalizedMessage.notificationType === "friend_removed" ||
+                          normalizedMessage.notificationType === "friend_request_canceled")) {
+          console.error("❌ friendId non déterminé après secours:", message);
+          dispatch(fetchSentFriendRequests(userId));
+          dispatch(fetchReceivedFriendRequests(userId));
           return;
         }
 
         const friendData = {
           id: friendId || "",
-          firstName: message.firstName || "",
-          lastName: message.lastName || "",
-          email: message.email || "",
-          profilePictureUrl: message.profilePictureUrl || null,
+          firstName: message.firstName || message.data?.firstName || "",
+          lastName: message.lastName || message.data?.lastName || "",
+          email: message.email || message.data?.email || "",
+          profilePictureUrl: message.profilePictureUrl || message.data?.profilePictureUrl || null,
         };
 
-        switch (normalizedMessage.notificationType) {
-          case "friend_request_received":
-            if (userId === normalizedMessage.userId) {
-              dispatch(addReceivedRequest(friendData));
-              console.log("✅ Demande reçue ajoutée:", friendData);
-            }
-            break;
+        // Gestion externalisée des notifications d'amitié
+        handleFriendNotifications(
+          dispatch,
+          userId,
+          normalizedMessage.notificationType,
+          fromUserId,
+          toUserId,
+          friendId,
+          friendData,
+          sentRequests,
+          receivedRequests,
+          friends
+        );
 
-          case "friend_request_sent":
-            if (userId === fromUserId) {
-              dispatch(addSentRequest(friendData));
-              console.log("✅ Demande envoyée ajoutée:", friendData);
-            }
-            break;
-
-          case "friend_request_accepted":
-            console.log("🔍 Traitement de friend_request_accepted - userId:", userId, "fromUserId:", fromUserId, "toUserId:", toUserId);
-            dispatch(addFriend(friendData));
-            if (userId === normalizedMessage.userId && fromUserId !== userId) {
-              dispatch(removeReceivedRequest(friendId));
-              console.log("✅ Demande acceptée (destinataire), supprimée de receivedRequests:", friendId, "État actuel:", receivedRequests);
-            } else if (userId === fromUserId) {
-              dispatch(removeSentRequest(friendId));
-              console.log("✅ Demande acceptée (expéditeur), supprimée de sentRequests:", friendId, "État actuel:", sentRequests);
-            }
-            console.log("✅ Ami ajouté:", friendData, "État friends:", friends);
-            break;
-
-          case "friend_request_rejected":
-            console.log("🔍 Traitement de friend_request_rejected - userId:", userId, "friendId:", friendId, "fromUserId:", fromUserId, "toUserId:", toUserId);
-            if (userId === friendId) {
-              dispatch(removeReceivedRequest(fromUserId));
-              console.log("✅ Demande rejetée (destinataire), supprimée de receivedRequests:", fromUserId, "État actuel:", receivedRequests);
-            } else if (userId !== friendId && userId !== fromUserId) {
-              dispatch(removeSentRequest(friendId));
-              console.log("✅ Demande rejetée (expéditeur), supprimée de sentRequests:", friendId, "État actuel:", sentRequests);
-            }
-            console.log("✅ État après rejet - friendId:", friendId, "sentRequests:", sentRequests, "receivedRequests:", receivedRequests);
-            break;
-
-          case "friend_removed":
-            console.log("🔍 Traitement de friend_removed - userId:", userId, "friendId:", friendId, "fromUserId:", fromUserId, "toUserId:", toUserId);
-            dispatch(removeFriendFromList(friendId));
-            dispatch(removeSentRequest(friendId));
-            dispatch(removeReceivedRequest(friendId));
-            console.log("✅ État nettoyé après friend_removed - friendId:", friendId, "sentRequests:", sentRequests, "receivedRequests:", receivedRequests, "friends:", friends);
-            break;
-
-          case "friend_request_canceled":
-            if (userId === fromUserId) {
-              dispatch(removeSentRequest(friendId));
-              console.log("✅ Demande annulée, supprimée de sentRequests:", friendId);
-            } else if (userId === toUserId) {
-              dispatch(removeReceivedRequest(friendId));
-              console.log("✅ Demande annulée, supprimée de receivedRequests:", friendId);
-            }
-            break;
-
-          case "user_like":
-            console.log("🔍 Traitement de user_like - userId:", userId, "fromUserId:", fromUserId);
-            if (userId === normalizedMessage.userId) {
-              dispatch(addNotification({
-                id: normalizedMessage.id,
-                userId: normalizedMessage.userId,
-                type: "user_like",
-                message: message.message || "Quelqu'un a aimé votre profil !",
-                timestamp: normalizedTimestamp,
-                isRead: false,
-                data: normalizedMessage.data,
-              }));
-              console.log("✅ Notification user_like ajoutée:", normalizedMessage);
-            }
-            break;
-
-          case "user_unlike":
-            console.log("🔍 Traitement de user_unlike - userId:", userId, "fromUserId:", fromUserId);
-            if (userId === normalizedMessage.userId) {
-              dispatch(addNotification({
-                id: normalizedMessage.id,
-                userId: normalizedMessage.userId,
-                type: "user_unlike",
-                message: message.message || "Quelqu'un a retiré son like de votre profil !",
-                timestamp: normalizedTimestamp,
-                isRead: false,
-                data: normalizedMessage.data,
-              }));
-              console.log("✅ Notification user_unlike ajoutée:", normalizedMessage);
-            }
-            break;
-
-          case "connected":
-            console.log("✅ Connexion WebSocket confirmée pour userId:", userId);
-            break;
-
-          default:
-            console.warn("⚠️ Notification non gérée:", normalizedMessage.notificationType);
+        // Gestion des notifications non liées aux amis
+        if (normalizedMessage.notificationType === "user_like" && userId === normalizedMessage.userId) {
+          dispatch(addNotification({
+            id: normalizedMessage.id,
+            userId: normalizedMessage.userId,
+            type: "user_like",
+            message: message.message || "Quelqu'un a aimé votre profil !",
+            timestamp: normalizedTimestamp,
+            isRead: false,
+            data: normalizedMessage.data,
+          }));
+          console.log("✅ Notification user_like ajoutée:", normalizedMessage);
+        } else if (normalizedMessage.notificationType === "user_unlike" && userId === normalizedMessage.userId) {
+          dispatch(addNotification({
+            id: normalizedMessage.id,
+            userId: normalizedMessage.userId,
+            type: "user_unlike",
+            message: message.message || "Quelqu'un a retiré son like de votre profil !",
+            timestamp: normalizedTimestamp,
+            isRead: false,
+            data: normalizedMessage.data,
+          }));
+          console.log("✅ Notification user_unlike ajoutée:", normalizedMessage);
+        } else if (normalizedMessage.notificationType === "connected") {
+          console.log("✅ Connexion WebSocket confirmée pour userId:", userId);
         }
       } else if (message.type === "private" || message.type === "group_message") {
         const isDuplicate = messages.some((msg) => msg.id === normalizedMessage.id);
