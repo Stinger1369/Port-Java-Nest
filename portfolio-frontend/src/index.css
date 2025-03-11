@@ -41,9 +41,6 @@ h1 {
   line-height: 1.1;
 }
 
-.react-datepicker-popper {
-  z-index: 20000 !important; /* Très élevé pour confirmer */
-}
 
 button {
   border-radius: 8px;

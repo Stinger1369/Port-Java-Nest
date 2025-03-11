@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState, AppDispatch } from "../../../redux/store";
-import { fetchLanguagesByUser, deleteLanguage } from "../../../redux/features/languageSlice";
+import { fetchLanguagesByUser, deleteLanguage, updateLanguage } from "../../../redux/features/languageSlice";
 import AddLanguage from "./AddLanguage";
 import UpdateLanguage from "./UpdateLanguage";
 import "./Languages.css";
@@ -22,6 +22,26 @@ const Languages = () => {
     }
   }, [dispatch, userId]);
 
+  const handleTogglePublic = (languageId: string) => {
+    const language = languages.find((lang) => lang.id === languageId);
+    if (language && userId) {
+      dispatch(
+        updateLanguage({
+          id: languageId,
+          languageData: { name: language.name, proficiencyLevel: language.proficiencyLevel, isPublic: !language.isPublic },
+        })
+      )
+        .unwrap()
+        .then(() => {
+          dispatch(fetchLanguagesByUser(userId));
+        })
+        .catch((err) => {
+          console.error("❌ Erreur lors de la mise à jour de la langue:", err);
+          alert("Erreur lors de la mise à jour de la langue.");
+        });
+    }
+  };
+
   return (
     <div className="languages-container">
       <h2>Langues Parlées</h2>
@@ -35,6 +55,14 @@ const Languages = () => {
             <li key={lang.id} className="language-item">
               <div className="language-info">
                 <strong>{lang.name}</strong> - {lang.proficiencyLevel}
+                <label>
+                  Public :
+                  <input
+                    type="checkbox"
+                    checked={lang.isPublic || false}
+                    onChange={() => handleTogglePublic(lang.id)}
+                  />
+                </label>
                 <button className="edit-button" onClick={() => setSelectedLanguage(lang)}>✏️</button>
                 <button className="delete-button" onClick={() => dispatch(deleteLanguage(lang.id))}>🗑️</button>
               </div>

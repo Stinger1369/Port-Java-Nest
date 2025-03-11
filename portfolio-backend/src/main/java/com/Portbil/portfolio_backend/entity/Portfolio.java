@@ -15,11 +15,7 @@ public class Portfolio {
 
     @Id
     private String id;
-    private String userId; // ✅ Référence à l'utilisateur propriétaire
-
-    // ✅ Configuration des cartes du portfolio (ordre, taille, etc.)
-    private List<PortfolioCard> cards;
-
-    private boolean isPublic; // ✅ Indique si le portfolio est visible publiquement
-
+    private String userId; // Référence à l'utilisateur propriétaire
+    private List<PortfolioCard> cards; // Configuration des cartes du portfolio
+    private boolean isPublic; // Indique si le portfolio est visible publiquement
 }

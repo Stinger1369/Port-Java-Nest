@@ -51,6 +51,7 @@ public class InterestController {
     @PutMapping("/{id}")
     @PreAuthorize("@interestService.getInterestById(#id).get().userId == authentication.name or hasAuthority('ADMIN')")
     public ResponseEntity<Interest> updateInterest(@PathVariable String id, @RequestBody Interest interest) {
+        System.out.println("Updating interest with ID: " + id + ", isPublic: " + interest.isPublic()); // Log pour déboguer
         return interestService.updateInterest(id, interest)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());

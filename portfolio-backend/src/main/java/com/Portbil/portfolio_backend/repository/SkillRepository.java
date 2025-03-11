@@ -8,5 +8,5 @@ import java.util.List;
 
 @Repository
 public interface SkillRepository extends MongoRepository<Skill, String> {
-    List<Skill> findByUserId(String userId); // ✅ Trouver les skills par userId
+    List<Skill> findByUserId(String userId); // Trouver les skills par userId
 }

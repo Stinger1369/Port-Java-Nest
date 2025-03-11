@@ -9,4 +9,5 @@ import java.util.List;
 @Repository
 public interface SocialLinkRepository extends MongoRepository<SocialLink, String> {
     List<SocialLink> findByUserId(String userId);
+    List<SocialLink> findByUserIdAndIsPublicTrue(String userId); // Pour le portfolio public
 }

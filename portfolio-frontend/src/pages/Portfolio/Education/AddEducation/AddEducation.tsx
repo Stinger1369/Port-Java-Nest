@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "../../../../redux/store";
-import { addEducation } from "../../../../redux/features/educationSlice";
+import { addEducation, fetchEducationsByUser } from "../../../../redux/features/educationSlice";
 import DatePicker from "../../../../components/common/DatePicker";
-import "./AddEducation.css"; // ✅ Import du CSS
+import "./AddEducation.css";
 
 interface Props {
   onClose: () => void;
@@ -20,14 +20,31 @@ const AddEducation = ({ onClose }: Props) => {
     endDate: "",
     currentlyStudying: false,
     description: "",
+    isPublic: false, // Ajouté
   });
+
+  // Vérifier si tous les champs obligatoires sont remplis
+  const isFormValid = () => {
+    const requiredFields = education.schoolName && education.degree && education.startDate;
+    if (education.currentlyStudying) {
+      return requiredFields; // Pas besoin de endDate si currentlyStudying est true
+    }
+    return requiredFields && education.endDate; // endDate est requis si currentlyStudying est false
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value, type, checked } = e.target;
-    setEducation((prev) => ({
-      ...prev,
-      [name]: type === "checkbox" ? checked : value,
-    }));
+    setEducation((prev) => {
+      const updatedEducation = {
+        ...prev,
+        [name]: type === "checkbox" ? checked : value,
+      };
+      // Si currentlyStudying est true, vide le champ endDate
+      if (name === "currentlyStudying" && checked) {
+        updatedEducation.endDate = "";
+      }
+      return updatedEducation;
+    });
   };
 
   const handleDateChange = (name: string, value: string) => {
@@ -40,15 +57,22 @@ const AddEducation = ({ onClose }: Props) => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    const userId = localStorage.getItem("userId"); // ✅ Récupération de l'userId
+    const userId = localStorage.getItem("userId"); // Utilisation de localStorage comme fallback
     if (!userId) {
       console.error("❌ Erreur : ID utilisateur manquant.");
       return;
     }
 
-    // ✅ Envoi de l'éducation avec userId
-    dispatch(addEducation({ ...education, userId }));
-    onClose();
+    dispatch(addEducation({ ...education, userId }))
+      .unwrap()
+      .then(() => {
+        dispatch(fetchEducationsByUser(userId)); // Rafraîchit la liste
+        onClose();
+      })
+      .catch((err) => {
+        console.error("❌ Erreur lors de l'ajout de la formation:", err);
+        alert("Erreur lors de l'ajout de la formation.");
+      });
   };
 
   return (
@@ -118,6 +142,16 @@ const AddEducation = ({ onClose }: Props) => {
             Actuellement en cours
           </label>
 
+          <label className="education-checkbox-label">
+            <input
+              type="checkbox"
+              name="isPublic"
+              checked={education.isPublic}
+              onChange={handleChange}
+            />
+            Public
+          </label>
+
           <label className="education-label">Description</label>
           <textarea
             name="description"
@@ -128,7 +162,11 @@ const AddEducation = ({ onClose }: Props) => {
           />
 
           <div className="education-buttons">
-            <button type="submit" className="education-button education-button-submit">
+            <button
+              type="submit"
+              className="education-button education-button-submit"
+              disabled={!isFormValid()}
+            >
               Ajouter
             </button>
             <button

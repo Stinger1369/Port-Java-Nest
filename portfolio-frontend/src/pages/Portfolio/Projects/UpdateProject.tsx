@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "../../../redux/store";
-import { updateProject } from "../../../redux/features/projectSlice";
+import { updateProject, fetchProjectsByUser } from "../../../redux/features/projectSlice";
 import DatePicker from "../../../components/common/DatePicker";
-import "./Projects.css"; // Importer les styles
+import "./Projects.css";
 
 interface Props {
   project: {
@@ -16,6 +16,7 @@ interface Props {
     startDate: string;
     endDate?: string;
     currentlyWorkingOn: boolean;
+    isPublic?: boolean; // Ajouté
   };
   onClose: () => void;
 }
@@ -65,8 +66,20 @@ const UpdateProject = ({ project, onClose }: Props) => {
       setError("La date de fin est requise si le projet n'est pas en cours.");
       return;
     }
-    dispatch(updateProject({ id: updatedProject.id, projectData: updatedProject }));
-    onClose();
+
+    dispatch(updateProject({ id: updatedProject.id, projectData: updatedProject }))
+      .unwrap()
+      .then(() => {
+        const userId = localStorage.getItem("userId");
+        if (userId) {
+          dispatch(fetchProjectsByUser(userId));
+          onClose();
+        }
+      })
+      .catch((err) => {
+        setError("Erreur lors de la mise à jour du projet. Veuillez réessayer.");
+        console.error(err);
+      });
   };
 
   return (
@@ -134,6 +147,15 @@ const UpdateProject = ({ project, onClose }: Props) => {
               onChange={handleChange}
             />
             Projet en cours
+          </label>
+          <label className="project-checkbox-label">
+            <input
+              type="checkbox"
+              name="isPublic"
+              checked={updatedProject.isPublic || false}
+              onChange={handleChange}
+            />
+            Public
           </label>
           {error && <p className="project-error-message">{error}</p>}
           <button type="submit" className="project-button project-button-submit">Mettre à jour</button>

@@ -1,12 +1,13 @@
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import axios from "axios";
-import { BASE_URL } from "../../config/hostname"; // Import de la configuration de l'URL
+import { BASE_URL } from "../../config/hostname";
 
 interface Interest {
   id?: string;
   userId: string;
   name: string;
   description?: string;
+  isPublic?: boolean; // Aligné avec le backend
 }
 
 interface InterestState {
@@ -23,7 +24,6 @@ const initialState: InterestState = {
 
 const getAuthToken = () => localStorage.getItem("token");
 
-// ✅ **Récupérer les centres d’intérêt d'un utilisateur**
 export const fetchInterestsByUser = createAsyncThunk(
   "interest/fetchByUser",
   async (userId: string, { rejectWithValue }) => {
@@ -33,7 +33,7 @@ export const fetchInterestsByUser = createAsyncThunk(
 
       const response = await axios.get<Interest[]>(
         `${BASE_URL}/api/interests/user/${userId}`,
-        { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } }
+        { headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" } }
       );
 
       return response.data;
@@ -43,7 +43,6 @@ export const fetchInterestsByUser = createAsyncThunk(
   }
 );
 
-// ✅ **Ajouter un centre d’intérêt**
 export const addInterest = createAsyncThunk(
   "interest/add",
   async (interestData: Omit<Interest, "id" | "userId">, { rejectWithValue }) => {
@@ -57,7 +56,7 @@ export const addInterest = createAsyncThunk(
       const response = await axios.post<Interest>(
         `${BASE_URL}/api/interests`,
         { ...interestData, userId },
-        { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } }
+        { headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" } }
       );
 
       return response.data;
@@ -67,7 +66,6 @@ export const addInterest = createAsyncThunk(
   }
 );
 
-// ✅ **Mettre à jour un centre d’intérêt**
 export const updateInterest = createAsyncThunk(
   "interest/update",
   async ({ id, interestData }: { id: string; interestData: Partial<Interest> }, { rejectWithValue }) => {
@@ -78,7 +76,7 @@ export const updateInterest = createAsyncThunk(
       const response = await axios.put<Interest>(
         `${BASE_URL}/api/interests/${id}`,
         interestData,
-        { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } }
+        { headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" } }
       );
 
       return response.data;
@@ -88,7 +86,6 @@ export const updateInterest = createAsyncThunk(
   }
 );
 
-// ✅ **Supprimer un centre d’intérêt**
 export const deleteInterest = createAsyncThunk(
   "interest/delete",
   async (id: string, { rejectWithValue }) => {
@@ -98,7 +95,7 @@ export const deleteInterest = createAsyncThunk(
 
       await axios.delete(
         `${BASE_URL}/api/interests/${id}`,
-        { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } }
+        { headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" } }
       );
 
       return id;
@@ -108,14 +105,12 @@ export const deleteInterest = createAsyncThunk(
   }
 );
 
-// ✅ **Création du slice Redux**
 const interestSlice = createSlice({
   name: "interest",
   initialState,
   reducers: {},
   extraReducers: (builder) => {
     builder
-      // **Récupérer les centres d’intérêt**
       .addCase(fetchInterestsByUser.pending, (state) => {
         state.status = "loading";
         state.error = null;
@@ -128,8 +123,6 @@ const interestSlice = createSlice({
         state.status = "failed";
         state.error = action.payload as string;
       })
-
-      // **Ajouter un centre d’intérêt**
       .addCase(addInterest.pending, (state) => {
         state.status = "loading";
       })
@@ -141,8 +134,6 @@ const interestSlice = createSlice({
         state.status = "failed";
         state.error = action.payload as string;
       })
-
-      // **Mettre à jour un centre d’intérêt**
       .addCase(updateInterest.pending, (state) => {
         state.status = "loading";
       })
@@ -156,8 +147,6 @@ const interestSlice = createSlice({
         state.status = "failed";
         state.error = action.payload as string;
       })
-
-      // **Supprimer un centre d’intérêt**
       .addCase(deleteInterest.pending, (state) => {
         state.status = "loading";
       })
@@ -172,5 +161,4 @@ const interestSlice = createSlice({
   },
 });
 
-// ✅ **Exports**
 export default interestSlice.reducer;

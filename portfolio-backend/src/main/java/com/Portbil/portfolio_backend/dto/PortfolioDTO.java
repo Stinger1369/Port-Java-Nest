@@ -1,4 +1,4 @@
-package com.Portbil.portfolio_backend.dto;
+// package com.Portbil.portfolio_backend.dto;
 
 import com.Portbil.portfolio_backend.entity.*;
 import lombok.*;
@@ -15,7 +15,10 @@ public class PortfolioDTO {
     private String userId;
     private boolean isPublic;
 
-    // ✅ Liste complète des sections avec leurs objets (au lieu des simples IDs)
+    // Liste des préférences des cartes
+    private List<PortfolioCard> cards;
+
+    // Liste complète des sections avec leurs objets
     private List<Education> educations;
     private List<Experience> experiences;
     private List<Skill> skills;
@@ -25,4 +28,18 @@ public class PortfolioDTO {
     private List<Language> languages;
     private List<Recommendation> recommendations;
     private List<Interest> interests;
+
+    // Ajouter les IDs des sections pour le mappage côté frontend
+    private List<String> educationIds;
+    private List<String> experienceIds;
+    private List<String> skillIds;
+    private List<String> projectIds;
+    private List<String> certificationIds;
+    private List<String> socialLinkIds;
+    private List<String> languageIds;
+    private List<String> recommendationIds;
+    private List<String> interestIds;
+
+    // Ajouter les imageIds si disponibles
+    private List<String> imageIds;
 }

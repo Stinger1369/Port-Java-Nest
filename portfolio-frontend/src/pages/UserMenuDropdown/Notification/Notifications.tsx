@@ -1,4 +1,3 @@
-// src/pages/UserMenuDropdown/Notification/Notifications.tsx
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "../../../redux/store";
@@ -15,6 +14,9 @@ const Notifications: React.FC = () => {
     useNotificationActions(t);
   const { friends, receivedRequests, handleAcceptFriendRequest, handleRejectFriendRequest, handleRemoveFriend } = useFriendActions();
   const [filter, setFilter] = useState<"all" | "friends" | "chat" | "likes">("all");
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalAction, setModalAction] = useState<"remove" | "clear" | null>(null);
+  const [notificationToRemove, setNotificationToRemove] = useState<string | null>(null);
 
   useEffect(() => {
     if (status !== "loading") {
@@ -63,6 +65,40 @@ const Notifications: React.FC = () => {
   const handleRemoveFriendAction = (e: React.MouseEvent, friendId: string) => {
     e.stopPropagation();
     handleRemoveFriend(friendId, (errorMessage) => alert(errorMessage));
+  };
+
+  const openRemoveModal = (notificationId: string) => {
+    setModalAction("remove");
+    setNotificationToRemove(notificationId);
+    setIsModalOpen(true);
+  };
+
+  const openClearModal = () => {
+    setModalAction("clear");
+    setIsModalOpen(true);
+  };
+
+  const handleConfirmModal = () => {
+    if (modalAction === "remove" && notificationToRemove) {
+      handleRemoveNotification(notificationToRemove, userId);
+    } else if (modalAction === "clear") {
+      handleClearNotifications(userId);
+    }
+    setIsModalOpen(false);
+    setModalAction(null);
+    setNotificationToRemove(null);
+  };
+
+  const handleCancelModal = () => {
+    setIsModalOpen(false);
+    setModalAction(null);
+    setNotificationToRemove(null);
+  };
+
+  const handleCloseModal = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (e.target === e.currentTarget) {
+      handleCancelModal();
+    }
   };
 
   const isFriendRequestPending = (friendId: string) => {
@@ -170,7 +206,7 @@ const Notifications: React.FC = () => {
                     )}
                     <button
                       className="page-remove-button"
-                      onClick={() => handleRemoveNotification(notification.id, userId)}
+                      onClick={() => openRemoveModal(notification.id)}
                       title={t("notification.remove")}
                     >
                       <i className="fas fa-trash-alt"></i>
@@ -212,10 +248,34 @@ const Notifications: React.FC = () => {
           })}
           <button
             className="page-clear-all-button"
-            onClick={() => handleClearNotifications(userId)}
+            onClick={openClearModal}
           >
             <i className="fas fa-trash"></i> {t("notification.clearAll")}
           </button>
+        </div>
+      )}
+
+      {isModalOpen && (
+        <div className="modal-overlay" onClick={handleCloseModal}>
+          <div className="modal-content">
+            <button className="modal-close-button" onClick={handleCancelModal}>
+              <i className="fas fa-times"></i> {/* Utilisation de FontAwesome */}
+            </button>
+            <h2>{modalAction === "remove" ? t("notification.confirmRemoveTitle") : t("notification.confirmClearTitle")}</h2>
+            <p>
+              {modalAction === "remove"
+                ? t("notification.confirmRemoveMessage", "Are you sure you want to remove this notification?")
+                : t("notification.confirmClearMessage", "Are you sure you want to clear all notifications?")}
+            </p>
+            <div className="modal-actions">
+              <button className="modal-confirm-button" onClick={handleConfirmModal}>
+                {t("notification.yes")}
+              </button>
+              <button className="modal-cancel-button" onClick={handleCancelModal}>
+                {t("notification.no")}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

@@ -12,4 +12,5 @@ public class InterestDTO {
     private String userId;
     private String name;
     private String description;
+    private boolean isPublic; // Ajouté pour refléter l'entité Interest
 }

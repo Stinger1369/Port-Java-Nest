@@ -18,6 +18,7 @@ import imageReducer from "./features/imageSlice";
 import chatReducer from "./features/chatSlice";
 import friendReducer from "./features/friendSlice";
 import notificationReducer from "./features/notificationSlice";
+import portfolioCardReducer from "./features/portfolioCardSlice";
 
 export const store = configureStore({
   reducer: {
@@ -40,6 +41,7 @@ export const store = configureStore({
     chat: chatReducer,
     friend: friendReducer,
     notification: notificationReducer,
+    portfolioCard: portfolioCardReducer, // Ajout du nouveau reducer
   },
 });
 

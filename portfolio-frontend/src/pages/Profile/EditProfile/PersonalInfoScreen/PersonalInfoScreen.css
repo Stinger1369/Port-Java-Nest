@@ -8,6 +8,7 @@
   --shadow: 0 8px 32px rgba(31, 38, 135, 0.15); /* Ombre douce */
   --border-radius: 12px; /* Coins arrondis modernes */
   --transition: all 0.3s ease-in-out;
+  --disabled-color: #a0aec0; /* Gris pour les éléments désactivés */
 }
 
 /* Style général du conteneur */
@@ -18,8 +19,10 @@
   background: var(--background-color);
   border-radius: var(--border-radius);
   box-shadow: var(--shadow);
-  backdrop-filter: blur(10px); /* Effet glassmorphism */
+  backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.2);
+  position: relative;
+  overflow: visible; /* Pour éviter que le DatePicker soit coupé */
 }
 
 /* Titre */
@@ -46,6 +49,12 @@
   transition: var(--transition);
 }
 
+/* Style pour label désactivé (pour la case à cocher) */
+.personal-info-screen label.disabled-label {
+  color: var(--disabled-color);
+  cursor: not-allowed;
+}
+
 /* Champs d'entrée (input, select, textarea) */
 .personal-info-screen input,
 .personal-info-screen select,
@@ -61,6 +70,18 @@
   outline: none;
   transition: var(--transition);
   box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+/* Checkbox spécifique */
+.personal-info-screen input[type="checkbox"] {
+  width: auto;
+  margin-right: 0.5rem;
+  accent-color: var(--primary-color);
+}
+
+.personal-info-screen input[type="checkbox"]:disabled {
+  accent-color: var(--disabled-color);
+  cursor: not-allowed;
 }
 
 /* Effet au focus */
@@ -107,9 +128,66 @@
   animation: fadeIn 0.5s ease-in-out forwards;
 }
 
-/* Style spécifique pour PhoneInputComponent (à ajuster selon ton composant) */
+/* Style spécifique pour PhoneInputComponent */
 .personal-info-screen .phone-input-wrapper {
   margin-bottom: 1.5rem;
+}
+
+/* Style spécifique pour le DatePicker */
+.personal-info-screen .date-picker-container {
+  margin-bottom: 1.5rem;
+  position: relative;
+  z-index: 10; /* Priorité pour le conteneur */
+}
+
+.personal-info-screen .date-picker-wrapper {
+  position: relative;
+}
+
+.personal-info-screen .date-picker-input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  margin-bottom: 0;
+  background: var(--input-bg);
+  border: 1px solid rgba(107, 72, 255, 0.2);
+  border-radius: var(--border-radius);
+  font-size: 1rem;
+  color: var(--text-color);
+  outline: none;
+  transition: var(--transition);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.personal-info-screen .date-picker-input:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 8px rgba(107, 72, 255, 0.3);
+  transform: scale(1.02);
+}
+
+.personal-info-screen .calendar-icon {
+  position: absolute;
+  right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--primary-color);
+  pointer-events: none;
+}
+
+.personal-info-screen .react-datepicker {
+  z-index: 1000; /* Assure que le calendrier passe devant */
+}
+
+/* Style pour le ReactDatePicker */
+.personal-info-screen .react-datepicker-wrapper,
+.personal-info-screen .react-datepicker__input-container {
+  width: 100%;
+}
+
+/* Boutons de navigation (ancien style restauré) */
+.personal-info-screen .navigation-buttons {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 2.5rem;
 }
 
 /* Responsive Design */
@@ -118,11 +196,9 @@
     padding: 1.5rem;
     margin: 1rem;
   }
-
   .personal-info-screen h3 {
     font-size: 1.5rem;
   }
-
   .personal-info-screen input,
   .personal-info-screen select,
   .personal-info-screen textarea {
@@ -135,11 +211,9 @@
   .personal-info-screen {
     padding: 1rem;
   }
-
   .personal-info-screen h3 {
     font-size: 1.25rem;
   }
-
   .personal-info-screen label {
     font-size: 0.9rem;
   }

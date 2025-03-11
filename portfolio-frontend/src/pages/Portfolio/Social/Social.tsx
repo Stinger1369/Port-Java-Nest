@@ -4,6 +4,7 @@ import { RootState, AppDispatch } from "../../../redux/store";
 import {
   fetchSocialLinksByUser,
   deleteSocialLink,
+  updateSocialLink,
 } from "../../../redux/features/socialLinkSlice";
 import AddSocialLink from "./AddSocialLink";
 import UpdateSocialLink from "./UpdateSocialLink";
@@ -25,6 +26,26 @@ const Social = () => {
     }
   }, [dispatch, userId]);
 
+  const handleTogglePublic = (socialLinkId: string) => {
+    const socialLink = socialLinks.find((link) => link.id === socialLinkId);
+    if (socialLink && userId) {
+      dispatch(
+        updateSocialLink({
+          id: socialLinkId,
+          socialLinkData: { platform: socialLink.platform, url: socialLink.url, isPublic: !socialLink.isPublic },
+        })
+      )
+        .unwrap()
+        .then(() => {
+          dispatch(fetchSocialLinksByUser(userId));
+        })
+        .catch((err) => {
+          console.error("❌ Erreur lors de la mise à jour du lien social:", err);
+          alert("Erreur lors de la mise à jour du lien social.");
+        });
+    }
+  };
+
   return (
     <div className="social-container">
       <h2>Liens vers les Réseaux Sociaux</h2>
@@ -43,6 +64,14 @@ const Social = () => {
                     {link.url}
                   </a>
                 </p>
+                <label>
+                  Public :
+                  <input
+                    type="checkbox"
+                    checked={link.isPublic || false}
+                    onChange={() => handleTogglePublic(link.id)}
+                  />
+                </label>
                 <button className="edit-button" onClick={() => setSelectedSocialLink(link)}>✏️</button>
                 <button className="delete-button" onClick={() => dispatch(deleteSocialLink(link.id))}>🗑️</button>
               </div>

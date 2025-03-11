@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import axios from "axios";
-import { BASE_URL } from "../../config/hostname"; // Import de la configuration de l'URL
+import { BASE_URL } from "../../config/hostname";
 
 interface Certification {
   id?: string;
@@ -12,6 +12,7 @@ interface Certification {
   doesNotExpire: boolean;
   credentialId?: string;
   credentialUrl?: string;
+  isPublic?: boolean; // Ajouté
 }
 
 interface CertificationState {
@@ -28,7 +29,6 @@ const initialState: CertificationState = {
 
 const getAuthToken = () => localStorage.getItem("token");
 
-// ✅ **Récupérer les certifications d'un utilisateur**
 export const fetchCertificationsByUser = createAsyncThunk(
   "certification/fetchByUser",
   async (userId: string, { rejectWithValue }) => {
@@ -50,6 +50,7 @@ export const fetchCertificationsByUser = createAsyncThunk(
         doesNotExpire: cert.doesNotExpire ?? false,
         credentialId: cert.credentialId || "",
         credentialUrl: cert.credentialUrl || "",
+        isPublic: cert.isPublic ?? false, // Ajouté
       }));
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || "Échec du chargement des certifications.");
@@ -57,7 +58,6 @@ export const fetchCertificationsByUser = createAsyncThunk(
   }
 );
 
-// ✅ **Ajouter une certification**
 export const addCertification = createAsyncThunk(
   "certification/add",
   async (certificationData: Omit<Certification, "id" | "userId">, { rejectWithValue, getState }) => {
@@ -84,6 +84,7 @@ export const addCertification = createAsyncThunk(
         doesNotExpire: response.data.doesNotExpire ?? false,
         credentialId: response.data.credentialId || "",
         credentialUrl: response.data.credentialUrl || "",
+        isPublic: response.data.isPublic ?? false, // Ajouté
       };
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || "Échec de l'ajout de la certification.");
@@ -91,7 +92,6 @@ export const addCertification = createAsyncThunk(
   }
 );
 
-// ✅ **Mettre à jour une certification**
 export const updateCertification = createAsyncThunk(
   "certification/update",
   async ({ id, certificationData }: { id: string; certificationData: Partial<Certification> }, { rejectWithValue }) => {
@@ -115,6 +115,7 @@ export const updateCertification = createAsyncThunk(
         doesNotExpire: response.data.doesNotExpire ?? false,
         credentialId: response.data.credentialId || "",
         credentialUrl: response.data.credentialUrl || "",
+        isPublic: response.data.isPublic ?? false, // Ajouté
       };
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || "Échec de la mise à jour de la certification.");
@@ -122,7 +123,6 @@ export const updateCertification = createAsyncThunk(
   }
 );
 
-// ✅ **Supprimer une certification**
 export const deleteCertification = createAsyncThunk(
   "certification/delete",
   async (id: string, { rejectWithValue }) => {
@@ -141,14 +141,12 @@ export const deleteCertification = createAsyncThunk(
   }
 );
 
-// ✅ **Création du slice Redux**
 const certificationSlice = createSlice({
   name: "certification",
   initialState,
   reducers: {},
   extraReducers: (builder) => {
     builder
-      // **Récupérer les certifications**
       .addCase(fetchCertificationsByUser.pending, (state) => {
         state.status = "loading";
         state.error = null;
@@ -161,8 +159,6 @@ const certificationSlice = createSlice({
         state.status = "failed";
         state.error = action.payload as string;
       })
-
-      // **Ajouter une certification**
       .addCase(addCertification.pending, (state) => {
         state.status = "loading";
       })
@@ -174,8 +170,6 @@ const certificationSlice = createSlice({
         state.status = "failed";
         state.error = action.payload as string;
       })
-
-      // **Mettre à jour une certification**
       .addCase(updateCertification.pending, (state) => {
         state.status = "loading";
       })
@@ -189,8 +183,6 @@ const certificationSlice = createSlice({
         state.status = "failed";
         state.error = action.payload as string;
       })
-
-      // **Supprimer une certification**
       .addCase(deleteCertification.pending, (state) => {
         state.status = "loading";
       })
@@ -205,5 +197,4 @@ const certificationSlice = createSlice({
   },
 });
 
-// ✅ **Exports**
 export default certificationSlice.reducer;

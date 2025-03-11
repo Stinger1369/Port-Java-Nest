@@ -2,14 +2,18 @@ import { useSelector } from "react-redux";
 import { RootState } from "../../../../redux/store";
 import { useTranslation } from "react-i18next";
 import PhoneInputComponent from "../../../../components/PhoneInput/PhoneInputComponent";
+import DatePicker from "../../../../components/common/DatePicker";
+import { FaArrowLeft, FaArrowRight } from "react-icons/fa";
 import "./PersonalInfoScreen.css";
 
 interface Props {
   formData: any;
   setFormData: (data: any) => void;
+  onBack?: () => void;
+  onNext?: () => void;
 }
 
-const PersonalInfoScreen = ({ formData, setFormData }: Props) => {
+const PersonalInfoScreen = ({ formData, setFormData, onBack, onNext }: Props) => {
   const { t } = useTranslation();
   const user = useSelector((state: RootState) => state.user.user);
 
@@ -23,9 +27,16 @@ const PersonalInfoScreen = ({ formData, setFormData }: Props) => {
 
   const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.checked;
-    console.log("🔹 Mise à jour de showBirthdate :", newValue); // Log pour débogage
+    console.log("🔹 Mise à jour de showBirthdate :", newValue);
     setFormData({ ...formData, [e.target.name]: newValue });
   };
+
+  const handleDateChange = (name: string, value: string) => {
+    setFormData({ ...formData, [name]: value });
+  };
+
+  // Vérifie si birthdate est défini (non vide et valide)
+  const isBirthdateSet = !!formData.birthdate && formData.birthdate.trim() !== "";
 
   return (
     <div className="personal-info-screen">
@@ -56,24 +67,34 @@ const PersonalInfoScreen = ({ formData, setFormData }: Props) => {
         <option value="Woman">{t("editProfile.sexOptions.woman", "Woman")}</option>
         <option value="Other">{t("editProfile.sexOptions.other", "Other")}</option>
       </select>
-      <label>{t("editProfile.birthdate", "Birthdate")} :</label>
-      <input
-        type="date"
+
+      <DatePicker
         name="birthdate"
         value={formData.birthdate || user?.birthdate || ""}
-        onChange={handleChange}
+        onChange={handleDateChange}
+        label={t("editProfile.birthdate", "Birthdate") + " :"}
       />
-      <label>
+ {/* Checkbox avant le DatePicker */}
+      <label className={!isBirthdateSet ? "disabled-label" : ""}>
         <input
           type="checkbox"
           name="showBirthdate"
           checked={formData.showBirthdate ?? user?.showBirthdate ?? false}
           onChange={handleCheckboxChange}
+          disabled={!isBirthdateSet}
         />
         {t("editProfile.showBirthdate", "Show birthdate and age")}
       </label>
       <label>{t("editProfile.bio", "Bio")} :</label>
       <textarea name="bio" value={formData.bio || user?.bio || ""} onChange={handleChange} />
+      <div className="navigation-buttons">
+        <button className="nav-button back-button" onClick={onBack} title={t("editProfile.backToProfile", "Back to Profile")}>
+          <FaArrowLeft />
+        </button>
+        <button className="nav-button next-button" onClick={onNext} title={t("editProfile.next", "Next")}>
+          <FaArrowRight />
+        </button>
+      </div>
     </div>
   );
 };

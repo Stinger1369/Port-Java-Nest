@@ -10,8 +10,8 @@
 
 .main-content {
   flex: 1;
-  padding-top: 70px; /* Ajoute un padding supérieur égal à la hauteur de la navbar + un peu d’espace */
-}
+  padding-top: 70px;
+
 
 @media (max-width: 768px) {
   .app-container {

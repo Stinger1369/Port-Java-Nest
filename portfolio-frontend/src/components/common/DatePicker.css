@@ -75,7 +75,7 @@
   border-bottom: 1px solid #ccc;
   padding: 8px 0;
   position: relative;
-  z-index: 20002 !important;
+  z-index: 1000 !important;
 }
 
 .react-datepicker__year-dropdown {

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "../../../redux/store";
-import { addSkill } from "../../../redux/features/skillSlice";
+import { addSkill, fetchSkillsByUser } from "../../../redux/features/skillSlice";
 import "./Skills.css";
 
 interface Props {
@@ -15,13 +15,14 @@ const AddSkill = ({ onClose }: Props) => {
     name: "",
     level: 50,
     description: "",
+    isPublic: false, // Ajouté
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
+    const { name, value, type, checked } = e.target;
     setSkill((prev) => ({
       ...prev,
-      [name]: name === "level" ? Number(value) : value,
+      [name]: type === "checkbox" ? checked : name === "level" ? Number(value) : value,
     }));
   };
 
@@ -34,8 +35,16 @@ const AddSkill = ({ onClose }: Props) => {
       return;
     }
 
-    dispatch(addSkill({ ...skill, userId }));
-    onClose();
+    dispatch(addSkill({ ...skill, userId }))
+      .unwrap()
+      .then(() => {
+        dispatch(fetchSkillsByUser(userId));
+        onClose();
+      })
+      .catch((err) => {
+        console.error("❌ Erreur lors de l'ajout de la compétence:", err);
+        alert("Erreur lors de l'ajout de la compétence.");
+      });
   };
 
   return (
@@ -74,6 +83,16 @@ const AddSkill = ({ onClose }: Props) => {
             placeholder="Description"
             className="skill-textarea"
           />
+
+          <label className="skill-checkbox-label">
+            <input
+              type="checkbox"
+              name="isPublic"
+              checked={skill.isPublic}
+              onChange={handleChange}
+            />
+            Public
+          </label>
 
           <button type="submit" className="skill-button skill-button-submit">
             Ajouter

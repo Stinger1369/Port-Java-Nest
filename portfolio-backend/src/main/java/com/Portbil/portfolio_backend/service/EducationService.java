@@ -16,7 +16,7 @@ public class EducationService {
 
     private final EducationRepository educationRepository;
     private final UserRepository userRepository;
-    private final PortfolioService portfolioService; // ✅ Ajout du PortfolioService
+    private final PortfolioService portfolioService;
 
     public List<Education> getAllEducations() {
         return educationRepository.findAll();
@@ -31,15 +31,18 @@ public class EducationService {
     }
 
     public Optional<Education> createEducation(Education education) {
-        // ✅ Vérifier si l'utilisateur existe avant d'ajouter l'éducation
         Optional<User> user = userRepository.findById(education.getUserId());
         if (user.isEmpty()) {
             return Optional.empty();
         }
 
+        // Vider endDate si currentlyStudying est true
+        if (education.isCurrentlyStudying()) {
+            education.setEndDate(null);
+        }
+
         Education savedEducation = educationRepository.save(education);
 
-        // ✅ Ajouter l'ID de l'éducation à l'utilisateur et mettre à jour le portfolio
         user.get().getEducationIds().add(savedEducation.getId());
         userRepository.save(user.get());
         portfolioService.updatePortfolioWithUserData(user.get().getId());
@@ -56,13 +59,19 @@ public class EducationService {
             existingEducation.setEndDate(updatedEducation.getEndDate());
             existingEducation.setDescription(updatedEducation.getDescription());
             existingEducation.setCurrentlyStudying(updatedEducation.isCurrentlyStudying());
+            existingEducation.setPublic(updatedEducation.isPublic()); // Ajout de la mise à jour de isPublic
+
+            // Vider endDate si currentlyStudying est true
+            if (existingEducation.isCurrentlyStudying()) {
+                existingEducation.setEndDate(null);
+            }
+
             return educationRepository.save(existingEducation);
         });
     }
 
     public void deleteEducation(String id) {
         educationRepository.findById(id).ifPresent(education -> {
-            // ✅ Supprimer l'ID de l'éducation dans l'utilisateur
             userRepository.findById(education.getUserId()).ifPresent(user -> {
                 user.getEducationIds().remove(id);
                 userRepository.save(user);

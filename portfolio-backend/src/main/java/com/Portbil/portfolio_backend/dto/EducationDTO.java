@@ -12,4 +12,5 @@ public class EducationDTO {
     private LocalDate endDate;
     private String description;
     private boolean currentlyStudying;
+    private boolean isPublic; // Ajouté
 }

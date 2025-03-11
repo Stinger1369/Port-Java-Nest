@@ -2,12 +2,13 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState, AppDispatch } from "../../../redux/store";
-import { fetchUser, updateUser } from "../../../redux/features/userSlice";
+import { fetchUser } from "../../../redux/features/userSlice";
 import { useTranslation } from "react-i18next";
 import PersonalInfoScreen from "./PersonalInfoScreen/PersonalInfoScreen";
 import AddressScreen from "./AddressScreen/AddressScreen";
 import ImagesScreen from "./ImagesScreen/ImagesScreen";
 import ConfirmationScreen from "./ConfirmationScreen/ConfirmationScreen";
+import { FaArrowLeft, FaArrowRight } from "react-icons/fa"; // Importez les icônes
 import "./EditProfileContainer.css";
 
 const EditProfileContainer = () => {
@@ -88,7 +89,6 @@ const EditProfileContainer = () => {
         showBirthdate: user.showBirthdate ?? false,
         age: user.age || 0,
       };
-      console.log("🔹 Initialisation des données initiales :", updatedFormData);
       setInitialFormData(updatedFormData);
       setFormData(updatedFormData);
       setIsInitialDataSet(true);
@@ -109,10 +109,6 @@ const EditProfileContainer = () => {
   }, [address, latitude, longitude, city, country, isInitialDataSet]);
 
   const hasChanges = () => {
-    console.log("🔸 Comparaison pour détecter les changements :", {
-      initial: initialFormData,
-      current: formData,
-    });
     return (
       formData.id === initialFormData.id && (
         formData.firstName !== initialFormData.firstName ||
@@ -148,16 +144,18 @@ const EditProfileContainer = () => {
   const renderScreen = () => {
     switch (currentScreen) {
       case 1:
-        return <PersonalInfoScreen formData={formData} setFormData={setFormData} />;
+        return <PersonalInfoScreen formData={formData} setFormData={setFormData} onBack={handleBack} onNext={handleNext} />;
       case 2:
-        return <AddressScreen formData={formData} setFormData={setFormData} />;
+        return <AddressScreen formData={formData} setFormData={setFormData} onBack={handleBack} onNext={handleNext} />;
       case 3:
-        return <ImagesScreen />;
+        return <ImagesScreen onBack={handleBack} onNext={handleNext} />;
       case 4:
         return (
           <ConfirmationScreen
             formData={formData}
             hasChanges={hasChanges}
+            onBack={handleBack}
+            onNext={handleNext}
           />
         );
       default:
@@ -183,14 +181,7 @@ const EditProfileContainer = () => {
         <div className="progress-line" style={{ "--current-screen": currentScreen } as React.CSSProperties}></div>
       </div>
       {renderScreen()}
-      <div className="navigation-buttons">
-        <button onClick={handleBack}>
-          {currentScreen === 1 ? t("editProfile.backToProfile", "Back to Profile") : t("editProfile.previous", "Previous")}
-        </button>
-        <button onClick={handleNext}>
-          {currentScreen === totalScreens ? t("editProfile.finish", "Finish") : t("editProfile.next", "Next")}
-        </button>
-      </div>
+      {/* Les boutons sont maintenant dans les écrans enfants */}
     </div>
   );
 };

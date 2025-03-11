@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import axios from "axios";
-import { BASE_URL } from "../../config/hostname"; // Import de la configuration de l'URL
+import { BASE_URL } from "../../config/hostname";
 
 interface Skill {
   id?: string;
@@ -8,6 +8,7 @@ interface Skill {
   name: string;
   level: number;
   description?: string;
+  isPublic?: boolean; // Ajouté
 }
 
 interface SkillState {
@@ -16,17 +17,14 @@ interface SkillState {
   error: string | null;
 }
 
-// ✅ **État initial**
 const initialState: SkillState = {
   skills: [],
   status: "idle",
   error: null,
 };
 
-// ✅ **Récupérer le token**
 const getAuthToken = () => localStorage.getItem("token");
 
-// ✅ **Récupérer tous les skills d'un utilisateur**
 export const fetchSkillsByUser = createAsyncThunk(
   "skill/fetchByUser",
   async (userId: string, { rejectWithValue }) => {
@@ -36,17 +34,19 @@ export const fetchSkillsByUser = createAsyncThunk(
 
       const response = await axios.get<Skill[]>(
         `${BASE_URL}/api/skills/user/${userId}`,
-        { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } }
+        { headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" } }
       );
 
-      return response.data;
+      return response.data.map((skill) => ({
+        ...skill,
+        isPublic: skill.isPublic ?? false, // Ajouté
+      }));
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || "Échec du chargement des skills.");
     }
   }
 );
 
-// ✅ **Ajouter un skill**
 export const addSkill = createAsyncThunk(
   "skill/add",
   async (skillData: Omit<Skill, "id" | "userId">, { rejectWithValue }) => {
@@ -60,17 +60,19 @@ export const addSkill = createAsyncThunk(
       const response = await axios.post<Skill>(
         `${BASE_URL}/api/skills`,
         { ...skillData, userId },
-        { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } }
+        { headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" } }
       );
 
-      return response.data;
+      return {
+        ...response.data,
+        isPublic: response.data.isPublic ?? false, // Ajouté
+      };
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || "Échec de l'ajout du skill.");
     }
   }
 );
 
-// ✅ **Mettre à jour un skill**
 export const updateSkill = createAsyncThunk(
   "skill/update",
   async ({ id, skillData }: { id: string; skillData: Partial<Skill> }, { rejectWithValue }) => {
@@ -81,17 +83,19 @@ export const updateSkill = createAsyncThunk(
       const response = await axios.put<Skill>(
         `${BASE_URL}/api/skills/${id}`,
         skillData,
-        { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } }
+        { headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" } }
       );
 
-      return response.data;
+      return {
+        ...response.data,
+        isPublic: response.data.isPublic ?? false, // Ajouté
+      };
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || "Échec de la mise à jour du skill.");
     }
   }
 );
 
-// ✅ **Supprimer un skill**
 export const deleteSkill = createAsyncThunk(
   "skill/delete",
   async (id: string, { rejectWithValue }) => {
@@ -101,7 +105,7 @@ export const deleteSkill = createAsyncThunk(
 
       await axios.delete(
         `${BASE_URL}/api/skills/${id}`,
-        { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } }
+        { headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" } }
       );
 
       return id;
@@ -111,14 +115,12 @@ export const deleteSkill = createAsyncThunk(
   }
 );
 
-// ✅ **Création du slice Redux**
 const skillSlice = createSlice({
   name: "skill",
   initialState,
   reducers: {},
   extraReducers: (builder) => {
     builder
-      // 🔹 **Récupérer les skills**
       .addCase(fetchSkillsByUser.pending, (state) => {
         state.status = "loading";
         state.error = null;
@@ -131,8 +133,6 @@ const skillSlice = createSlice({
         state.status = "failed";
         state.error = action.payload as string;
       })
-
-      // 🔹 **Ajouter un skill**
       .addCase(addSkill.pending, (state) => {
         state.status = "loading";
       })
@@ -144,8 +144,6 @@ const skillSlice = createSlice({
         state.status = "failed";
         state.error = action.payload as string;
       })
-
-      // 🔹 **Mettre à jour un skill**
       .addCase(updateSkill.pending, (state) => {
         state.status = "loading";
       })
@@ -159,8 +157,6 @@ const skillSlice = createSlice({
         state.status = "failed";
         state.error = action.payload as string;
       })
-
-      // 🔹 **Supprimer un skill**
       .addCase(deleteSkill.pending, (state) => {
         state.status = "loading";
       })
@@ -175,5 +171,4 @@ const skillSlice = createSlice({
   },
 });
 
-// ✅ **Exports**
 export default skillSlice.reducer;

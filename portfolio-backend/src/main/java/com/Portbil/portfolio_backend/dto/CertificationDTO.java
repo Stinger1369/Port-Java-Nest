@@ -19,4 +19,5 @@ public class CertificationDTO {
     private boolean doesNotExpire;
     private String credentialId;
     private String credentialUrl;
+    private boolean isPublic; // Ajouté
 }

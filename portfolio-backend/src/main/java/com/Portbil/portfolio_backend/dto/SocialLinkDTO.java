@@ -12,4 +12,5 @@ public class SocialLinkDTO {
     private String userId;
     private String platform;
     private String url;
+    private boolean isPublic; // Ajouté
 }

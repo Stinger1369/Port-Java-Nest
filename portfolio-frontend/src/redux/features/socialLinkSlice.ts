@@ -7,6 +7,7 @@ interface SocialLink {
   userId: string;
   platform: string;
   url: string;
+  isPublic?: boolean;
 }
 
 interface SocialLinkState {
@@ -20,11 +21,8 @@ const initialState: SocialLinkState = {
   status: "idle",
   error: null,
 };
-
-// ✅ **Récupérer le token d'authentification**
 const getAuthToken = () => localStorage.getItem("token");
 
-// ✅ **Récupérer les liens sociaux d'un utilisateur**
 export const fetchSocialLinksByUser = createAsyncThunk(
   "socialLink/fetchByUser",
   async (userId: string, { rejectWithValue }) => {
@@ -34,7 +32,7 @@ export const fetchSocialLinksByUser = createAsyncThunk(
 
       const response = await axios.get<SocialLink[]>(
         `${BASE_URL}/api/social-links/user/${userId}`,
-        { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } }
+        { headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" } }
       );
 
       return response.data;
@@ -44,7 +42,6 @@ export const fetchSocialLinksByUser = createAsyncThunk(
   }
 );
 
-// ✅ **Ajouter un lien social**
 export const addSocialLink = createAsyncThunk(
   "socialLink/add",
   async (socialLinkData: Omit<SocialLink, "id" | "userId">, { rejectWithValue }) => {
@@ -58,7 +55,7 @@ export const addSocialLink = createAsyncThunk(
       const response = await axios.post<SocialLink>(
         `${BASE_URL}/api/social-links`,
         { ...socialLinkData, userId },
-        { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } }
+        { headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" } }
       );
 
       return response.data;
@@ -68,7 +65,6 @@ export const addSocialLink = createAsyncThunk(
   }
 );
 
-// ✅ **Mettre à jour un lien social**
 export const updateSocialLink = createAsyncThunk(
   "socialLink/update",
   async ({ id, socialLinkData }: { id: string; socialLinkData: Partial<SocialLink> }, { rejectWithValue }) => {
@@ -79,7 +75,7 @@ export const updateSocialLink = createAsyncThunk(
       const response = await axios.put<SocialLink>(
         `${BASE_URL}/api/social-links/${id}`,
         socialLinkData,
-        { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } }
+        { headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" } }
       );
 
       return response.data;
@@ -89,7 +85,6 @@ export const updateSocialLink = createAsyncThunk(
   }
 );
 
-// ✅ **Supprimer un lien social**
 export const deleteSocialLink = createAsyncThunk(
   "socialLink/delete",
   async (id: string, { rejectWithValue }) => {
@@ -99,7 +94,7 @@ export const deleteSocialLink = createAsyncThunk(
 
       await axios.delete(
         `${BASE_URL}/api/social-links/${id}`,
-        { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } }
+        { headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" } }
       );
 
       return id;
@@ -109,14 +104,12 @@ export const deleteSocialLink = createAsyncThunk(
   }
 );
 
-// ✅ **Création du slice Redux**
 const socialLinkSlice = createSlice({
   name: "socialLink",
   initialState,
   reducers: {},
   extraReducers: (builder) => {
     builder
-      // 🔹 **Récupérer les liens sociaux**
       .addCase(fetchSocialLinksByUser.pending, (state) => {
         state.status = "loading";
         state.error = null;
@@ -129,8 +122,6 @@ const socialLinkSlice = createSlice({
         state.status = "failed";
         state.error = action.payload as string;
       })
-
-      // 🔹 **Ajouter un lien social**
       .addCase(addSocialLink.pending, (state) => {
         state.status = "loading";
       })
@@ -142,8 +133,6 @@ const socialLinkSlice = createSlice({
         state.status = "failed";
         state.error = action.payload as string;
       })
-
-      // 🔹 **Mettre à jour un lien social**
       .addCase(updateSocialLink.pending, (state) => {
         state.status = "loading";
       })
@@ -157,8 +146,6 @@ const socialLinkSlice = createSlice({
         state.status = "failed";
         state.error = action.payload as string;
       })
-
-      // 🔹 **Supprimer un lien social**
       .addCase(deleteSocialLink.pending, (state) => {
         state.status = "loading";
       })
@@ -173,5 +160,4 @@ const socialLinkSlice = createSlice({
   },
 });
 
-// ✅ **Exports**
 export default socialLinkSlice.reducer;

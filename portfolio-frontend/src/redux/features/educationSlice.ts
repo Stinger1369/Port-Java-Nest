@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import axios from "axios";
-import { BASE_URL } from "../../config/hostname"; // Import de la configuration de l'URL
+import { BASE_URL } from "../../config/hostname";
 
 interface Education {
   id?: string;
@@ -12,6 +12,7 @@ interface Education {
   endDate?: string;
   currentlyStudying: boolean;
   description?: string;
+  isPublic?: boolean; // Ajouté
 }
 
 interface EducationState {
@@ -20,17 +21,14 @@ interface EducationState {
   error: string | null;
 }
 
-// ✅ **État initial**
 const initialState: EducationState = {
   educations: [],
   status: "idle",
   error: null,
 };
 
-// ✅ **Fonction pour récupérer le token stocké**
 const getAuthToken = () => localStorage.getItem("token");
 
-// ✅ **Récupérer toutes les formations d'un utilisateur avec le token**
 export const fetchEducationsByUser = createAsyncThunk(
   "education/fetchByUser",
   async (userId: string, { rejectWithValue }) => {
@@ -42,17 +40,19 @@ export const fetchEducationsByUser = createAsyncThunk(
 
       const response = await axios.get<Education[]>(
         `${BASE_URL}/api/educations/user/${userId}`,
-        { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } }
+        { headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" } }
       );
 
-      return response.data;
+      return response.data.map((edu) => ({
+        ...edu,
+        isPublic: edu.isPublic ?? false, // Assurer une valeur par défaut
+      }));
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || "Échec du chargement des formations.");
     }
   }
 );
 
-// ✅ **Ajouter une formation avec le token**
 export const addEducation = createAsyncThunk(
   "education/add",
   async (educationData: Omit<Education, "id" | "userId">, { rejectWithValue }) => {
@@ -70,17 +70,19 @@ export const addEducation = createAsyncThunk(
       const response = await axios.post<Education>(
         `${BASE_URL}/api/educations`,
         { ...educationData, userId },
-        { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } }
+        { headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" } }
       );
 
-      return response.data;
+      return {
+        ...response.data,
+        isPublic: response.data.isPublic ?? false, // Assurer une valeur par défaut
+      };
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || "Échec de l'ajout de la formation.");
     }
   }
 );
 
-// ✅ **Mettre à jour une formation avec le token**
 export const updateEducation = createAsyncThunk(
   "education/update",
   async ({ id, educationData }: { id: string; educationData: Partial<Education> }, { rejectWithValue }) => {
@@ -93,17 +95,19 @@ export const updateEducation = createAsyncThunk(
       const response = await axios.put<Education>(
         `${BASE_URL}/api/educations/${id}`,
         educationData,
-        { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } }
+        { headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" } }
       );
 
-      return response.data;
+      return {
+        ...response.data,
+        isPublic: response.data.isPublic ?? false, // Assurer une valeur par défaut
+      };
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || "Échec de la mise à jour de la formation.");
     }
   }
 );
 
-// ✅ **Supprimer une formation avec le token**
 export const deleteEducation = createAsyncThunk(
   "education/delete",
   async (id: string, { rejectWithValue }) => {
@@ -115,7 +119,7 @@ export const deleteEducation = createAsyncThunk(
 
       await axios.delete(
         `${BASE_URL}/api/educations/${id}`,
-        { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } }
+        { headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" } }
       );
 
       return id;
@@ -125,14 +129,12 @@ export const deleteEducation = createAsyncThunk(
   }
 );
 
-// ✅ **Création du slice Redux**
 const educationSlice = createSlice({
   name: "education",
   initialState,
   reducers: {},
   extraReducers: (builder) => {
     builder
-      // **Récupérer les formations**
       .addCase(fetchEducationsByUser.pending, (state) => {
         state.status = "loading";
         state.error = null;
@@ -145,8 +147,6 @@ const educationSlice = createSlice({
         state.status = "failed";
         state.error = action.payload as string;
       })
-
-      // **Ajouter une formation**
       .addCase(addEducation.pending, (state) => {
         state.status = "loading";
       })
@@ -158,8 +158,6 @@ const educationSlice = createSlice({
         state.status = "failed";
         state.error = action.payload as string;
       })
-
-      // **Mettre à jour une formation**
       .addCase(updateEducation.pending, (state) => {
         state.status = "loading";
       })
@@ -173,8 +171,6 @@ const educationSlice = createSlice({
         state.status = "failed";
         state.error = action.payload as string;
       })
-
-      // **Supprimer une formation**
       .addCase(deleteEducation.pending, (state) => {
         state.status = "loading";
       })
@@ -189,5 +185,4 @@ const educationSlice = createSlice({
   },
 });
 
-// ✅ **Exports**
 export default educationSlice.reducer;

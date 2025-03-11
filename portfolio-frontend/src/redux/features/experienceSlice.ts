@@ -1,17 +1,18 @@
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import axios from "axios";
-import { BASE_URL } from "../../config/hostname"; // Import de la configuration de l'URL
+import { BASE_URL } from "../../config/hostname";
 
 // ✅ **Interface Experience**
 interface Experience {
   id?: string;
   userId: string;
   companyName: string;
-  position: string;
+  jobTitle: string; // Changé de "position" à "jobTitle"
   startDate: string;
   endDate?: string;
   currentlyWorking: boolean;
   description?: string;
+  isPublic?: boolean;
 }
 
 // ✅ **État initial**
@@ -42,10 +43,13 @@ export const fetchExperiencesByUser = createAsyncThunk(
 
       const response = await axios.get<Experience[]>(
         `${BASE_URL}/api/experiences/user/${userId}`,
-        { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } }
+        { headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" } }
       );
 
-      return response.data;
+      return response.data.map((exp) => ({
+        ...exp,
+        isPublic: exp.isPublic ?? false,
+      }));
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || "Échec du chargement des expériences.");
     }
@@ -70,10 +74,13 @@ export const addExperience = createAsyncThunk(
       const response = await axios.post<Experience>(
         `${BASE_URL}/api/experiences`,
         { ...experienceData, userId },
-        { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } }
+        { headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" } }
       );
 
-      return response.data;
+      return {
+        ...response.data,
+        isPublic: response.data.isPublic ?? false,
+      };
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || "Échec de l'ajout de l'expérience.");
     }
@@ -93,10 +100,13 @@ export const updateExperience = createAsyncThunk(
       const response = await axios.put<Experience>(
         `${BASE_URL}/api/experiences/${id}`,
         experienceData,
-        { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } }
+        { headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" } }
       );
 
-      return response.data;
+      return {
+        ...response.data,
+        isPublic: response.data.isPublic ?? false,
+      };
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || "Échec de la mise à jour de l'expérience.");
     }
@@ -115,7 +125,7 @@ export const deleteExperience = createAsyncThunk(
 
       await axios.delete(
         `${BASE_URL}/api/experiences/${id}`,
-        { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } }
+        { headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" } }
       );
 
       return id;
@@ -132,7 +142,6 @@ const experienceSlice = createSlice({
   reducers: {},
   extraReducers: (builder) => {
     builder
-      // **Récupérer les expériences**
       .addCase(fetchExperiencesByUser.pending, (state) => {
         state.status = "loading";
         state.error = null;
@@ -145,8 +154,6 @@ const experienceSlice = createSlice({
         state.status = "failed";
         state.error = action.payload as string;
       })
-
-      // **Ajouter une expérience**
       .addCase(addExperience.pending, (state) => {
         state.status = "loading";
       })
@@ -158,8 +165,6 @@ const experienceSlice = createSlice({
         state.status = "failed";
         state.error = action.payload as string;
       })
-
-      // **Mettre à jour une expérience**
       .addCase(updateExperience.pending, (state) => {
         state.status = "loading";
       })
@@ -173,8 +178,6 @@ const experienceSlice = createSlice({
         state.status = "failed";
         state.error = action.payload as string;
       })
-
-      // **Supprimer une expérience**
       .addCase(deleteExperience.pending, (state) => {
         state.status = "loading";
       })

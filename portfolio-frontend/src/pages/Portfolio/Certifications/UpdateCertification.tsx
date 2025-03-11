@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "../../../redux/store";
-import { updateCertification } from "../../../redux/features/certificationSlice";
+import { updateCertification, fetchCertificationsByUser } from "../../../redux/features/certificationSlice";
 import DatePicker from "../../../components/common/DatePicker";
 import "./Certifications.css";
 
@@ -12,6 +12,9 @@ interface Certification {
   dateObtained?: string;
   expirationDate?: string | null;
   doesNotExpire?: boolean;
+  credentialId?: string;
+  credentialUrl?: string;
+  isPublic?: boolean;
 }
 
 interface Props {
@@ -29,6 +32,9 @@ const UpdateCertification = ({ certification, onClose }: Props) => {
     dateObtained: certification.dateObtained || "",
     expirationDate: certification.expirationDate || "",
     doesNotExpire: certification.doesNotExpire || false,
+    credentialId: certification.credentialId || "",
+    credentialUrl: certification.credentialUrl || "",
+    isPublic: certification.isPublic || false,
   });
 
   useEffect(() => {
@@ -40,6 +46,9 @@ const UpdateCertification = ({ certification, onClose }: Props) => {
         dateObtained: certification.dateObtained || "",
         expirationDate: certification.expirationDate || "",
         doesNotExpire: certification.doesNotExpire || false,
+        credentialId: certification.credentialId || "",
+        credentialUrl: certification.credentialUrl || "",
+        isPublic: certification.isPublic || false,
       });
     }
   }, [certification]);
@@ -61,8 +70,24 @@ const UpdateCertification = ({ certification, onClose }: Props) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    dispatch(updateCertification({ id: updatedCertification.id, certificationData: updatedCertification }));
-    onClose();
+    const userId = localStorage.getItem("userId");
+    if (userId) {
+      // Si la certification n'expire pas, on ignore expirationDate
+      const certificationData = updatedCertification.doesNotExpire
+        ? { ...updatedCertification, expirationDate: null }
+        : updatedCertification;
+
+      dispatch(updateCertification({ id: updatedCertification.id, certificationData }))
+        .unwrap()
+        .then(() => {
+          dispatch(fetchCertificationsByUser(userId));
+          onClose();
+        })
+        .catch((err) => {
+          console.error("❌ Erreur lors de la mise à jour de la certification:", err);
+          alert("Erreur lors de la mise à jour de la certification.");
+        });
+    }
   };
 
   return (
@@ -121,6 +146,36 @@ const UpdateCertification = ({ certification, onClose }: Props) => {
               onChange={handleChange}
             />
             Cette certification n'expire pas
+          </label>
+
+          <label className="certification-label">Identifiant de la certification</label>
+          <input
+            type="text"
+            name="credentialId"
+            value={updatedCertification.credentialId}
+            onChange={handleChange}
+            placeholder="Identifiant de la certification"
+            className="certification-input"
+          />
+
+          <label className="certification-label">URL de la certification</label>
+          <input
+            type="text"
+            name="credentialUrl"
+            value={updatedCertification.credentialUrl}
+            onChange={handleChange}
+            placeholder="URL de la certification"
+            className="certification-input"
+          />
+
+          <label className="certification-checkbox-label">
+            <input
+              type="checkbox"
+              name="isPublic"
+              checked={updatedCertification.isPublic}
+              onChange={handleChange}
+            />
+            Public
           </label>
 
           <button type="submit" className="certification-button certification-button-submit">

@@ -275,9 +275,15 @@ h2 {
   color: #ffffff;
 }
 
-.experience-button-submit:hover {
+.experience-button-submit:hover:not(:disabled) {
   background-color: #2980b9;
   transform: scale(1.05); /* Agrandissement au survol */
+}
+
+.experience-button-submit:disabled {
+  background-color: #a3bffa; /* Gris clair */
+  cursor: not-allowed;
+  opacity: 0.6;
 }
 
 .experience-button-cancel {

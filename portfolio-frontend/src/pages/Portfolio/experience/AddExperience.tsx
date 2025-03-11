@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "../../../redux/store";
-import { addExperience } from "../../../redux/features/experienceSlice";
+import { addExperience, fetchExperiencesByUser } from "../../../redux/features/experienceSlice";
 import DatePicker from "../../../components/common/DatePicker";
 import "./Experience.css";
 
@@ -14,19 +14,36 @@ const AddExperience = ({ onClose }: Props) => {
 
   const [experience, setExperience] = useState({
     companyName: "",
-    position: "",
+    jobTitle: "",
     startDate: "",
     endDate: "",
     currentlyWorking: false,
     description: "",
+    isPublic: false,
   });
+
+  // Vérifier si tous les champs obligatoires sont remplis
+  const isFormValid = () => {
+    const requiredFields = experience.companyName && experience.jobTitle && experience.startDate;
+    if (experience.currentlyWorking) {
+      return requiredFields; // Pas besoin de endDate si currentlyWorking est true
+    }
+    return requiredFields && experience.endDate; // endDate est requis si currentlyWorking est false
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value, type, checked } = e.target;
-    setExperience((prev) => ({
-      ...prev,
-      [name]: type === "checkbox" ? checked : value,
-    }));
+    setExperience((prev) => {
+      const updatedExperience = {
+        ...prev,
+        [name]: type === "checkbox" ? checked : value,
+      };
+      // Si currentlyWorking est true, vide le champ endDate
+      if (name === "currentlyWorking" && checked) {
+        updatedExperience.endDate = "";
+      }
+      return updatedExperience;
+    });
   };
 
   const handleDateChange = (name: string, value: string) => {
@@ -45,8 +62,16 @@ const AddExperience = ({ onClose }: Props) => {
       return;
     }
 
-    dispatch(addExperience({ ...experience, userId }));
-    onClose();
+    dispatch(addExperience({ ...experience, userId }))
+      .unwrap()
+      .then(() => {
+        dispatch(fetchExperiencesByUser(userId));
+        onClose();
+      })
+      .catch((err) => {
+        console.error("❌ Erreur lors de l'ajout de l'expérience:", err);
+        alert("Erreur lors de l'ajout de l'expérience.");
+      });
   };
 
   return (
@@ -68,8 +93,8 @@ const AddExperience = ({ onClose }: Props) => {
           <label className="experience-label">Poste *</label>
           <input
             type="text"
-            name="position"
-            value={experience.position}
+            name="jobTitle"
+            value={experience.jobTitle}
             onChange={handleChange}
             placeholder="Poste"
             required
@@ -105,6 +130,16 @@ const AddExperience = ({ onClose }: Props) => {
             Actuellement en poste
           </label>
 
+          <label className="experience-checkbox-label">
+            <input
+              type="checkbox"
+              name="isPublic"
+              checked={experience.isPublic}
+              onChange={handleChange}
+            />
+            Public
+          </label>
+
           <label className="experience-label">Description</label>
           <textarea
             name="description"
@@ -114,7 +149,11 @@ const AddExperience = ({ onClose }: Props) => {
             className="experience-textarea"
           />
 
-          <button type="submit" className="experience-button experience-button-submit">
+          <button
+            type="submit"
+            className="experience-button experience-button-submit"
+            disabled={!isFormValid()} // Désactiver si le formulaire n'est pas valide
+          >
             Ajouter
           </button>
           <button

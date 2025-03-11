@@ -1,26 +1,30 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
-import removeConsole from 'vite-plugin-remove-console'; // Assure-toi que c'est bien "removeConsole"
+import removeConsole from 'vite-plugin-remove-console';
+import mkcert from 'vite-plugin-mkcert';
 
 export default defineConfig(({ command, mode }) => {
   return {
     plugins: [
       react(),
       removeConsole({
-        include: ['**/*.ts', '**/*.tsx'], // Inclure les fichiers TypeScript et TSX
-        exclude: [], // Exclure certains fichiers si nécessaire
+        include: ['**/*.ts', '**/*.tsx'],
+        exclude: [],
       }),
+      mkcert(), // Ajout du plugin mkcert
     ],
     build: {
       outDir: 'dist',
-      sourcemap: mode === 'development', // Générer des sourcemaps en dev, pas en prod
+      sourcemap: mode === 'development',
     },
-    logLevel: mode === 'development' ? 'info' : 'error', // Logs en dev, erreurs seulement en prod
+    logLevel: mode === 'development' ? 'info' : 'error',
     server: {
-      port: 5173, // Port par défaut pour `dev` et `preview`
+      port: 5173,
+      https: true, // Activer HTTPS avec mkcert
     },
     preview: {
-      port: 5173, // Port pour `preview` (correspond à `start`)
+      port: 5173,
+      https: true, // Activer HTTPS pour preview
     },
   };
 });

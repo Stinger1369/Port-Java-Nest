@@ -51,6 +51,7 @@ public class SocialLinkController {
     @PutMapping("/{id}")
     @PreAuthorize("@socialLinkService.getSocialLinkById(#id).get().userId == authentication.name or hasAuthority('ADMIN')")
     public ResponseEntity<SocialLink> updateSocialLink(@PathVariable String id, @RequestBody SocialLink socialLink) {
+        System.out.println("Updating social link with ID: " + id + ", isPublic: " + socialLink.isPublic());
         return socialLinkService.updateSocialLink(id, socialLink)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());

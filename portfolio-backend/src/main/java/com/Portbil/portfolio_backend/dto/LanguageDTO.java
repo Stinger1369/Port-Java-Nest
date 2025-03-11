@@ -13,4 +13,5 @@ public class LanguageDTO {
     private String name;
     private String level;
     private String proficiencyLevel;
+    private boolean isPublic; // Ajouté
 }

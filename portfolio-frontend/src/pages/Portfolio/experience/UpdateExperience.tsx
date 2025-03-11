@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "../../../redux/store";
-import { updateExperience } from "../../../redux/features/experienceSlice";
+import { updateExperience, fetchExperiencesByUser } from "../../../redux/features/experienceSlice";
 import DatePicker from "../../../components/common/DatePicker";
 import "./Experience.css";
 
@@ -9,11 +9,12 @@ interface Props {
   experience: {
     id: string;
     companyName?: string;
-    position?: string;
+    jobTitle?: string;
     startDate?: string;
     endDate?: string;
     currentlyWorking?: boolean;
     description?: string;
+    isPublic?: boolean;
   };
   onClose: () => void;
 }
@@ -24,11 +25,12 @@ const UpdateExperience = ({ experience, onClose }: Props) => {
   const [updatedExperience, setUpdatedExperience] = useState({
     id: experience.id,
     companyName: experience.companyName || "",
-    position: experience.position || "",
+    jobTitle: experience.jobTitle || "",
     startDate: experience.startDate || "",
     endDate: experience.endDate || "",
     currentlyWorking: experience.currentlyWorking || false,
     description: experience.description || "",
+    isPublic: experience.isPublic || false,
   });
 
   useEffect(() => {
@@ -36,21 +38,38 @@ const UpdateExperience = ({ experience, onClose }: Props) => {
       setUpdatedExperience({
         id: experience.id,
         companyName: experience.companyName || "",
-        position: experience.position || "",
+        jobTitle: experience.jobTitle || "",
         startDate: experience.startDate || "",
         endDate: experience.endDate || "",
         currentlyWorking: experience.currentlyWorking || false,
         description: experience.description || "",
+        isPublic: experience.isPublic || false,
       });
     }
   }, [experience]);
 
+  // Vérifier si tous les champs obligatoires sont remplis
+  const isFormValid = () => {
+    const requiredFields = updatedExperience.companyName && updatedExperience.jobTitle && updatedExperience.startDate;
+    if (updatedExperience.currentlyWorking) {
+      return requiredFields; // Pas besoin de endDate si currentlyWorking est true
+    }
+    return requiredFields && updatedExperience.endDate; // endDate est requis si currentlyWorking est false
+  };
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value, type, checked } = e.target;
-    setUpdatedExperience((prev) => ({
-      ...prev,
-      [name]: type === "checkbox" ? checked : value,
-    }));
+    setUpdatedExperience((prev) => {
+      const updatedExp = {
+        ...prev,
+        [name]: type === "checkbox" ? checked : value,
+      };
+      // Si currentlyWorking est true, vide le champ endDate
+      if (name === "currentlyWorking" && checked) {
+        updatedExp.endDate = "";
+      }
+      return updatedExp;
+    });
   };
 
   const handleDateChange = (name: string, value: string) => {
@@ -62,8 +81,19 @@ const UpdateExperience = ({ experience, onClose }: Props) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    dispatch(updateExperience({ id: updatedExperience.id, experienceData: updatedExperience }));
-    onClose();
+    const userId = localStorage.getItem("userId");
+    if (userId) {
+      dispatch(updateExperience({ id: updatedExperience.id, experienceData: updatedExperience }))
+        .unwrap()
+        .then(() => {
+          dispatch(fetchExperiencesByUser(userId));
+          onClose();
+        })
+        .catch((err) => {
+          console.error("❌ Erreur lors de la mise à jour de l'expérience:", err);
+          alert("Erreur lors de la mise à jour de l'expérience.");
+        });
+    }
   };
 
   return (
@@ -84,8 +114,8 @@ const UpdateExperience = ({ experience, onClose }: Props) => {
           <label className="experience-label">Poste *</label>
           <input
             type="text"
-            name="position"
-            value={updatedExperience.position}
+            name="jobTitle"
+            value={updatedExperience.jobTitle}
             onChange={handleChange}
             required
             className="experience-input"
@@ -120,6 +150,16 @@ const UpdateExperience = ({ experience, onClose }: Props) => {
             Actuellement en poste
           </label>
 
+          <label className="experience-checkbox-label">
+            <input
+              type="checkbox"
+              name="isPublic"
+              checked={updatedExperience.isPublic}
+              onChange={handleChange}
+            />
+            Public
+          </label>
+
           <label className="experience-label">Description</label>
           <textarea
             name="description"
@@ -128,7 +168,11 @@ const UpdateExperience = ({ experience, onClose }: Props) => {
             className="experience-textarea"
           />
 
-          <button type="submit" className="experience-button experience-button-submit">
+          <button
+            type="submit"
+            className="experience-button experience-button-submit"
+            disabled={!isFormValid()} // Désactiver si le formulaire n'est pas valide
+          >
             Mettre à jour
           </button>
           <button

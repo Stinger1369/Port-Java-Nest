@@ -51,6 +51,7 @@ public class ExperienceController {
     @PutMapping("/{id}")
     @PreAuthorize("@experienceService.getExperienceById(#id).get().userId == authentication.name or hasAuthority('ADMIN')")
     public ResponseEntity<Experience> updateExperience(@PathVariable String id, @RequestBody Experience experience) {
+        System.out.println("Updating experience with ID: " + id + ", isPublic: " + experience.isPublic());
         return experienceService.updateExperience(id, experience)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());

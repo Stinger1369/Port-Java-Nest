@@ -15,8 +15,8 @@ import java.util.Optional;
 public class InterestService {
 
     private final InterestRepository interestRepository;
-    private final UserRepository userRepository; // ✅ Vérifier si l'utilisateur existe avant l'ajout
-    private final PortfolioService portfolioService; // ✅ Ajout du PortfolioService
+    private final UserRepository userRepository;
+    private final PortfolioService portfolioService;
 
     public List<Interest> getAllInterests() {
         return interestRepository.findAll();
@@ -31,15 +31,12 @@ public class InterestService {
     }
 
     public Optional<Interest> createInterest(Interest interest) {
-        // ✅ Vérifier si l'utilisateur associé existe avant d'ajouter l'intérêt
         Optional<User> user = userRepository.findById(interest.getUserId());
         if (user.isEmpty()) {
-            return Optional.empty(); // ✅ Retourne vide si l'utilisateur n'existe pas
+            return Optional.empty();
         }
 
         Interest savedInterest = interestRepository.save(interest);
-
-        // ✅ Ajouter l'ID de l'intérêt à l'utilisateur et mettre à jour le portfolio
         user.get().getInterestIds().add(savedInterest.getId());
         userRepository.save(user.get());
         portfolioService.updatePortfolioWithUserData(user.get().getId());
@@ -51,14 +48,13 @@ public class InterestService {
         return interestRepository.findById(id).map(existingInterest -> {
             existingInterest.setName(updatedInterest.getName());
             existingInterest.setDescription(updatedInterest.getDescription());
-
+            existingInterest.setPublic(updatedInterest.isPublic()); // Ajout de la mise à jour de isPublic
             return interestRepository.save(existingInterest);
         });
     }
 
     public void deleteInterest(String id) {
         interestRepository.findById(id).ifPresent(interest -> {
-            // ✅ Supprimer l'ID de l'intérêt dans l'utilisateur
             userRepository.findById(interest.getUserId()).ifPresent(user -> {
                 user.getInterestIds().remove(id);
                 userRepository.save(user);

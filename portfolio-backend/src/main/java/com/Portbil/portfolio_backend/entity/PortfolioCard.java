@@ -8,7 +8,8 @@ import lombok.*;
 @AllArgsConstructor
 @Builder
 public class PortfolioCard {
-    private String section; // Ex: "experience", "education", "skills"
-    private int position; // ✅ Position de la carte dans la grille
-    private String size; // ✅ Taille de la carte ("small", "medium", "large")
+    private String section; // Ex: "education", "experience", "skills"
+    private int position;   // Position de la carte dans la grille
+    private String size;    // Taille de la carte ("small", "medium", "large")
+    private String shape;   // Forme de la carte ("square", "rectangle")
 }

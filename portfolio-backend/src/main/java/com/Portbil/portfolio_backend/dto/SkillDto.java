@@ -10,4 +10,5 @@ public class SkillDto {
     private String name;
     private int level;
     private String description;
+    private boolean isPublic; // Ajouté
 }

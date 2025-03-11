@@ -15,8 +15,8 @@ import java.util.Optional;
 public class SocialLinkService {
 
     private final SocialLinkRepository socialLinkRepository;
-    private final UserRepository userRepository; // ✅ Vérifier si l'utilisateur existe
-    private final PortfolioService portfolioService; // ✅ Mettre à jour automatiquement le portfolio
+    private final UserRepository userRepository;
+    private final PortfolioService portfolioService;
 
     public List<SocialLink> getAllSocialLinks() {
         return socialLinkRepository.findAll();
@@ -31,15 +31,12 @@ public class SocialLinkService {
     }
 
     public Optional<SocialLink> createSocialLink(SocialLink socialLink) {
-        // ✅ Vérifier si l'utilisateur existe avant d'ajouter le lien social
         Optional<User> userOptional = userRepository.findById(socialLink.getUserId());
         if (userOptional.isEmpty()) {
             return Optional.empty();
         }
 
         SocialLink savedLink = socialLinkRepository.save(socialLink);
-
-        // ✅ Ajouter l'ID du lien social à l'utilisateur et mettre à jour le portfolio
         User user = userOptional.get();
         user.getSocialLinkIds().add(savedLink.getId());
         userRepository.save(user);
@@ -52,17 +49,15 @@ public class SocialLinkService {
         return socialLinkRepository.findById(id).map(existingLink -> {
             existingLink.setPlatform(updatedSocialLink.getPlatform());
             existingLink.setUrl(updatedSocialLink.getUrl());
-
+            existingLink.setPublic(updatedSocialLink.isPublic()); // Ajout de la mise à jour de isPublic
             SocialLink savedLink = socialLinkRepository.save(existingLink);
-            portfolioService.updatePortfolioWithUserData(existingLink.getUserId()); // ✅ Mise à jour auto du portfolio
-
+            portfolioService.updatePortfolioWithUserData(existingLink.getUserId()); // Mise à jour du portfolio
             return savedLink;
         });
     }
 
     public void deleteSocialLink(String id) {
         socialLinkRepository.findById(id).ifPresent(socialLink -> {
-            // ✅ Supprimer l'ID du lien social dans l'utilisateur
             userRepository.findById(socialLink.getUserId()).ifPresent(user -> {
                 user.getSocialLinkIds().remove(id);
                 userRepository.save(user);

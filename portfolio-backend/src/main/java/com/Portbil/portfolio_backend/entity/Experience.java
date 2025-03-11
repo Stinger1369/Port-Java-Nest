@@ -3,6 +3,7 @@ package com.Portbil.portfolio_backend.entity;
 import lombok.*;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.time.LocalDate;
 
@@ -17,13 +18,15 @@ public class Experience {
     @Id
     private String id;
 
-    private String userId; // ✅ Ajout de l'ID utilisateur pour la liaison
+    private String userId;
 
-    private String companyName; // ✅ Nom de l'entreprise
-    private String jobTitle; // ✅ Titre du poste
+    private String companyName;
+    private String jobTitle;
     private LocalDate startDate;
     private LocalDate endDate;
-    private boolean currentlyWorking; // ✅ Indique si l'utilisateur y travaille encore
-    private String description; // ✅ Description optionnelle
+    private boolean currentlyWorking;
+    private String description;
 
+    @JsonProperty("isPublic")
+    private boolean isPublic;
 }

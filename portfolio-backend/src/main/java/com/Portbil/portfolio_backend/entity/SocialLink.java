@@ -3,6 +3,7 @@ package com.Portbil.portfolio_backend.entity;
 import lombok.*;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 @Document(collection = "social_links")
 @Getter
@@ -15,7 +16,9 @@ public class SocialLink {
     @Id
     private String id;
 
-    private String userId; // ✅ ID de l'utilisateur propriétaire du lien social
-    private String platform; // ✅ Nom de la plateforme (ex: LinkedIn, GitHub, Twitter)
-    private String url; // ✅ Lien vers le profil social
+    private String userId;
+    private String platform;
+    private String url;
+    @JsonProperty("isPublic")
+    private boolean isPublic;
 }

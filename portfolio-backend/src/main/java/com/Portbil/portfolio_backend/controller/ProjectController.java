@@ -51,6 +51,7 @@ public class ProjectController {
     @PutMapping("/{id}")
     @PreAuthorize("@projectService.getProjectById(#id).orElse(null)?.userId == authentication.name or hasAuthority('ADMIN')")
     public ResponseEntity<Project> updateProject(@PathVariable String id, @RequestBody Project project) {
+        System.out.println("Updating project with ID: " + id + ", isPublic: " + project.isPublic());
         return projectService.updateProject(id, project)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
@@ -59,6 +60,7 @@ public class ProjectController {
     @DeleteMapping("/{id}")
     @PreAuthorize("@projectService.getProjectById(#id).orElse(null)?.userId == authentication.name or hasAuthority('ADMIN')")
     public ResponseEntity<Void> deleteProject(@PathVariable String id) {
+        System.out.println("Deleting project with ID: " + id);
         projectService.deleteProject(id);
         return ResponseEntity.noContent().build();
     }

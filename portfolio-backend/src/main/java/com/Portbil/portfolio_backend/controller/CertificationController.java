@@ -51,6 +51,7 @@ public class CertificationController {
     @PutMapping("/{id}")
     @PreAuthorize("@certificationService.getCertificationById(#id).get().userId == authentication.name or hasAuthority('ADMIN')")
     public ResponseEntity<Certification> updateCertification(@PathVariable String id, @RequestBody Certification certification) {
+        System.out.println("Updating certification with ID: " + id + ", isPublic: " + certification.isPublic());
         return certificationService.updateCertification(id, certification)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());

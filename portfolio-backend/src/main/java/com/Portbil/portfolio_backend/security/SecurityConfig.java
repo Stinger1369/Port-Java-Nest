@@ -1,6 +1,7 @@
 package com.Portbil.portfolio_backend.security;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -17,6 +18,7 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CorsFilter;
 
+import java.util.Arrays;
 import java.util.List;
 
 @Configuration
@@ -25,6 +27,9 @@ public class SecurityConfig {
 
     private final JwtUtil jwtUtil;
     private final UserDetailsService userDetailsService;
+
+    @Value("${app.cors.allowed-origins}")
+    private String allowedOrigins;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -45,6 +50,8 @@ public class SecurityConfig {
                         ).permitAll()
                         .requestMatchers("/api/portfolio/public/**").permitAll()
                         .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
+                        .requestMatchers("/api/portfolio/user/**").authenticated()
+                        .requestMatchers("/api/portfolio/cards/**").authenticated()
                         .requestMatchers("/api/users/*/like/*", "/api/users/*/unlike/*").authenticated()
                         .requestMatchers("/api/users/all").authenticated()
                         .requestMatchers("/api/users/**").authenticated()
@@ -77,12 +84,9 @@ public class SecurityConfig {
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
-        System.out.println("🔹 Applying CORS configuration");
+        System.out.println("🔹 Applying CORS configuration with allowed origins: " + allowedOrigins);
         CorsConfiguration corsConfig = new CorsConfiguration();
-        corsConfig.setAllowedOrigins(List.of(
-                "http://localhost:5173",         // Développement local
-                "http://192.168.1.184:5173"      // Accès réseau depuis ton téléphone
-        ));
+        corsConfig.setAllowedOrigins(Arrays.asList(allowedOrigins.split(",")));
         corsConfig.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         corsConfig.setAllowedHeaders(List.of("*"));
         corsConfig.setExposedHeaders(List.of("Authorization"));

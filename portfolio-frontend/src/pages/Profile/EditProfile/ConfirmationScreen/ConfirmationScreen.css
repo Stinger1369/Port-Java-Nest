@@ -1,27 +1,32 @@
 /* Variables globales pour cohérence */
 :root {
-  --primary-color: #5e43ff; /* Violet profond */
-  --secondary-color: #00e7ff; /* Cyan lumineux */
-  --background-color: #eef2f7; /* Fond gris clair */
-  --text-color: #0f172a; /* Bleu-noir */
+  --primary-color: #5e43ff;
+  --secondary-color: #00e7ff;
+  --background-color: #eef2f7;
+  --text-color: #0f172a;
   --button-bg: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
   --button-hover: linear-gradient(135deg, #4835d4, #00b8d4);
-  --gray-button-bg: linear-gradient(135deg, #6b7280, #4b5563); /* Gris pour Previous */
+  --gray-button-bg: linear-gradient(135deg, #6b7280, #4b5563);
   --gray-button-hover: linear-gradient(135deg, #4b5563, #374151);
   --shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
   --border-radius: 12px;
   --transition: all 0.3s ease;
+  --error-color: #ef4444;
+  --success-color: #10b981;
+  --return-button-bg: linear-gradient(135deg, #f97316, #ea580c); /* Orange pour "Return" */
+  --return-button-hover: linear-gradient(135deg, #ea580c, #d946ef);
 }
 
 /* Conteneur principal */
 .confirmation-screen {
-  max-width: 600px;
+  max-width: 700px;
   margin: 0 auto;
   padding: 2rem;
   background: var(--background-color);
   border-radius: var(--border-radius);
   box-shadow: var(--shadow);
   animation: fadeIn 0.5s ease-out;
+  position: relative;
 }
 
 /* Titre */
@@ -38,17 +43,19 @@
 }
 
 /* Liste de confirmation */
-.confirmation-screen ul {
+.confirmation-screen .confirmation-list {
   list-style: none;
   padding: 0;
   margin-bottom: 2rem;
+  display: grid;
+  gap: 0.75rem;
 }
 
-.confirmation-screen li {
-  display: flex;
+.confirmation-screen .confirmation-list li {
+  display: grid;
+  grid-template-columns: 2rem 1fr 2fr;
   align-items: center;
   padding: 1rem;
-  margin-bottom: 0.75rem;
   background: rgba(255, 255, 255, 0.95);
   border-radius: var(--border-radius);
   font-size: 1rem;
@@ -57,72 +64,209 @@
   transition: var(--transition);
 }
 
-.confirmation-screen li:hover {
+.confirmation-screen .confirmation-list li:hover {
   transform: translateY(-2px);
   box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
 }
 
-.confirmation-screen li .label-icon {
+.confirmation-screen .label-icon {
   font-size: 1.2rem;
   color: var(--primary-color);
-  margin-right: 0.75rem;
+  justify-self: center;
   transition: var(--transition);
 }
 
-.confirmation-screen li:hover .label-icon {
+.confirmation-screen .confirmation-list li:hover .label-icon {
   color: var(--secondary-color);
 }
 
-.confirmation-screen li span.label {
-  flex: 1;
+.confirmation-screen .confirmation-list .label {
   font-weight: 500;
   color: var(--text-color);
+  padding-left: 0.5rem;
 }
 
-.confirmation-screen li span.value {
-  flex: 2;
+.confirmation-screen .confirmation-list .value {
   color: var(--text-color);
   font-weight: 400;
   word-break: break-word;
+  padding-left: 0.5rem;
 }
 
-/* Bouton de sauvegarde */
-.confirmation-screen button {
-  display: block;
-  width: 100%;
-  padding: 0.85rem;
+/* Messages */
+.confirmation-screen .status-message,
+.confirmation-screen .error-message,
+.confirmation-screen .success-message {
+  text-align: center;
+  margin-bottom: 1.5rem;
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.confirmation-screen .status-message {
+  color: var(--text-color);
+}
+
+.confirmation-screen .error-message {
+  color: var(--error-color);
+}
+
+.confirmation-screen .success-message {
+  color: var(--success-color);
+}
+
+/* Boutons de navigation */
+.confirmation-screen .navigation-buttons {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 2rem;
+  gap: 1rem;
+}
+
+.confirmation-screen .nav-button {
+  background: var(--button-bg);
+  border: none;
+  border-radius: var(--border-radius);
+  padding: 0.75rem;
+  cursor: pointer;
+  color: white;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow);
+  transition: var(--transition);
+}
+
+.confirmation-screen .nav-button:hover:not(:disabled) {
+  transform: scale(1.05);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+}
+
+.confirmation-screen .nav-button:disabled {
+  background: var(--gray-button-bg);
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.confirmation-screen .back-button {
+  background: var(--gray-button-bg);
+}
+
+.confirmation-screen .back-button:hover:not(:disabled) {
+  background: var(--gray-button-hover);
+}
+
+.confirmation-screen .return-button {
+  background: var(--return-button-bg);
+}
+
+.confirmation-screen .return-button:hover:not(:disabled) {
+  background: var(--return-button-hover);
+}
+
+.confirmation-screen .finish-button {
+  background: var(--button-bg);
+}
+
+.confirmation-screen .finish-button:hover:not(:disabled) {
+  background: var(--button-hover);
+}
+
+.confirmation-screen .nav-button svg {
+  font-size: 1.5rem;
+}
+
+/* Modale */
+.confirmation-screen .modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  animation: fadeInOverlay 0.3s ease-in;
+}
+
+.confirmation-screen .modal-content {
+  background: white;
+  border-radius: var(--border-radius);
+  padding: 1.5rem;
+  max-width: 400px;
+  width: 90%;
+  box-shadow: var(--shadow);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  animation: slideUp 0.4s ease-out;
+}
+
+.confirmation-screen .modal-content h4 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-color);
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+.confirmation-screen .modal-content p {
+  font-size: 1rem;
+  color: var(--text-color);
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.confirmation-screen .modal-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.confirmation-screen .modal-button {
+  flex: 1;
+  padding: 0.75rem;
   font-size: 1rem;
   font-weight: 600;
   color: white;
-  background: var(--button-bg);
   border: none;
   border-radius: var(--border-radius);
   cursor: pointer;
   transition: var(--transition);
-  box-shadow: var(--shadow);
 }
 
-.confirmation-screen button:hover {
+.confirmation-screen .confirm-button {
+  background: var(--gray-button-bg);
+}
+
+.confirmation-screen .confirm-button:hover {
+  background: var(--gray-button-hover);
+}
+
+.confirmation-screen .cancel-button {
+  background: var(--button-bg);
+}
+
+.confirmation-screen .cancel-button:hover {
   background: var(--button-hover);
-  transform: translateY(-2px);
-  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
 }
 
-.confirmation-screen button:active {
-  transform: translateY(0);
-  box-shadow: var(--shadow);
-}
-
-/* Animation */
+/* Animations */
 @keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeInOverlay {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(50px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 /* Responsive */
@@ -136,13 +280,19 @@
     font-size: 1.5rem;
   }
 
-  .confirmation-screen li {
+  .confirmation-screen .confirmation-list li {
     font-size: 0.95rem;
     padding: 0.75rem;
+    grid-template-columns: 1.5rem 1fr 2fr;
   }
 
-  .confirmation-screen button {
-    padding: 0.7rem;
+  .confirmation-screen .nav-button {
+    width: 40px;
+    height: 40px;
+  }
+
+  .confirmation-screen .nav-button svg {
+    font-size: 1.2rem;
   }
 }
 
@@ -155,24 +305,37 @@
     font-size: 1.25rem;
   }
 
-  .confirmation-screen li {
-    flex-direction: column;
+  .confirmation-screen .confirmation-list li {
+    grid-template-columns: 1fr;
     text-align: left;
-    padding: 0.6rem;
+    padding: 0.75rem;
   }
 
-  .confirmation-screen li .label-icon {
-    margin-right: 0;
-    margin-bottom: 0.25rem;
+  .confirmation-screen .label-icon {
+    margin-bottom: 0.5rem;
   }
 
-  .confirmation-screen li span.label,
-  .confirmation-screen li span.value {
-    flex: none;
+  .confirmation-screen .confirmation-list .label,
+  .confirmation-screen .confirmation-list .value {
+    padding-left: 0;
+  }
+
+  .confirmation-screen .navigation-buttons {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .confirmation-screen .nav-button {
+    width: 36px;
+    height: 36px;
+  }
+
+  .confirmation-screen .modal-actions {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .confirmation-screen .modal-button {
     width: 100%;
-  }
-
-  .confirmation-screen button {
-    font-size: 0.9rem;
   }
 }

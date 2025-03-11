@@ -1,9 +1,9 @@
-/* src/pages/UserMenuDropdown/Notification/Notifications.css */
 .page-notifications-container {
   padding: 30px;
   max-width: 900px;
   margin: 0 auto;
   font-family: 'Arial', sans-serif;
+  position: relative;
 }
 
 .page-notifications-container h1 {
@@ -193,6 +193,112 @@
   font-size: 16px;
 }
 
+/* Styles pour la modale */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  animation: fadeIn 0.3s ease-in;
+}
+
+.modal-content {
+  background-color: #ffffff;
+  padding: 20px;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 400px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  animation: slideUp 0.3s ease-out;
+  position: relative;
+}
+
+.modal-close-button {
+  position: absolute;
+  top: 10px;
+  right: 15px;
+  background-color: #e74c3c;
+  color: white; /* Couleur blanche pour l'icône */
+  border: none;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.modal-close-button i {
+  color: white; /* S'assurer que l'icône est blanche */
+}
+
+.modal-close-button:hover {
+  background-color: #c0392b;
+  transform: scale(1.1);
+}
+
+.modal-content h2 {
+  font-size: 20px;
+  font-weight: 600;
+  color: #2c3e50;
+  margin-bottom: 15px;
+  text-align: center;
+}
+
+.modal-content p {
+  font-size: 16px;
+  color: #7f8c8d;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.modal-confirm-button,
+.modal-cancel-button {
+  flex: 1;
+  padding: 10px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.modal-confirm-button {
+  background-color: #e74c3c;
+  color: white;
+}
+
+.modal-confirm-button:hover {
+  background-color: #c0392b;
+  transform: translateY(-2px);
+}
+
+.modal-cancel-button {
+  background-color: #3498db;
+  color: white;
+}
+
+.modal-cancel-button:hover {
+  background-color: #2980b9;
+  transform: translateY(-2px);
+}
+
+/* Animations */
 @keyframes page-fadeIn {
   from {
     opacity: 0;
@@ -201,5 +307,82 @@
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Responsivité */
+@media (max-width: 768px) {
+  .page-notifications-container {
+    padding: 20px;
+  }
+
+  .page-notifications-container h1 {
+    font-size: 24px;
+  }
+
+  .page-notification-filter-buttons {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .modal-content {
+    width: 95%;
+    padding: 15px;
+  }
+}
+
+@media (max-width: 480px) {
+  .page-notifications-container {
+    padding: 15px;
+  }
+
+  .page-notifications-container h1 {
+    font-size: 20px;
+  }
+
+  .page-notification-main {
+    gap: 10px;
+  }
+
+  .page-notification-message {
+    font-size: 14px;
+  }
+
+  .page-notification-actions button {
+    font-size: 16px;
+  }
+
+  .modal-content h2 {
+    font-size: 18px;
+  }
+
+  .modal-content p {
+    font-size: 14px;
+  }
+
+  .modal-actions {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .modal-confirm-button,
+  .modal-cancel-button {
+    width: 100%;
+  }
+
+  .modal-close-button {
+    width: 20px;
+    height: 20px;
+    font-size: 12px;
   }
 }

@@ -34,27 +34,6 @@
     "confirmFriendRequest": "Voulez-vous accepter la demande d'ami de {{message}} ?",
     "viewProfile": "Voir le profil"
   },
-  "profile": {
-    "title": "Mon Profil",
-    "name": "Nom",
-    "email": "Email",
-    "phone": "Téléphone",
-    "address": "Adresse",
-    "city": "Ville",
-    "country": "Pays",
-    "sex": "Sexe",
-    "bio": "Biographie",
-    "edit": "Modifier mon profil",
-    "loading": "Chargement des données...",
-    "error": "Erreur : {{message}}",
-    "notFound": "Utilisateur non trouvé.",
-    "sexOptions": {
-      "man": "Homme",
-      "woman": "Femme",
-      "other": "Autre",
-      "unspecified": "Non spécifié"
-    }
-  },
   "login": {
     "title": "Connexion",
     "emailPlaceholder": "Email",
@@ -141,6 +120,14 @@
     "imageHashError": "Erreur lors de l'ajout du hash de l'image",
     "success": "Profil mis à jour avec succès",
     "noChanges": "Aucun changement",
+    "addressInfo": "Informations d'adresse",
+    "updateLocationAndAddress": "Mettre à jour la localisation et l'adresse",
+    "changeAddress": "Modifier l'adresse manuellement",
+    "modalTitle": "Modifier votre adresse",
+    "addressPlaceholder": "Entrez votre adresse",
+    "modalSave": "Enregistrer",
+    "modalCancel": "Annuler",
+    "updatingAddress": "Mise à jour en cours...",
     "sexOptions": {
       "man": "Homme",
       "woman": "Femme",
@@ -258,5 +245,33 @@
     "featureChat": "Discuter en temps réel via un système de chat intégré",
     "featureSocial": "Partager vos réseaux sociaux et vos projets",
     "featureMultiLang": "Utiliser l’application dans plusieurs langues"
+  },
+  "address": {
+    "geoNotSupported": "La géolocalisation n'est pas prise en charge par ce navigateur.",
+    "geoPermissionDenied": "La géolocalisation a été bloquée. Veuillez autoriser l'accès.",
+    "geoUnavailable": "Les données de géolocalisation ne sont pas disponibles.",
+    "geoError": "Erreur de géolocalisation : {{message}}"
+  },
+  "portfolio": {
+    "incompleteTitle": "Mon Portfolio",
+    "incompleteMessage": "Veuillez compléter votre profil pour générer un portfolio.",
+    "editProfile": "Cliquez ici pour modifier votre profil",
+    "global": "Portfolio Global",
+    "education": "Éducation",
+    "experience": "Expérience",
+    "skills": "Compétences",
+    "projects": "Projets",
+    "certifications": "Certifications",
+    "social": "Réseaux Sociaux",
+    "languages": "Langues",
+    "recommendations": "Recommandations",
+    "interests": "Centres d’intérêt",
+    "filterByDate": "Filtrer par date",
+    "sortByRelevance": "Trier par pertinence",
+    "exportPDF": "Exporter PDF",
+    "publicLink": "Lien public : ",
+    "copy": "Copier",
+    "linkCopied": "Lien copié !",
+    "copyError": "Erreur lors de la copie. Copiez manuellement : "
   }
 }

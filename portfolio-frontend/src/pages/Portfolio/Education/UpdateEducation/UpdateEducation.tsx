@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "../../../../redux/store";
-import { updateEducation } from "../../../../redux/features/educationSlice";
+import { updateEducation, fetchEducationsByUser } from "../../../../redux/features/educationSlice";
 import DatePicker from "../../../../components/common/DatePicker";
-import "./UpdateEducation.css"; // ✅ Import du CSS
+import "./UpdateEducation.css";
 
 interface Props {
   education: {
@@ -15,6 +15,7 @@ interface Props {
     endDate?: string;
     currentlyStudying: boolean;
     description?: string;
+    isPublic?: boolean; // Ajouté
   };
   onClose: () => void;
 }
@@ -25,8 +26,17 @@ const UpdateEducation = ({ education, onClose }: Props) => {
   const [updatedEducation, setUpdatedEducation] = useState(education);
 
   useEffect(() => {
-    setUpdatedEducation(education); // ✅ Mise à jour lorsque l'éducation change
+    setUpdatedEducation(education);
   }, [education]);
+
+  // Vérifier si tous les champs obligatoires sont remplis
+  const isFormValid = () => {
+    const requiredFields = updatedEducation.schoolName && updatedEducation.degree && updatedEducation.startDate;
+    if (updatedEducation.currentlyStudying) {
+      return requiredFields; // Pas besoin de endDate si currentlyStudying est true
+    }
+    return requiredFields && updatedEducation.endDate; // endDate est requis si currentlyStudying est false
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value, type, checked } = e.target;
@@ -45,8 +55,22 @@ const UpdateEducation = ({ education, onClose }: Props) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    dispatch(updateEducation({ id: updatedEducation.id, educationData: updatedEducation }));
-    onClose(); // Ferme le modal après soumission
+    const userId = localStorage.getItem("userId"); // Utilisation de localStorage comme fallback
+    if (!userId) {
+      console.error("❌ Erreur : ID utilisateur manquant.");
+      return;
+    }
+
+    dispatch(updateEducation({ id: updatedEducation.id, educationData: updatedEducation }))
+      .unwrap()
+      .then(() => {
+        dispatch(fetchEducationsByUser(userId)); // Rafraîchit la liste
+        onClose();
+      })
+      .catch((err) => {
+        console.error("❌ Erreur lors de la mise à jour de la formation:", err);
+        alert("Erreur lors de la mise à jour de la formation.");
+      });
   };
 
   return (
@@ -116,17 +140,31 @@ const UpdateEducation = ({ education, onClose }: Props) => {
             Actuellement en cours
           </label>
 
+          <label className="education-checkbox-label">
+            <input
+              type="checkbox"
+              name="isPublic"
+              checked={updatedEducation.isPublic || false}
+              onChange={handleChange}
+            />
+            Public
+          </label>
+
           <label className="education-label">Description</label>
           <textarea
             name="description"
-            value={updatedEducation.description}
+            value={updatedEducation.description || ""}
             onChange={handleChange}
             placeholder="Description"
             className="education-textarea"
           />
 
           <div className="education-buttons">
-            <button type="submit" className="education-button education-button-submit">
+            <button
+              type="submit"
+              className="education-button education-button-submit"
+              disabled={!isFormValid()}
+            >
               Mettre à jour
             </button>
             <button

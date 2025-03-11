@@ -1,11 +1,11 @@
-// src/App.tsx
 import { Suspense, useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState, AppDispatch } from "./redux/store";
 import { fetchAllUsers } from "./redux/features/userSlice";
-import { useWebSocket } from "./hooks/useWebSocket"; // Importer useWebSocket
+import { useWebSocket } from "./hooks/useWebSocket";
 import Navbar from "./components/Navbar/Navbar";
+import Footer from "./components/Footer/Footer"; // Importez le nouveau Footer
 import Home from "./pages/Home/Home";
 import Login from "./pages/Profile/Login/Login";
 import Register from "./pages/Profile/Register/Register";
@@ -34,8 +34,8 @@ import MembersList from "./pages/UserMenuDropdown/MembersList/MembersList";
 import ChatPage from "./pages/Chat/ChatPage";
 import Settings from "./pages/Settings/Settings";
 import ErrorBoundary from "./components/ErrorBoundary";
-import { isMobileDevice } from "./utils/detectMobile"; // Importer la détection mobile
-import MobileRedirect from "./components/Mobile/MobileRedirect"; // Importer le composant de redirection
+import { isMobileDevice } from "./utils/detectMobile";
+import MobileRedirect from "./components/Mobile/MobileRedirect";
 import "./App.css";
 
 const App = () => {
@@ -43,7 +43,6 @@ const App = () => {
   const { token } = useSelector((state: RootState) => state.auth);
   const { userId } = useSelector((state: RootState) => state.chat);
 
-  // Intégrer useWebSocket pour établir la connexion WebSocket
   const { wsInstance } = useWebSocket(token);
 
   useEffect(() => {
@@ -63,12 +62,10 @@ const App = () => {
     }
   }, [wsInstance, userId]);
 
-  // Si l'utilisateur est sur un appareil mobile, afficher la page de redirection
   if (isMobileDevice()) {
     return <MobileRedirect />;
   }
 
-  // Sinon, afficher le site web normal
   return (
     <Router>
       <div className="app-container">
@@ -107,6 +104,7 @@ const App = () => {
               <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
             </Routes>
           </main>
+          <Footer /> {/* Ajout du Footer ici */}
         </Suspense>
       </div>
     </Router>

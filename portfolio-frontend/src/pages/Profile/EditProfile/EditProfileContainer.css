@@ -21,6 +21,7 @@
   box-shadow: var(--shadow);
   position: relative;
   overflow: hidden;
+  z-index: 5; /* Réduit pour permettre au DatePicker de passer au-dessus */
   animation: slideIn 0.5s ease-out;
 }
 
@@ -45,6 +46,7 @@
   align-items: center;
   position: relative;
   margin-bottom: 2rem;
+  z-index: 6; /* Au-dessus du conteneur principal */
 }
 
 .step {
@@ -60,7 +62,7 @@
   color: var(--text-color);
   cursor: pointer;
   transition: var(--transition);
-  z-index: 2;
+  z-index: 7; /* Au-dessus des étapes */
 }
 
 .step.active {
@@ -83,7 +85,7 @@
   height: 4px;
   background: rgba(94, 67, 255, 0.2);
   transform: translateY(-50%);
-  z-index: 1;
+  z-index: 6; /* Au-dessus du conteneur principal */
 }
 
 .progress-line::after {
@@ -103,6 +105,7 @@
   display: flex;
   justify-content: space-between;
   margin-top: 2.5rem;
+  z-index: 6; /* Au-dessus du conteneur principal */
 }
 
 .navigation-buttons button {
@@ -116,6 +119,7 @@
   cursor: pointer;
   transition: var(--transition);
   box-shadow: var(--shadow);
+  z-index: 7; /* Au-dessus des boutons */
 }
 
 .navigation-buttons button:hover {
@@ -143,6 +147,7 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 1.5rem;
+  z-index: 6; /* Au-dessus du conteneur principal */
 }
 
 .close-icon {
@@ -152,6 +157,7 @@
   transition: var(--transition);
   padding: 0.5rem;
   border-radius: 50%;
+  z-index: 7; /* Au-dessus de l'en-tête */
 }
 
 .close-icon:hover {

@@ -1,59 +1,80 @@
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import axios from "axios";
-import { BASE_URL } from "../../config/hostname"; // Import de la configuration de l'URL
+import { BASE_URL } from "../../config/hostname";
 
-// ✅ Définir des interfaces spécifiques pour chaque section du portfolio
 interface Education {
   id: string;
   degree: string;
   schoolName: string;
   startDate: string;
+  endDate?: string;
+  currentlyStudying: boolean;
+  description?: string;
+  isPublic?: boolean; // Ajouté
 }
 
 interface Experience {
   id: string;
-  jobTitle: string;
+  jobTitle: string; // Changé de "position" à "jobTitle"
   companyName: string;
   startDate: string;
+  endDate?: string;
+  currentlyWorking: boolean;
+  description?: string;
+  isPublic?: boolean; // Ajouté
 }
 
 interface Skill {
   id: string;
   name: string;
+  isPublic?: boolean; // Ajouté
 }
 
 interface Project {
   id: string;
   title: string;
+  isPublic?: boolean;
 }
 
 interface Certification {
   id: string;
   name: string;
+  isPublic?: boolean;
 }
 
 interface SocialLink {
   id: string;
   platform: string;
   url: string;
+  isPublic?: boolean; // Ajouté
 }
 
 interface Language {
   id: string;
   name: string;
+  isPublic?: boolean; // Ajouté
 }
 
 interface Recommendation {
   id: string;
   content: string;
+  isPublic?: boolean; // Ajouté
 }
 
 interface Interest {
   id: string;
   name: string;
+  description?: string;
+  isPublic?: boolean;
 }
 
-// ✅ Type Portfolio raffiné
+interface PortfolioCard {
+  section: string;
+  position: number;
+  size: string;
+  shape: string;
+}
+
 interface Portfolio {
   id?: string;
   userId: string;
@@ -67,35 +88,41 @@ interface Portfolio {
   languages: Language[];
   recommendations: Recommendation[];
   interests: Interest[];
+  cards: PortfolioCard[];
+  imageIds?: string[];
 }
 
-// ✅ État initial Redux
 interface PortfolioState {
   portfolio: Portfolio | null;
   status: "idle" | "loading" | "succeeded" | "failed";
   error: string | null;
+  lastFetchedUserId: string | null;
 }
 
 const initialState: PortfolioState = {
   portfolio: null,
   status: "idle",
   error: null,
+  lastFetchedUserId: null,
 };
 
-// ✅ Récupérer le token d'authentification
 const getAuthToken = () => localStorage.getItem("token");
 
-// ✅ Récupérer le portfolio par `userId` (Authentifié)
 export const fetchPortfolioByUser = createAsyncThunk(
   "portfolio/fetchByUser",
-  async (userId: string, { rejectWithValue }) => {
+  async (userId: string, { rejectWithValue, getState }) => {
+    const state = getState() as { portfolio: PortfolioState };
+    if (state.portfolio.lastFetchedUserId === userId && state.portfolio.portfolio) {
+      return state.portfolio.portfolio;
+    }
+
     try {
       const token = getAuthToken();
       if (!token) return rejectWithValue("Token non trouvé, veuillez vous reconnecter.");
 
       const response = await axios.get<Portfolio>(
         `${BASE_URL}/api/portfolio/user/${userId}`,
-        { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } }
+        { headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" } }
       );
 
       return response.data;
@@ -109,7 +136,6 @@ export const fetchPortfolioByUser = createAsyncThunk(
   }
 );
 
-// ✅ Récupérer le portfolio public par `firstName`, `lastName` et `slug`
 export const fetchPortfolioByUsername = createAsyncThunk(
   "portfolio/fetchByUsername",
   async (
@@ -119,7 +145,7 @@ export const fetchPortfolioByUsername = createAsyncThunk(
     try {
       const response = await axios.get<Portfolio>(
         `${BASE_URL}/api/portfolio/public/${firstName}/${lastName}/${slug}`,
-        { headers: { 'Content-Type': 'application/json' } }
+        { headers: { "Content-Type": "application/json" } }
       );
 
       return response.data;
@@ -133,18 +159,17 @@ export const fetchPortfolioByUsername = createAsyncThunk(
   }
 );
 
-// ✅ Mettre à jour le portfolio
 export const updatePortfolio = createAsyncThunk(
   "portfolio/update",
-  async (portfolioData: Partial<Portfolio> & { userId: string }, { rejectWithValue }) => {
+  async (userId: string, { rejectWithValue }) => {
     try {
       const token = getAuthToken();
       if (!token) return rejectWithValue("Token non trouvé, veuillez vous reconnecter.");
 
       const response = await axios.post<Portfolio>(
-        `${BASE_URL}/api/portfolio/user/${portfolioData.userId}/update`,
-        portfolioData,
-        { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } }
+        `${BASE_URL}/api/portfolio/user/${userId}/update`,
+        {},
+        { headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" } }
       );
       return response.data;
     } catch (error: any) {
@@ -157,14 +182,46 @@ export const updatePortfolio = createAsyncThunk(
   }
 );
 
-// ✅ Création du slice Redux
 const portfolioSlice = createSlice({
   name: "portfolio",
   initialState,
-  reducers: {},
+  reducers: {
+    setSectionPublicity: (state, action: PayloadAction<{ section: string; isPublic: boolean }>) => {
+      if (state.portfolio) {
+        switch (action.payload.section) {
+          case "educations":
+            state.portfolio.educations.forEach((e) => (e.isPublic = action.payload.isPublic));
+            break;
+          case "experiences":
+            state.portfolio.experiences.forEach((e) => (e.isPublic = action.payload.isPublic));
+            break;
+          case "skills":
+            state.portfolio.skills.forEach((s) => (s.isPublic = action.payload.isPublic));
+            break;
+          case "projects":
+            state.portfolio.projects.forEach((p) => (p.isPublic = action.payload.isPublic));
+            break;
+          case "certifications":
+            state.portfolio.certifications.forEach((c) => (c.isPublic = action.payload.isPublic));
+            break;
+          case "socialLinks":
+            state.portfolio.socialLinks.forEach((s) => (s.isPublic = action.payload.isPublic));
+            break;
+          case "languages":
+            state.portfolio.languages.forEach((l) => (l.isPublic = action.payload.isPublic));
+            break;
+          case "recommendations":
+            state.portfolio.recommendations.forEach((r) => (r.isPublic = action.payload.isPublic));
+            break;
+          case "interests":
+            state.portfolio.interests.forEach((i) => (i.isPublic = action.payload.isPublic));
+            break;
+        }
+      }
+    },
+  },
   extraReducers: (builder) => {
     builder
-      // 🔹 Récupérer le portfolio par `userId`
       .addCase(fetchPortfolioByUser.pending, (state) => {
         state.status = "loading";
         state.error = null;
@@ -172,13 +229,12 @@ const portfolioSlice = createSlice({
       .addCase(fetchPortfolioByUser.fulfilled, (state, action: PayloadAction<Portfolio>) => {
         state.status = "succeeded";
         state.portfolio = action.payload;
+        state.lastFetchedUserId = action.payload.userId;
       })
       .addCase(fetchPortfolioByUser.rejected, (state, action) => {
         state.status = "failed";
         state.error = action.payload as string;
       })
-
-      // 🔹 Récupérer le portfolio par `firstName`, `lastName` et `slug`
       .addCase(fetchPortfolioByUsername.pending, (state) => {
         state.status = "loading";
         state.error = null;
@@ -191,8 +247,6 @@ const portfolioSlice = createSlice({
         state.status = "failed";
         state.error = action.payload as string;
       })
-
-      // 🔹 Mettre à jour le portfolio
       .addCase(updatePortfolio.pending, (state) => {
         state.status = "loading";
         state.error = null;
@@ -208,5 +262,5 @@ const portfolioSlice = createSlice({
   },
 });
 
-// ✅ Exports
+export const { setSectionPublicity } = portfolioSlice.actions;
 export default portfolioSlice.reducer;

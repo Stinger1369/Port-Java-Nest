@@ -41,7 +41,7 @@ public class SkillController {
     public ResponseEntity<Skill> createSkill(@RequestBody Skill skill) {
         try {
             Skill createdSkill = skillService.createSkill(skill);
-            return ResponseEntity.ok(createdSkill); // ✅ Corrigé pour renvoyer directement l'objet Skill
+            return ResponseEntity.ok(createdSkill);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(null);
         }
@@ -50,6 +50,7 @@ public class SkillController {
     @PutMapping("/{id}")
     @PreAuthorize("@skillService.getSkillById(#id).orElse(null)?.userId == authentication.name or hasAuthority('ADMIN')")
     public ResponseEntity<Skill> updateSkill(@PathVariable String id, @RequestBody Skill skill) {
+        System.out.println("Updating skill with ID: " + id + ", isPublic: " + skill.isPublic());
         return skillService.updateSkill(id, skill)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());

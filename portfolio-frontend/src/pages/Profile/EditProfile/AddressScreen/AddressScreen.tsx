@@ -4,14 +4,17 @@ import { RootState, AppDispatch } from "../../../../redux/store";
 import { updateUserAddress, updateGeolocation } from "../../../../redux/features/googleMapsSlice";
 import { useGoogleMaps } from "../../../../hooks/useGoogleMaps";
 import { useTranslation } from "react-i18next";
+import { FaArrowLeft, FaArrowRight } from "react-icons/fa"; // Importez les icônes
 import "./AddressScreen.css";
 
 interface Props {
   formData: any;
   setFormData: (data: any) => void;
+  onBack?: () => void;
+  onNext?: () => void;
 }
 
-const AddressScreen = ({ formData, setFormData }: Props) => {
+const AddressScreen = ({ formData, setFormData, onBack, onNext }: Props) => {
   const { t } = useTranslation();
   const dispatch = useDispatch<AppDispatch>();
   const user = useSelector((state: RootState) => state.user.user);
@@ -60,23 +63,41 @@ const AddressScreen = ({ formData, setFormData }: Props) => {
       return;
     }
 
+    const isSecureOrigin = window.location.protocol === "https:" || window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
+    if (!isSecureOrigin) {
+      setGeoError(t("address.geoSecureError", "La géolocalisation nécessite une connexion sécurisée (HTTPS) ou localhost. Utilisez http://localhost:5173."));
+      return;
+    }
+
     setIsGeoLoading(true);
     setGeoError(null);
 
     try {
       const position = await new Promise<GeolocationPosition>((resolve, reject) => {
-        navigator.geolocation.getCurrentPosition(resolve, reject, {
-          enableHighAccuracy: true,
-          timeout: 20000,
-          maximumAge: 0,
-        });
+        navigator.geolocation.getCurrentPosition(
+          resolve,
+          (err) => {
+            console.error("Erreur géolocalisation:", err);
+            reject(err);
+          },
+          {
+            enableHighAccuracy: true,
+            timeout: 20000,
+            maximumAge: 0,
+          }
+        );
       });
 
       const { latitude: newLatitude, longitude: newLongitude } = position.coords;
       await dispatch(updateGeolocation({ userId: user.id, latitude: newLatitude, longitude: newLongitude })).unwrap();
-      await handleUpdateAddress(newLatitude, newLongitude); // Passer directement les nouvelles coordonnées
+      await handleUpdateAddress(newLatitude, newLongitude);
     } catch (err: any) {
-      setGeoError(t("address.geoError", { message: err.message }));
+      const errorMessage = err.code === err.PERMISSION_DENIED
+        ? t("address.geoPermissionDenied", "La géolocalisation a été bloquée. Veuillez autoriser l'accès.")
+        : err.code === err.POSITION_UNAVAILABLE
+        ? t("address.geoUnavailable", "Les données de géolocalisation ne sont pas disponibles.")
+        : t("address.geoError", { message: err.message || "Une erreur inconnue s'est produite." });
+      setGeoError(errorMessage);
       console.error("Erreur de géolocalisation manuelle:", err.message);
     } finally {
       setIsGeoLoading(false);
@@ -160,6 +181,15 @@ const AddressScreen = ({ formData, setFormData }: Props) => {
           </div>
         </div>
       )}
+
+      <div className="navigation-buttons">
+        <button className="nav-button back-button" onClick={onBack} title={t("editProfile.previous", "Previous")}>
+          <FaArrowLeft />
+        </button>
+        <button className="nav-button next-button" onClick={onNext} title={t("editProfile.next", "Next")}>
+          <FaArrowRight />
+        </button>
+      </div>
     </div>
   );
 };

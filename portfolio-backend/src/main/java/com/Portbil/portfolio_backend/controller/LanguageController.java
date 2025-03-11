@@ -51,6 +51,7 @@ public class LanguageController {
     @PutMapping("/{id}")
     @PreAuthorize("@languageService.getLanguageById(#id).get().userId == authentication.name or hasAuthority('ADMIN')")
     public ResponseEntity<Language> updateLanguage(@PathVariable String id, @RequestBody Language language) {
+        System.out.println("Updating language with ID: " + id + ", isPublic: " + language.isPublic());
         return languageService.updateLanguage(id, language)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());

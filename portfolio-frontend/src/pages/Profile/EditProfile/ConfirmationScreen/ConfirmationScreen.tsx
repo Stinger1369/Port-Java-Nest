@@ -1,129 +1,166 @@
+import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "../../../../redux/store";
 import { updateUser } from "../../../../redux/features/userSlice";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
-import { useEffect } from "react";
+import { FaArrowLeft, FaArrowRight, FaUser } from "react-icons/fa"; // Ajout de FaUser pour le bouton "Return"
 import "./ConfirmationScreen.css";
 
 interface Props {
   formData: any;
   hasChanges: () => boolean;
+  onBack?: () => void;
+  onNext?: () => void;
 }
 
-const ConfirmationScreen = ({ formData, hasChanges }: Props) => {
+const ConfirmationScreen = ({ formData, hasChanges, onBack, onNext }: Props) => {
   const { t } = useTranslation();
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
   const status = useSelector((state: RootState) => state.user.status);
 
-  // Sauvegarde automatique au montage de l'écran
-  useEffect(() => {
-    const autoSave = async () => {
-      // Vérifier si les champs obligatoires sont remplis
-      if (!formData.firstName || !formData.lastName) {
-        console.log("⚠️ Champs obligatoires manquants, pas de sauvegarde automatique");
-        return;
-      }
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
 
-      if (!formData.id) {
-        console.error("Erreur : ID de l'utilisateur manquant dans formData");
-        return;
-      }
+  const handleBack = () => {
+    if (onBack) onBack(); // Retourne à l'écran précédent (géré par le parent)
+  };
 
-      console.log("🔹 Sauvegarde automatique des données :", { ...formData, age: undefined });
-      console.log("🔹 Valeur de showBirthdate avant envoi :", formData.showBirthdate);
+  const handleReturnToProfile = () => {
+    if (hasChanges()) {
+      setIsModalOpen(true); // Ouvre la modale si des changements sont détectés
+    } else {
+      navigate("/profile"); // Retourne au profil directement si aucun changement
+    }
+  };
 
-      try {
-        await dispatch(updateUser({ id: formData.id, ...formData })).unwrap();
-        console.log("✅ Sauvegarde automatique réussie");
-      } catch (error) {
-        console.error("❌ Échec de la sauvegarde automatique :", error);
-      }
-    };
-
-    autoSave();
-  }, [dispatch, formData]);
-
-  const handleSubmit = async () => {
-    // Vérifier si des champs obligatoires sont manquants
+  const handleFinish = async () => {
     if (!formData.firstName || !formData.lastName) {
-      alert(t("editProfile.missingRequiredFields", "First Name and Last Name are required."));
+      setMessage(t("editProfile.missingRequiredFields", "First Name and Last Name are required."));
+      setTimeout(() => setMessage(null), 3000);
       return;
     }
 
-    // Les données ont déjà été sauvegardées automatiquement, donc on redirige simplement
-    navigate("/profile");
+    if (!formData.id) {
+      setMessage(t("editProfile.error", "An error occurred. User ID is missing."));
+      setTimeout(() => setMessage(null), 3000);
+      return;
+    }
+
+    if (!hasChanges()) {
+      setMessage(t("editProfile.noChanges", "No changes detected to save."));
+      setTimeout(() => {
+        setMessage(null);
+        navigateNext();
+      }, 2000);
+      return;
+    }
+
+    try {
+      console.log("🔹 Sauvegarde des données :", { ...formData, age: undefined });
+      await dispatch(updateUser({ id: formData.id, ...formData })).unwrap();
+      setMessage(t("editProfile.saveSuccess", "Changes saved successfully!"));
+      setTimeout(() => {
+        setMessage(null);
+        navigateNext();
+      }, 2000);
+    } catch (error) {
+      console.error("❌ Échec de la sauvegarde :", error);
+      setMessage(t("editProfile.saveError", "Failed to save changes. Please try again."));
+      setTimeout(() => setMessage(null), 3000);
+    }
+  };
+
+  const navigateNext = () => {
+    if (onNext) onNext();
+    else navigate("/profile");
+  };
+
+  const confirmDiscard = () => {
+    setIsModalOpen(false);
+    navigate("/profile"); // Retourne au profil sans sauvegarder
+  };
+
+  const cancelDiscard = () => {
+    setIsModalOpen(false);
   };
 
   return (
     <div className="confirmation-screen">
       <h3>{t("editProfile.confirmation", "Confirm Changes")}</h3>
       {status === "loading" ? (
-        <p>{t("editProfile.saving", "Saving...")}</p>
+        <p className="status-message">{t("editProfile.saving", "Saving...")}</p>
       ) : (
         <>
-          <ul>
-            <li>
-              <i className="fas fa-user label-icon"></i>
-              <span className="label">{t("editProfile.firstName", "First Name")}</span>
-              <span className="value">{formData.firstName || "Not provided"}</span>
-            </li>
-            <li>
-              <i className="fas fa-user label-icon"></i>
-              <span className="label">{t("editProfile.lastName", "Last Name")}</span>
-              <span className="value">{formData.lastName || "Not provided"}</span>
-            </li>
-            <li>
-              <i className="fas fa-phone label-icon"></i>
-              <span className="label">{t("editProfile.phone", "Phone")}</span>
-              <span className="value">{formData.phone || "Not provided"}</span>
-            </li>
-            <li>
-              <i className="fas fa-home label-icon"></i>
-              <span className="label">{t("editProfile.address", "Address")}</span>
-              <span className="value">{formData.address || "Not provided"}</span>
-            </li>
-            <li>
-              <i className="fas fa-city label-icon"></i>
-              <span className="label">{t("editProfile.city", "City")}</span>
-              <span className="value">{formData.city || "Not provided"}</span>
-            </li>
-            <li>
-              <i className="fas fa-flag label-icon"></i>
-              <span className="label">{t("editProfile.country", "Country")}</span>
-              <span className="value">{formData.country || "Not provided"}</span>
-            </li>
-            <li>
-              <i className="fas fa-venus-mars label-icon"></i>
-              <span className="label">{t("editProfile.sex", "Sex")}</span>
-              <span className="value">{formData.sex || "Not specified"}</span>
-            </li>
-            <li>
-              <i className="fas fa-calendar label-icon"></i>
-              <span className="label">{t("editProfile.birthdate", "Birthdate")}</span>
-              <span className="value">{formData.birthdate || "Not provided"}</span>
-            </li>
-            <li>
-              <i className="fas fa-eye label-icon"></i>
-              <span className="label">{t("editProfile.showBirthdate", "Show Birthdate")}</span>
-              <span className="value">{formData.showBirthdate ? "Yes" : "No"}</span>
-            </li>
-            <li>
-              <i className="fas fa-calendar-check label-icon"></i>
-              <span className="label">{t("editProfile.age", "Age")}</span>
-              <span className="value">{formData.age || "Not calculated"}</span>
-            </li>
-            <li>
-              <i className="fas fa-book label-icon"></i>
-              <span className="label">{t("editProfile.bio", "Bio")}</span>
-              <span className="value">{formData.bio || "No biography"}</span>
-            </li>
+          <ul className="confirmation-list">
+            {[
+              { icon: "fas fa-user", label: t("editProfile.firstName", "First Name"), value: formData.firstName },
+              { icon: "fas fa-user", label: t("editProfile.lastName", "Last Name"), value: formData.lastName },
+              { icon: "fas fa-phone", label: t("editProfile.phone", "Phone"), value: formData.phone },
+              { icon: "fas fa-home", label: t("editProfile.address", "Address"), value: formData.address },
+              { icon: "fas fa-city", label: t("editProfile.city", "City"), value: formData.city },
+              { icon: "fas fa-flag", label: t("editProfile.country", "Country"), value: formData.country },
+              { icon: "fas fa-venus-mars", label: t("editProfile.sex", "Sex"), value: formData.sex || "Not specified" },
+              { icon: "fas fa-calendar", label: t("editProfile.birthdate", "Birthdate"), value: formData.birthdate },
+              { icon: "fas fa-eye", label: t("editProfile.showBirthdate", "Show Birthdate"), value: formData.showBirthdate ? "Yes" : "No" },
+              { icon: "fas fa-calendar-check", label: t("editProfile.age", "Age"), value: formData.age || "Not calculated" },
+              { icon: "fas fa-book", label: t("editProfile.bio", "Bio"), value: formData.bio || "No biography" },
+            ].map((item, index) => (
+              <li key={index}>
+                <i className={`${item.icon} label-icon`}></i>
+                <span className="label">{item.label}</span>
+                <span className="value">{item.value || "Not provided"}</span>
+              </li>
+            ))}
           </ul>
-          <button onClick={handleSubmit} disabled={status === "loading" || (!formData.firstName || !formData.lastName)}>
-            {t("editProfile.continueToProfile", "Continue to Profile")}
-          </button>
+          {message && (
+            <p className={message.includes("Error") || message.includes("échec") ? "error-message" : "success-message"}>
+              {message}
+            </p>
+          )}
+          <div className="navigation-buttons">
+            <button
+              className="nav-button back-button"
+              onClick={handleBack}
+              title={t("editProfile.previous", "Previous")}
+            >
+              <FaArrowLeft />
+            </button>
+            <button
+              className="nav-button return-button"
+              onClick={handleReturnToProfile}
+              title={t("editProfile.returnToProfile", "Return to Profile")}
+            >
+              <FaUser />
+            </button>
+            <button
+              className="nav-button finish-button"
+              onClick={handleFinish}
+              disabled={status === "loading" || (!formData.firstName || !formData.lastName)}
+              title={t("editProfile.finish", "Finish")}
+            >
+              <FaArrowRight />
+            </button>
+          </div>
         </>
+      )}
+
+      {isModalOpen && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <h4>{t("editProfile.confirmDiscardTitle", "Discard Changes?")}</h4>
+            <p>{t("editProfile.confirmDiscardMessage", "You have unsaved changes. Are you sure you want to leave without saving?")}</p>
+            <div className="modal-actions">
+              <button className="modal-button confirm-button" onClick={confirmDiscard}>
+                {t("editProfile.yesDiscard", "Yes, discard")}
+              </button>
+              <button className="modal-button cancel-button" onClick={cancelDiscard}>
+                {t("editProfile.noStay", "No, stay")}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

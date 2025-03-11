@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "../../../redux/store";
-import { addCertification } from "../../../redux/features/certificationSlice";
+import { addCertification, fetchCertificationsByUser } from "../../../redux/features/certificationSlice";
 import DatePicker from "../../../components/common/DatePicker";
 import "./Certifications.css";
 
@@ -18,6 +18,9 @@ const AddCertification = ({ onClose }: Props) => {
     dateObtained: "",
     expirationDate: "",
     doesNotExpire: false,
+    credentialId: "",
+    credentialUrl: "",
+    isPublic: false,
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -49,8 +52,16 @@ const AddCertification = ({ onClose }: Props) => {
       ? { ...certification, expirationDate: null }
       : certification;
 
-    dispatch(addCertification({ ...certificationData, userId }));
-    onClose();
+    dispatch(addCertification({ ...certificationData, userId }))
+      .unwrap()
+      .then(() => {
+        dispatch(fetchCertificationsByUser(userId));
+        onClose();
+      })
+      .catch((err) => {
+        console.error("❌ Erreur lors de l'ajout de la certification:", err);
+        alert("Erreur lors de l'ajout de la certification.");
+      });
   };
 
   return (
@@ -109,6 +120,36 @@ const AddCertification = ({ onClose }: Props) => {
               onChange={handleChange}
             />
             Cette certification n'expire pas
+          </label>
+
+          <label className="certification-label">Identifiant de la certification</label>
+          <input
+            type="text"
+            name="credentialId"
+            value={certification.credentialId}
+            onChange={handleChange}
+            placeholder="Identifiant de la certification"
+            className="certification-input"
+          />
+
+          <label className="certification-label">URL de la certification</label>
+          <input
+            type="text"
+            name="credentialUrl"
+            value={certification.credentialUrl}
+            onChange={handleChange}
+            placeholder="URL de la certification"
+            className="certification-input"
+          />
+
+          <label className="certification-checkbox-label">
+            <input
+              type="checkbox"
+              name="isPublic"
+              checked={certification.isPublic}
+              onChange={handleChange}
+            />
+            Public
           </label>
 
           <button type="submit" className="certification-button certification-button-submit">

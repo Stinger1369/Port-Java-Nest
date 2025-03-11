@@ -16,7 +16,7 @@ public class CertificationService {
 
     private final CertificationRepository certificationRepository;
     private final UserRepository userRepository;
-    private final PortfolioService portfolioService; // ✅ Ajout du PortfolioService
+    private final PortfolioService portfolioService;
 
     public List<Certification> getAllCertifications() {
         return certificationRepository.findAll();
@@ -31,15 +31,12 @@ public class CertificationService {
     }
 
     public Optional<Certification> createCertification(Certification certification) {
-        // ✅ Vérifier si l'utilisateur existe avant d'ajouter la certification
         Optional<User> user = userRepository.findById(certification.getUserId());
         if (user.isEmpty()) {
             return Optional.empty();
         }
 
         Certification savedCertification = certificationRepository.save(certification);
-
-        // ✅ Ajouter l'ID de la certification à l'utilisateur et mettre à jour le portfolio
         user.get().getCertificationIds().add(savedCertification.getId());
         userRepository.save(user.get());
         portfolioService.updatePortfolioWithUserData(user.get().getId());
@@ -56,14 +53,13 @@ public class CertificationService {
             existingCertification.setDoesNotExpire(updatedCertification.isDoesNotExpire());
             existingCertification.setCredentialId(updatedCertification.getCredentialId());
             existingCertification.setCredentialUrl(updatedCertification.getCredentialUrl());
-
+            existingCertification.setPublic(updatedCertification.isPublic()); // Ajout de la mise à jour de isPublic
             return certificationRepository.save(existingCertification);
         });
     }
 
     public void deleteCertification(String id) {
         certificationRepository.findById(id).ifPresent(certification -> {
-            // ✅ Supprimer l'ID de la certification dans l'utilisateur
             userRepository.findById(certification.getUserId()).ifPresent(user -> {
                 user.getCertificationIds().remove(id);
                 userRepository.save(user);

@@ -49,15 +49,16 @@ public class EducationController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("@educationService.getEducationById(#id).get().userId == authentication.name or hasAuthority('ADMIN')")
+    @PreAuthorize("@educationService.getEducationById(#id).orElse(null)?.userId == authentication.name or hasAuthority('ADMIN')") // Corrige
     public ResponseEntity<Education> updateEducation(@PathVariable String id, @RequestBody Education education) {
+        System.out.println("Updating education with ID: " + id + ", isPublic: " + education.isPublic()); // Log
         return educationService.updateEducation(id, education)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("@educationService.getEducationById(#id).get().userId == authentication.name or hasAuthority('ADMIN')")
+    @PreAuthorize("@educationService.getEducationById(#id).orElse(null)?.userId == authentication.name or hasAuthority('ADMIN')") // Corrige
     public ResponseEntity<Void> deleteEducation(@PathVariable String id) {
         educationService.deleteEducation(id);
         return ResponseEntity.noContent().build();

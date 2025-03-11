@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "../../../redux/store";
-import { updateSkill } from "../../../redux/features/skillSlice";
+import { updateSkill, fetchSkillsByUser } from "../../../redux/features/skillSlice";
 import "./Skills.css";
 
 interface Props {
@@ -10,6 +10,7 @@ interface Props {
     name: string;
     level: number;
     description?: string;
+    isPublic?: boolean; // Ajouté
   };
   onClose: () => void;
 }
@@ -23,17 +24,28 @@ const UpdateSkill = ({ skill, onClose }: Props) => {
   }, [skill]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
+    const { name, value, type, checked } = e.target;
     setUpdatedSkill((prev) => ({
       ...prev,
-      [name]: name === "level" ? Number(value) : value,
+      [name]: type === "checkbox" ? checked : name === "level" ? Number(value) : value,
     }));
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    dispatch(updateSkill({ id: updatedSkill.id, skillData: updatedSkill }));
-    onClose();
+    const userId = localStorage.getItem("userId");
+    if (userId) {
+      dispatch(updateSkill({ id: updatedSkill.id, skillData: updatedSkill }))
+        .unwrap()
+        .then(() => {
+          dispatch(fetchSkillsByUser(userId));
+          onClose();
+        })
+        .catch((err) => {
+          console.error("❌ Erreur lors de la mise à jour de la compétence:", err);
+          alert("Erreur lors de la mise à jour de la compétence.");
+        });
+    }
   };
 
   return (
@@ -70,6 +82,16 @@ const UpdateSkill = ({ skill, onClose }: Props) => {
             onChange={handleChange}
             className="skill-textarea"
           />
+
+          <label className="skill-checkbox-label">
+            <input
+              type="checkbox"
+              name="isPublic"
+              checked={updatedSkill.isPublic || false}
+              onChange={handleChange}
+            />
+            Public
+          </label>
 
           <button type="submit" className="skill-button skill-button-submit">
             Mettre à jour

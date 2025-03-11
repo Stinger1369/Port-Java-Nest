@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { RootState, AppDispatch } from "../../../../redux/store";
 import { uploadImage, getAllImagesByUserId, deleteImage, setProfilePicture } from "../../../../redux/features/imageSlice";
 import { useTranslation } from "react-i18next";
+import { FaArrowLeft, FaArrowRight } from "react-icons/fa"; // Importez les icônes
 import "./ImagesScreen.css";
 
 interface Image {
@@ -15,7 +16,12 @@ interface Image {
   uploadedAt: string | null;
 }
 
-const ImagesScreen = () => {
+interface Props {
+  onBack?: () => void;
+  onNext?: () => void;
+}
+
+const ImagesScreen = ({ onBack, onNext }: Props) => {
   const { t } = useTranslation();
   const dispatch = useDispatch<AppDispatch>();
   const user = useSelector((state: RootState) => state.user.user);
@@ -28,7 +34,7 @@ const ImagesScreen = () => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isImageUploading, setIsImageUploading] = useState(false);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null); // État pour le message de succès
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   useEffect(() => {
     const userId = localStorage.getItem("userId");
@@ -110,8 +116,6 @@ const ImagesScreen = () => {
       await dispatch(getAllImagesByUserId(user.id)).unwrap();
       setSuccessMessage(t("editProfile.profileUpdated", "Image updated as default profile picture."));
       console.log("✅ Photo de profil définie avec succès pour imageId:", imageId);
-
-      // Effacer le message après 3 secondes
       setTimeout(() => setSuccessMessage(null), 3000);
     } catch (error) {
       console.error("❌ Échec de handleSetProfilePicture:", error);
@@ -187,6 +191,15 @@ const ImagesScreen = () => {
         </div>
       )}
       {images.length === 0 && <p>{t("editProfile.noImages", "No images yet")}</p>}
+
+      <div className="navigation-buttons">
+        <button className="nav-button back-button" onClick={onBack} title={t("editProfile.previous", "Previous")}>
+          <FaArrowLeft />
+        </button>
+        <button className="nav-button next-button" onClick={onNext} title={t("editProfile.next", "Next")}>
+          <FaArrowRight />
+        </button>
+      </div>
     </div>
   );
 };

@@ -9,4 +9,5 @@ import java.util.List;
 @Repository
 public interface EducationRepository extends MongoRepository<Education, String> {
     List<Education> findByUserId(String userId);
+    List<Education> findByUserIdAndIsPublicTrue(String userId); // Pour le portfolio public
 }

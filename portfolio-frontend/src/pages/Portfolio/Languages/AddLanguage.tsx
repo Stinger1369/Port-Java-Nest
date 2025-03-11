@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "../../../redux/store";
-import { addLanguage } from "../../../redux/features/languageSlice";
+import { addLanguage, fetchLanguagesByUser } from "../../../redux/features/languageSlice";
 
 interface Props {
   onClose: () => void;
@@ -13,13 +13,14 @@ const AddLanguage = ({ onClose }: Props) => {
   const [language, setLanguage] = useState({
     name: "",
     proficiencyLevel: "Débutant",
+    isPublic: false,
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
+    const { name, value, type, checked } = e.target as HTMLInputElement;
     setLanguage((prev) => ({
       ...prev,
-      [name]: value,
+      [name]: type === "checkbox" ? checked : value,
     }));
   };
 
@@ -32,8 +33,16 @@ const AddLanguage = ({ onClose }: Props) => {
       return;
     }
 
-    dispatch(addLanguage({ ...language, userId }));
-    onClose();
+    dispatch(addLanguage({ ...language, userId }))
+      .unwrap()
+      .then(() => {
+        dispatch(fetchLanguagesByUser(userId));
+        onClose();
+      })
+      .catch((err) => {
+        console.error("❌ Erreur lors de l'ajout de la langue:", err);
+        alert("Erreur lors de l'ajout de la langue.");
+      });
   };
 
   return (
@@ -48,6 +57,15 @@ const AddLanguage = ({ onClose }: Props) => {
             <option value="Avancé">Avancé</option>
             <option value="Courant">Courant</option>
           </select>
+          <label>
+            Public :
+            <input
+              type="checkbox"
+              name="isPublic"
+              checked={language.isPublic}
+              onChange={handleChange}
+            />
+          </label>
           <button type="submit">Ajouter</button>
           <button type="button" onClick={onClose}>Annuler</button>
         </form>

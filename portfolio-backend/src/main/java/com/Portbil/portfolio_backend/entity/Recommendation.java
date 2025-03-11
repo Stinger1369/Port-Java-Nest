@@ -20,4 +20,5 @@ public class Recommendation {
     private String recommenderId; // ✅ ID de l'utilisateur qui fait la recommandation
     private String content; // ✅ Contenu de la recommandation
     private LocalDateTime createdAt; // ✅ Date de création
+    private boolean isPublic;
 }

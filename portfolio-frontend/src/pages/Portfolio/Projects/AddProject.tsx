@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "../../../redux/store";
-import { addProject } from "../../../redux/features/projectSlice";
+import { addProject, fetchProjectsByUser } from "../../../redux/features/projectSlice";
 import DatePicker from "../../../components/common/DatePicker";
-import "./Projects.css"; // Importer les styles
+import "./Projects.css";
 
 interface Props {
   onClose: () => void;
@@ -21,6 +21,7 @@ const AddProject = ({ onClose }: Props) => {
     startDate: "",
     endDate: "",
     currentlyWorkingOn: false,
+    isPublic: false, // Ajouté
   });
 
   const [error, setError] = useState<string | null>(null);
@@ -83,7 +84,9 @@ const AddProject = ({ onClose }: Props) => {
       technologies: project.technologies.split(",").map((tech) => tech.trim()),
       userId,
     }))
+      .unwrap()
       .then(() => {
+        dispatch(fetchProjectsByUser(userId));
         onClose();
       })
       .catch((err) => {
@@ -162,6 +165,15 @@ const AddProject = ({ onClose }: Props) => {
               onChange={handleChange}
             />
             Projet en cours
+          </label>
+          <label className="project-checkbox-label">
+            <input
+              type="checkbox"
+              name="isPublic"
+              checked={project.isPublic}
+              onChange={handleChange}
+            />
+            Public
           </label>
           {error && <p className="project-error-message">{error}</p>}
           <button type="submit" className="project-button project-button-submit">Ajouter</button>

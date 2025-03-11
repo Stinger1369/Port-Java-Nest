@@ -17,9 +17,10 @@ public class ProjectDTO {
     private String description;
     private String repositoryUrl;
     private String liveDemoUrl;
-    private String link; // ✅ Nouveau champ ajouté
+    private String link;
     private LocalDate startDate;
     private LocalDate endDate;
     private boolean currentlyWorkingOn;
     private List<String> technologies;
+    private boolean isPublic; // Ajouté
 }

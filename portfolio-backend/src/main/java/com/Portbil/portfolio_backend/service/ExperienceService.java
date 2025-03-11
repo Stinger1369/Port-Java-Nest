@@ -16,7 +16,7 @@ public class ExperienceService {
 
     private final ExperienceRepository experienceRepository;
     private final UserRepository userRepository;
-    private final PortfolioService portfolioService; // ✅ Ajout du PortfolioService
+    private final PortfolioService portfolioService;
 
     public List<Experience> getAllExperiences() {
         return experienceRepository.findAll();
@@ -31,15 +31,18 @@ public class ExperienceService {
     }
 
     public Optional<Experience> createExperience(Experience experience) {
-        // ✅ Vérifier si l'utilisateur existe avant d'ajouter l'expérience
         Optional<User> user = userRepository.findById(experience.getUserId());
         if (user.isEmpty()) {
             return Optional.empty();
         }
 
+        // Vider endDate si currentlyWorking est true
+        if (experience.isCurrentlyWorking()) {
+            experience.setEndDate(null);
+        }
+
         Experience savedExperience = experienceRepository.save(experience);
 
-        // ✅ Ajouter l'ID de l'expérience à l'utilisateur et mettre à jour le portfolio
         user.get().getExperienceIds().add(savedExperience.getId());
         userRepository.save(user.get());
         portfolioService.updatePortfolioWithUserData(user.get().getId());
@@ -55,6 +58,12 @@ public class ExperienceService {
             existingExperience.setEndDate(updatedExperience.getEndDate());
             existingExperience.setCurrentlyWorking(updatedExperience.isCurrentlyWorking());
             existingExperience.setDescription(updatedExperience.getDescription());
+            existingExperience.setPublic(updatedExperience.isPublic());
+
+            // Vider endDate si currentlyWorking est true
+            if (existingExperience.isCurrentlyWorking()) {
+                existingExperience.setEndDate(null);
+            }
 
             return experienceRepository.save(existingExperience);
         });
@@ -62,7 +71,6 @@ public class ExperienceService {
 
     public void deleteExperience(String id) {
         experienceRepository.findById(id).ifPresent(experience -> {
-            // ✅ Supprimer l'ID de l'expérience dans l'utilisateur
             userRepository.findById(experience.getUserId()).ifPresent(user -> {
                 user.getExperienceIds().remove(id);
                 userRepository.save(user);

@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import axios from "axios";
-import { BASE_URL } from "../../config/hostname"; // Import de la configuration de l'URL
+import { BASE_URL } from "../../config/hostname";
 
 interface Project {
   id?: string;
@@ -8,11 +8,12 @@ interface Project {
   title: string;
   description: string;
   technologies: string[];
-  liveDemoUrl?: string;   // Remplacer "link" par "liveDemoUrl"
-  repositoryUrl?: string; // Remplacer "repository" par "repositoryUrl"
+  liveDemoUrl?: string;
+  repositoryUrl?: string;
   startDate: string;
   endDate?: string;
-  currentlyWorkingOn: boolean; // Remplacer "currentlyWorking" par "currentlyWorkingOn"
+  currentlyWorkingOn: boolean;
+  isPublic?: boolean; // Ajouté
 }
 
 interface ProjectState {
@@ -29,7 +30,6 @@ const initialState: ProjectState = {
 
 const getAuthToken = () => localStorage.getItem("token");
 
-// ✅ **Récupérer les projets d'un utilisateur**
 export const fetchProjectsByUser = createAsyncThunk(
   "project/fetchByUser",
   async (userId: string, { rejectWithValue }) => {
@@ -39,10 +39,9 @@ export const fetchProjectsByUser = createAsyncThunk(
 
       const response = await axios.get<Project[]>(
         `${BASE_URL}/api/projects/user/${userId}`,
-        { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } }
+        { headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" } }
       );
 
-      // Mapping des champs pour correspondre au frontend
       return response.data.map((proj) => ({
         id: proj.id,
         userId: proj.userId,
@@ -51,9 +50,10 @@ export const fetchProjectsByUser = createAsyncThunk(
         technologies: proj.technologies || [],
         liveDemoUrl: proj.liveDemoUrl || "",
         repositoryUrl: proj.repositoryUrl || "",
-        startDate: proj.startDate.toString(), // Convertir LocalDate en string
+        startDate: proj.startDate.toString(),
         endDate: proj.endDate?.toString() || "",
         currentlyWorkingOn: proj.currentlyWorkingOn || false,
+        isPublic: proj.isPublic ?? false, // Ajouté
       }));
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || "Échec du chargement des projets.");
@@ -61,7 +61,6 @@ export const fetchProjectsByUser = createAsyncThunk(
   }
 );
 
-// ✅ **Ajouter un projet**
 export const addProject = createAsyncThunk(
   "project/add",
   async (projectData: Omit<Project, "id" | "userId">, { rejectWithValue }) => {
@@ -78,7 +77,7 @@ export const addProject = createAsyncThunk(
           ...projectData,
           userId,
         },
-        { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } }
+        { headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" } }
       );
 
       return {
@@ -86,6 +85,7 @@ export const addProject = createAsyncThunk(
         liveDemoUrl: response.data.liveDemoUrl || "",
         repositoryUrl: response.data.repositoryUrl || "",
         currentlyWorkingOn: response.data.currentlyWorkingOn || false,
+        isPublic: response.data.isPublic ?? false, // Ajouté
       };
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || "Échec de l'ajout du projet.");
@@ -93,7 +93,6 @@ export const addProject = createAsyncThunk(
   }
 );
 
-// ✅ **Mettre à jour un projet**
 export const updateProject = createAsyncThunk(
   "project/update",
   async ({ id, projectData }: { id: string; projectData: Partial<Project> }, { rejectWithValue }) => {
@@ -106,7 +105,7 @@ export const updateProject = createAsyncThunk(
         {
           ...projectData,
         },
-        { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } }
+        { headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" } }
       );
 
       return {
@@ -114,6 +113,7 @@ export const updateProject = createAsyncThunk(
         liveDemoUrl: response.data.liveDemoUrl || "",
         repositoryUrl: response.data.repositoryUrl || "",
         currentlyWorkingOn: response.data.currentlyWorkingOn || false,
+        isPublic: response.data.isPublic ?? false, // Ajouté
       };
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || "Échec de la mise à jour du projet.");
@@ -121,7 +121,6 @@ export const updateProject = createAsyncThunk(
   }
 );
 
-// ✅ **Supprimer un projet**
 export const deleteProject = createAsyncThunk(
   "project/delete",
   async (id: string, { rejectWithValue }) => {
@@ -131,7 +130,7 @@ export const deleteProject = createAsyncThunk(
 
       await axios.delete(
         `${BASE_URL}/api/projects/${id}`,
-        { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } }
+        { headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" } }
       );
 
       return id;
@@ -141,14 +140,12 @@ export const deleteProject = createAsyncThunk(
   }
 );
 
-// ✅ **Création du slice Redux**
 const projectSlice = createSlice({
   name: "project",
   initialState,
   reducers: {},
   extraReducers: (builder) => {
     builder
-      // **Récupérer les projets**
       .addCase(fetchProjectsByUser.pending, (state) => {
         state.status = "loading";
         state.error = null;
@@ -161,8 +158,6 @@ const projectSlice = createSlice({
         state.status = "failed";
         state.error = action.payload as string;
       })
-
-      // **Ajouter un projet**
       .addCase(addProject.pending, (state) => {
         state.status = "loading";
       })
@@ -174,8 +169,6 @@ const projectSlice = createSlice({
         state.status = "failed";
         state.error = action.payload as string;
       })
-
-      // **Mettre à jour un projet**
       .addCase(updateProject.pending, (state) => {
         state.status = "loading";
       })
@@ -189,8 +182,6 @@ const projectSlice = createSlice({
         state.status = "failed";
         state.error = action.payload as string;
       })
-
-      // **Supprimer un projet**
       .addCase(deleteProject.pending, (state) => {
         state.status = "loading";
       })
@@ -205,5 +196,4 @@ const projectSlice = createSlice({
   },
 });
 
-// ✅ **Exports**
 export default projectSlice.reducer;

@@ -7,6 +7,7 @@ import com.Portbil.portfolio_backend.service.ImageService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -37,6 +38,9 @@ public class ImageController {
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
 
+    @Value("${app.image.go-api-url}")
+    private String goApiUrlBase; // Injecte la propriété depuis application.yml
+
     @PostMapping("/upload")
     public ResponseEntity<ImageDTO> uploadImage(
             @RequestParam("userId") String userId,
@@ -61,7 +65,7 @@ public class ImageController {
 
             HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
 
-            String goApiUrl = "http://localhost:7000/server-image/ajouter-image";
+            String goApiUrl = goApiUrlBase + "/ajouter-image"; // Construire l'URL avec la base
             System.out.println("🔹 Envoi de la requête au serveur Go: URL = " + goApiUrl + ", Headers = " + headers);
             ResponseEntity<String> goResponse = restTemplate.postForEntity(
                     goApiUrl,
@@ -101,7 +105,7 @@ public class ImageController {
     @GetMapping("/user/{userId}")
     public ResponseEntity<List<ImageDTO>> getUserImages(@PathVariable String userId) {
         try {
-            String goApiUrl = "http://localhost:7000/server-image/image/" + userId + "/";
+            String goApiUrl = goApiUrlBase + "/image/" + userId + "/";
             HttpHeaders headers = new HttpHeaders();
             HttpEntity<?> entity = new HttpEntity<>(headers);
 
@@ -132,7 +136,7 @@ public class ImageController {
     @DeleteMapping("/delete/{userId}/{name}")
     public ResponseEntity<Void> deleteImage(@PathVariable String userId, @PathVariable String name) {
         try {
-            String goApiUrl = "http://localhost:7000/server-image/delete-image/" + userId + "/" + name;
+            String goApiUrl = goApiUrlBase + "/delete-image/" + userId + "/" + name;
             HttpHeaders headers = new HttpHeaders();
             HttpEntity<?> entity = new HttpEntity<>(headers);
 
@@ -165,7 +169,7 @@ public class ImageController {
             @PathVariable String userId,
             @PathVariable String name) {
         try {
-            String goApiUrl = "http://localhost:7000/server-image/image/" + userId + "/" + name;
+            String goApiUrl = goApiUrlBase + "/image/" + userId + "/" + name;
             HttpHeaders headers = new HttpHeaders();
             HttpEntity<?> entity = new HttpEntity<>(headers);
 

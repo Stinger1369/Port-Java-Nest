@@ -34,6 +34,7 @@
 │   │   │               │   ├── InterestController.java
 │   │   │               │   ├── LanguageController.java
 │   │   │               │   ├── NotificationController.java
+│   │   │               │   ├── PortfolioCardController.java
 │   │   │               │   ├── PortfolioController.java
 │   │   │               │   ├── ProjectController.java
 │   │   │               │   ├── RecommendationController.java
@@ -53,7 +54,10 @@
 │   │   │               │   ├── InterestDTO.java
 │   │   │               │   ├── LanguageDTO.java
 │   │   │               │   ├── NotificationDTO.java
+│   │   │               │   ├── PortfolioCardPreferencesDTO.java
 │   │   │               │   ├── PortfolioDTO.java
+│   │   │               │   ├── PortfolioInternalDTO.java
+│   │   │               │   ├── PortfolioPublicDTO.java
 │   │   │               │   ├── ProjectDTO.java
 │   │   │               │   ├── RecommendationDTO.java
 │   │   │               │   ├── SkillDto.java
@@ -120,6 +124,7 @@
 │   │   │               │   ├── InterestService.java
 │   │   │               │   ├── LanguageService.java
 │   │   │               │   ├── NotificationService.java
+│   │   │               │   ├── PortfolioCardService.java
 │   │   │               │   ├── PortfolioService.java
 │   │   │               │   ├── ProjectService.java
 │   │   │               │   ├── RecommendationService.java
@@ -169,6 +174,7 @@
 │   │   │           │   ├── InterestController.class
 │   │   │           │   ├── LanguageController.class
 │   │   │           │   ├── NotificationController.class
+│   │   │           │   ├── PortfolioCardController.class
 │   │   │           │   ├── PortfolioController.class
 │   │   │           │   ├── ProjectController.class
 │   │   │           │   ├── RecommendationController.class
@@ -195,8 +201,14 @@
 │   │   │           │   ├── LanguageDTO$LanguageDTOBuilder.class
 │   │   │           │   ├── NotificationDTO.class
 │   │   │           │   ├── NotificationDTO$NotificationDTOBuilder.class
+│   │   │           │   ├── PortfolioCardPreferencesDTO.class
+│   │   │           │   ├── PortfolioCardPreferencesDTO$PortfolioCardPreferencesDTOBuilder.class
 │   │   │           │   ├── PortfolioDTO.class
 │   │   │           │   ├── PortfolioDTO$PortfolioDTOBuilder.class
+│   │   │           │   ├── PortfolioInternalDTO.class
+│   │   │           │   ├── PortfolioInternalDTO$PortfolioInternalDTOBuilder.class
+│   │   │           │   ├── PortfolioPublicDTO.class
+│   │   │           │   ├── PortfolioPublicDTO$PortfolioPublicDTOBuilder.class
 │   │   │           │   ├── ProjectDTO.class
 │   │   │           │   ├── ProjectDTO$ProjectDTOBuilder.class
 │   │   │           │   ├── RecommendationDTO.class
@@ -284,6 +296,7 @@
 │   │   │           │   ├── InterestService.class
 │   │   │           │   ├── LanguageService.class
 │   │   │           │   ├── NotificationService.class
+│   │   │           │   ├── PortfolioCardService.class
 │   │   │           │   ├── PortfolioService.class
 │   │   │           │   ├── ProjectService.class
 │   │   │           │   ├── RecommendationService.class

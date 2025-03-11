@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState, AppDispatch } from "../../../redux/store";
-import { fetchExperiencesByUser, deleteExperience } from "../../../redux/features/experienceSlice";
+import { fetchExperiencesByUser, deleteExperience, updateExperience } from "../../../redux/features/experienceSlice";
 import AddExperience from "./AddExperience";
 import UpdateExperience from "./UpdateExperience";
 import "./Experience.css";
@@ -22,6 +22,48 @@ const Experience = () => {
     }
   }, [dispatch, userId]);
 
+  const handleTogglePublic = (experienceId: string) => {
+    const experience = experiences.find((exp) => exp.id === experienceId);
+    if (experience && userId) {
+      dispatch(
+        updateExperience({
+          id: experienceId,
+          experienceData: {
+            companyName: experience.companyName,
+            position: experience.position,
+            startDate: experience.startDate,
+            endDate: experience.endDate,
+            currentlyWorking: experience.currentlyWorking,
+            description: experience.description,
+            isPublic: !experience.isPublic,
+          },
+        })
+      )
+        .unwrap()
+        .then(() => {
+          dispatch(fetchExperiencesByUser(userId));
+        })
+        .catch((err) => {
+          console.error("❌ Erreur lors de la mise à jour de la visibilité de l'expérience:", err);
+          alert("Erreur lors de la mise à jour de la visibilité de l'expérience.");
+        });
+    }
+  };
+
+  const handleDeleteExperience = (experienceId: string) => {
+    if (userId) {
+      dispatch(deleteExperience(experienceId))
+        .unwrap()
+        .then(() => {
+          dispatch(fetchExperiencesByUser(userId));
+        })
+        .catch((err) => {
+          console.error("❌ Erreur lors de la suppression de l'expérience:", err);
+          alert("Erreur lors de la suppression de l'expérience.");
+        });
+    }
+  };
+
   return (
     <div className="experience-container">
       <h2>Expériences Professionnelles</h2>
@@ -37,8 +79,16 @@ const Experience = () => {
                 <strong>{exp.companyName}</strong> - {exp.position}
                 <p>{exp.startDate} - {exp.endDate || "Actuellement en poste"}</p>
                 <p>{exp.description}</p>
+                <label>
+                  Public :
+                  <input
+                    type="checkbox"
+                    checked={exp.isPublic || false}
+                    onChange={() => handleTogglePublic(exp.id)}
+                  />
+                </label>
                 <button className="edit-button" onClick={() => setSelectedExperience(exp)}>✏️</button>
-                <button className="delete-button" onClick={() => dispatch(deleteExperience(exp.id))}>🗑️</button>
+                <button className="delete-button" onClick={() => handleDeleteExperience(exp.id)}>🗑️</button>
               </div>
             </li>
           ))}

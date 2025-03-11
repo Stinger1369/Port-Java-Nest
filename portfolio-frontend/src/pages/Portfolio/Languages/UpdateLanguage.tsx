@@ -1,13 +1,14 @@
 import { useState, useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "../../../redux/store";
-import { updateLanguage } from "../../../redux/features/languageSlice";
+import { updateLanguage, fetchLanguagesByUser } from "../../../redux/features/languageSlice";
 
 interface Props {
   language: {
     id: string;
     name: string;
     proficiencyLevel: string;
+    isPublic?: boolean;
   };
   onClose: () => void;
 }
@@ -15,24 +16,41 @@ interface Props {
 const UpdateLanguage = ({ language, onClose }: Props) => {
   const dispatch = useDispatch<AppDispatch>();
 
-  const [updatedLanguage, setUpdatedLanguage] = useState(language);
+  const [updatedLanguage, setUpdatedLanguage] = useState({
+    ...language,
+    isPublic: language.isPublic || false,
+  });
 
   useEffect(() => {
-    setUpdatedLanguage(language);
+    setUpdatedLanguage({
+      ...language,
+      isPublic: language.isPublic || false,
+    });
   }, [language]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
+    const { name, value, type, checked } = e.target as HTMLInputElement;
     setUpdatedLanguage((prev) => ({
       ...prev,
-      [name]: value,
+      [name]: type === "checkbox" ? checked : value,
     }));
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    dispatch(updateLanguage({ id: updatedLanguage.id, languageData: updatedLanguage }));
-    onClose();
+    const userId = localStorage.getItem("userId");
+    if (userId) {
+      dispatch(updateLanguage({ id: updatedLanguage.id, languageData: updatedLanguage }))
+        .unwrap()
+        .then(() => {
+          dispatch(fetchLanguagesByUser(userId));
+          onClose();
+        })
+        .catch((err) => {
+          console.error("❌ Erreur lors de la mise à jour de la langue:", err);
+          alert("Erreur lors de la mise à jour de la langue.");
+        });
+    }
   };
 
   return (
@@ -47,6 +65,15 @@ const UpdateLanguage = ({ language, onClose }: Props) => {
             <option value="Avancé">Avancé</option>
             <option value="Courant">Courant</option>
           </select>
+          <label>
+            Public :
+            <input
+              type="checkbox"
+              name="isPublic"
+              checked={updatedLanguage.isPublic}
+              onChange={handleChange}
+            />
+          </label>
           <button type="submit">Mettre à jour</button>
           <button type="button" onClick={onClose}>Annuler</button>
         </form>

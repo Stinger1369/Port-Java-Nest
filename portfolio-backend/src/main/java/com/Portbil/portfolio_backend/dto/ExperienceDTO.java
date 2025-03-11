@@ -11,4 +11,5 @@ public class ExperienceDTO {
     private LocalDate endDate;
     private boolean currentlyWorking;
     private String description;
+    private boolean isPublic; // Ajouté
 }

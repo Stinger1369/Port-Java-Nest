@@ -9,4 +9,5 @@ import java.util.List;
 @Repository
 public interface ProjectRepository extends MongoRepository<Project, String> {
     List<Project> findByUserId(String userId);
+    List<Project> findByUserIdAndIsPublicTrue(String userId); // Pour le portfolio public
 }
