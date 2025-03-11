@@ -1,5 +1,5 @@
 // src/components/Navbar.tsx
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, memo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState, AppDispatch } from "../../redux/store";
@@ -13,14 +13,15 @@ import UserDropdown from "../UserDropdown/UserDropdown";
 import NotificationDropdown from "../NotificationDropdown/NotificationDropdown";
 import "./Navbar.css";
 
+// Mémoriser NotificationDropdown pour éviter les re-renders inutiles
+const MemoizedNotificationDropdown = memo(NotificationDropdown);
+
 const Navbar = () => {
   const { t, i18n } = useTranslation();
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
   const token = useSelector((state: RootState) => state.auth.token);
   const user = useSelector((state: RootState) => state.user.user);
-  const notifications = useSelector((state: RootState) => state.notification.notifications);
-  const unreadCount = notifications.filter((n) => !n.isRead).length;
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isWeatherOpen, setIsWeatherOpen] = useState(false);
@@ -66,9 +67,7 @@ const Navbar = () => {
     };
 
     document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   const handleLogout = () => {
@@ -126,7 +125,8 @@ const Navbar = () => {
               onToggle={() => setIsWeatherOpen(!isWeatherOpen)}
               onClose={() => setIsWeatherOpen(false)}
             />
-            <NotificationDropdown
+            <MemoizedNotificationDropdown
+              ref={notificationsRef}
               isOpen={isNotificationsOpen}
               onToggle={() => setIsNotificationsOpen(!isNotificationsOpen)}
               onClose={() => setIsNotificationsOpen(false)}

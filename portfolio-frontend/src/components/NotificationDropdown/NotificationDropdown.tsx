@@ -1,5 +1,4 @@
-// src/components/NotificationDropdown.tsx
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, memo, forwardRef, useCallback } from "react";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { AppDispatch, RootState } from "../../redux/store";
@@ -18,417 +17,445 @@ interface NotificationDropdownProps {
   onClose: () => void;
 }
 
-const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ isOpen, onToggle, onClose }) => {
-  const { t } = useTranslation();
-  const dispatch = useDispatch<AppDispatch>();
-  const navigate = useNavigate();
-  const { notifications, status, error, loadNotifications, handleMarkAsRead, handleRemoveNotification, handleClearNotifications } =
-    useNotificationActions(t);
-  const { friends, receivedRequests, handleAcceptFriendRequest, handleRejectFriendRequest, handleRemoveFriend } = useFriendActions();
-  const { user: currentUser } = useSelector((state: RootState) => state.user);
-  const userId = localStorage.getItem("userId") || "";
+interface NotificationItemProps {
+  notification: any;
+  userId: string;
+  isPending: boolean;
+  isAccepted: boolean;
+  friendId: string | undefined;
+  handleMarkAsRead: (notificationId: string) => void;
+  handleRemoveNotification: (notificationId: string) => void;
+  handleViewProfile: (notification: any) => void;
+  handleAccept: (e: React.MouseEvent, friendId: string) => void;
+  handleReject: (e: React.MouseEvent, friendId: string) => void;
+  handleRemoveFriendAction: (e: React.MouseEvent, friendId: string) => void;
+  handleNotificationClick: (notification: any) => void;
+  getIconClass: (type: string) => string;
+  getSecondaryIconClass: (type: string) => string;
+  t: (key: string) => string; // Typage précis pour t
+  isRemoving: boolean;
+}
 
-  const [refresh, setRefresh] = useState(false);
-  const [noNotifications, setNoNotifications] = useState(false);
-  const [selectedMember, setSelectedMember] = useState<any | null>(null);
-  const [selectedMemberImages, setSelectedMemberImages] = useState<Image[]>([]);
-  const isInitialMount = useRef(true);
-  const lastFetchTimestamp = useRef<number | null>(null);
-
-  useEffect(() => {
-    let mounted = true;
-    if (mounted && (isInitialMount.current || refresh)) {
-      console.log("🔍 Chargement initial ou sur refresh pour userId:", userId);
-      loadNotifications(userId);
-      isInitialMount.current = false;
-      setRefresh(false);
-    }
-    return () => {
-      mounted = false;
-    };
-  }, [loadNotifications, userId, refresh]);
-
-  useEffect(() => {
-    let mounted = true;
-    if (mounted && isOpen && status !== "loading" && status !== "succeeded") {
-      console.log("🔍 Chargement à l'ouverture du dropdown pour userId:", userId);
-      loadNotifications(userId);
-    }
-    return () => {
-      mounted = false;
-    };
-  }, [loadNotifications, userId, isOpen, status]);
-
-  useEffect(() => {
-    let mounted = true;
-    const interval = setInterval(() => {
-      const now = Date.now();
-      if (mounted && isOpen && status !== "loading" && !noNotifications && (!lastFetchTimestamp.current || now - lastFetchTimestamp.current >= 30000)) {
-        console.log("🔄 Rechargement périodique des notifications pour userId:", userId);
-        loadNotifications(userId);
-        lastFetchTimestamp.current = now;
-      } else if (noNotifications) {
-        console.log("ℹ️ Rechargement périodique arrêté car il n'y a pas de notifications pour userId:", userId);
-      }
-    }, 10000);
-
-    return () => {
-      mounted = false;
-      clearInterval(interval);
-    };
-  }, [loadNotifications, userId, status, isOpen, noNotifications]);
-
-  useEffect(() => {
-    if (status === "succeeded") {
-      const hasNoNotifications = notifications.length === 0;
-      setNoNotifications(hasNoNotifications);
-      if (hasNoNotifications) {
-        console.log("✅ Aucune notification détectée pour userId:", userId);
-      } else {
-        console.log("✅ Notifications détectées:", notifications);
-      }
-    }
-  }, [status, notifications.length, userId]);
-
-  useEffect(() => {
-    if (status === "failed" && error?.includes("Failed to fetch")) {
-      dispatch(resetStatus());
-      console.warn("⚠️ Erreur réseau détectée, statut réinitialisé:", error);
-    }
-  }, [status, error, dispatch]);
-
-  const sortedNotifications = [...notifications].sort(
-    (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
-  );
-
-  const unreadCount = sortedNotifications.filter((notif) => !notif.isRead).length;
-
-  const handleViewProfile = async (notification: any) => {
-    const memberId = notification.data?.fromUserId || notification.data?.friendId || notification.data?.likerId;
-    if (memberId) {
-      try {
-        const member = await dispatch(fetchUserById(memberId)).unwrap();
-        setSelectedMember(member);
-        if (member.id) {
-          const imagesResult = await dispatch(getAllImagesByUserId(member.id)).unwrap();
-          const sortedImages = [...imagesResult.images].sort((a: Image, b: Image) =>
-            a.isProfilePicture && !b.isProfilePicture ? -1 : !a.isProfilePicture && b.isProfilePicture ? 1 : 0
-          );
-          setSelectedMemberImages(sortedImages);
-        }
-      } catch (err) {
-        console.error("❌ Erreur lors de la récupération du membre:", err);
-      }
-    }
-    onClose();
-  };
-
-  const handleNotificationClick = async (notification: any) => {
-    switch (notification.type) {
-      case "new_chat":
-      case "new_private_message":
-        navigate(`/chat/private/${notification.data?.chatId || "default"}`);
-        break;
-      case "new_group_message":
-        navigate(`/chat/group/${notification.data?.groupId || "default"}`);
-        break;
-      default:
-        // Par défaut, ne rien faire (la navigation est gérée par le bouton "Voir le profil")
-        break;
-    }
-    handleMarkAsRead(notification.id, userId);
-    loadNotifications(userId); // S'assurer que l'état est synchronisé après le clic
-    onClose();
-  };
-
-  const handleToggle = () => {
-    onToggle();
-    if (!isOpen && unreadCount > 0) {
-      // Optionnel : marquer toutes comme lues à l'ouverture
-      // dispatch(markAllNotificationsAsRead());
-    }
-  };
-
-  const handleViewAllNotifications = () => {
-    navigate("/notifications");
-    onClose();
-  };
-
-  const handleAccept = (e: React.MouseEvent, friendId: string) => {
-    e.stopPropagation();
-    handleAcceptFriendRequest(friendId, (errorMessage) => {
-      alert(errorMessage);
+const NotificationItem = memo(
+  ({
+    notification,
+    userId,
+    isPending,
+    isAccepted,
+    friendId,
+    handleMarkAsRead,
+    handleRemoveNotification,
+    handleViewProfile,
+    handleAccept,
+    handleReject,
+    handleRemoveFriendAction,
+    handleNotificationClick,
+    getIconClass,
+    getSecondaryIconClass,
+    t,
+    isRemoving,
+  }: NotificationItemProps) => {
+    useEffect(() => {
+      console.log(`🔄 NotificationItem re-rendu pour ID: ${notification.id}`);
     });
-  };
 
-  const handleReject = (e: React.MouseEvent, friendId: string) => {
-    e.stopPropagation();
-    handleRejectFriendRequest(friendId, (errorMessage) => {
-      alert(errorMessage);
-    });
-  };
-
-  const handleRemoveFriendAction = (e: React.MouseEvent, friendId: string) => {
-    e.stopPropagation();
-    handleRemoveFriend(friendId, (errorMessage) => {
-      alert(errorMessage);
-    });
-  };
-
-  const isFriendRequestPending = (friendId: string) => {
-    return receivedRequests.some((request) => request.id === friendId);
-  };
-
-  const isFriendRequestAccepted = (friendId: string) => {
-    return friends.some((friend) => friend.id === friendId);
-  };
-
-  const getIconClass = (type: string) => {
-    switch (type) {
-      case "new_chat":
-      case "new_private_message":
-      case "new_group_message":
-        return "fas fa-envelope";
-      case "friend_request_received":
-        return "fas fa-user-plus";
-      case "friend_request_accepted":
-        return "fas fa-user-check";
-      case "friend_request_rejected":
-        return "fas fa-user-times";
-      case "friend_removed":
-        return "fas fa-user-slash";
-      case "user_like":
-        return "fas fa-thumbs-up";
-      case "user_unlike":
-        return "fas fa-thumbs-down";
-      default:
-        return "fas fa-info";
-    }
-  };
-
-  const getSecondaryIconClass = (type: string) => {
-    switch (type) {
-      case "friend_request_received":
-      case "friend_request_accepted":
-      case "friend_request_rejected":
-      case "friend_removed":
-      case "user_like":
-      case "user_unlike":
-        return "fas fa-bell";
-      case "new_chat":
-      case "new_private_message":
-      case "new_group_message":
-        return "fas fa-comment-dots";
-      default:
-        return "fas fa-info-circle";
-    }
-  };
-
-  const closeModal = () => {
-    setSelectedMember(null);
-    setSelectedMemberImages([]);
-  };
-
-  const handleEditProfile = () => {
-    closeModal();
-    navigate("/edit-profile");
-  };
-
-  const formatValue = (value: string | number | undefined | string[]): string =>
-    Array.isArray(value) ? (value.length > 0 ? value.join(", ") : "Aucun") : value?.toString() || "Non renseigné";
-
-  if (status === "loading") {
-    return <div className="notification-loading">{t("notification.loading")}</div>;
-  }
-  if (status === "failed") {
     return (
-      <div className="notification-error">
-        {t("notification.error")} {error}
-        <button onClick={() => { loadNotifications(userId); dispatch(resetStatus()); setRefresh(true); }}>
-          Réessayer
+      <div className={`notification-wrapper ${isRemoving ? "removing" : ""}`}>
+        <div
+          className={`dropdown-item ${!notification.isRead ? "unread" : ""}`}
+          onClick={() => handleNotificationClick(notification)}
+        >
+          <div className="icon-group">
+            <i className={getIconClass(notification.type)}></i>
+            <i className={getSecondaryIconClass(notification.type)}></i>
+          </div>
+          <div className="notification-content">
+            <span className="notification-message">{notification.message}</span>
+            <span className="notification-time">
+              {new Date(notification.timestamp).toLocaleString()}
+            </span>
+          </div>
+          <div className="action-buttons">
+            {!notification.isRead && (
+              <button
+                className="mark-read-button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleMarkAsRead(notification.id);
+                }}
+                title={t("notification.markAsRead")}
+              >
+                <i className="fas fa-check-circle"></i>
+              </button>
+            )}
+            {friendId && (
+              <button
+                className="view-profile-button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleViewProfile(notification);
+                }}
+                title={t("notification.viewProfile")}
+              >
+                <i className="fas fa-user"></i>
+              </button>
+            )}
+            <button
+              className="remove-button"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleRemoveNotification(notification.id);
+              }}
+              title={t("notification.remove")}
+            >
+              <i className="fas fa-trash-alt"></i>
+            </button>
+            {notification.type === "friend_request_received" && friendId && isPending && !isAccepted && (
+              <div className="notification-actions">
+                <button
+                  className="accept-button"
+                  onClick={(e) => handleAccept(e, friendId)}
+                  title={t("notification.accept")}
+                >
+                  <i className="fas fa-check"></i>
+                </button>
+                <button
+                  className="reject-button"
+                  onClick={(e) => handleReject(e, friendId)}
+                  title={t("notification.reject")}
+                >
+                  <i className="fas fa-times"></i>
+                </button>
+              </div>
+            )}
+            {notification.type === "friend_request_received" && friendId && isAccepted && (
+              <button
+                className="remove-friend-button"
+                onClick-traceback={(e) => handleRemoveFriendAction(e, friendId)}
+                title={t("notification.removeFriend")}
+              >
+                <i className="fas fa-user-minus"></i>
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  },
+  (prevProps, nextProps) =>
+    prevProps.notification.id === nextProps.notification.id &&
+    prevProps.notification.isRead === nextProps.notification.isRead &&
+    prevProps.isPending === nextProps.isPending &&
+    prevProps.isAccepted === nextProps.isAccepted &&
+    prevProps.isRemoving === nextProps.isRemoving &&
+    prevProps.handleMarkAsRead === nextProps.handleMarkAsRead &&
+    prevProps.handleRemoveNotification === nextProps.handleRemoveNotification &&
+    prevProps.handleViewProfile === nextProps.handleViewProfile &&
+    prevProps.handleAccept === nextProps.handleAccept &&
+    prevProps.handleReject === nextProps.handleReject &&
+    prevProps.handleRemoveFriendAction === nextProps.handleRemoveFriendAction &&
+    prevProps.handleNotificationClick === nextProps.handleNotificationClick &&
+    prevProps.getIconClass === nextProps.getIconClass &&
+    prevProps.getSecondaryIconClass === nextProps.getSecondaryIconClass &&
+    prevProps.t === nextProps.t
+);
+
+const NotificationDropdown = forwardRef<HTMLDivElement, NotificationDropdownProps>(
+  ({ isOpen, onToggle, onClose }, ref) => {
+    const { t } = useTranslation();
+    const dispatch = useDispatch<AppDispatch>();
+    const navigate = useNavigate();
+    const { status, error, loadNotifications, handleMarkAsRead: markAsReadAsync, handleRemoveNotification: removeNotificationAsync, handleClearNotifications } = useNotificationActions(t);
+    const { friends, receivedRequests, handleAcceptFriendRequest, handleRejectFriendRequest, handleRemoveFriend } = useFriendActions();
+    const { user: currentUser } = useSelector((state: RootState) => state.user);
+    const userId = localStorage.getItem("userId") || "";
+
+    const [localNotifications, setLocalNotifications] = useState<any[]>([]);
+    const [removingIds, setRemovingIds] = useState<string[]>([]);
+    const [noNotifications, setNoNotifications] = useState(false);
+    const [selectedMember, setSelectedMember] = useState<any | null>(null);
+    const [selectedMemberImages, setSelectedMemberImages] = useState<Image[]>([]);
+    const isInitialMount = useRef(true);
+
+    useEffect(() => {
+      console.log("🔄 NotificationDropdown re-rendu");
+    });
+
+    useEffect(() => {
+      if (isInitialMount.current) {
+        console.log("🔍 Chargement initial des notifications pour userId:", userId);
+        loadNotifications(userId).then((data) => {
+          const sortedData = [...data].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+          setLocalNotifications(sortedData);
+          setNoNotifications(sortedData.length === 0);
+        });
+        isInitialMount.current = false;
+      }
+    }, [loadNotifications, userId]);
+
+    useEffect(() => {
+      if (isOpen && localNotifications.length === 0 && status !== "loading") {
+        console.log("🔍 Chargement à l'ouverture du dropdown pour userId:", userId);
+        loadNotifications(userId).then((data) => {
+          const sortedData = [...data].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+          setLocalNotifications(sortedData);
+          setNoNotifications(sortedData.length === 0);
+        });
+      }
+    }, [isOpen, status, loadNotifications, userId, localNotifications.length]);
+
+    useEffect(() => {
+      if (status === "failed" && error?.includes("Failed to fetch")) {
+        dispatch(resetStatus());
+        console.warn("⚠️ Erreur réseau détectée, statut réinitialisé:", error);
+      }
+    }, [status, error, dispatch]);
+
+    const unreadCount = localNotifications.filter((notif) => !notif.isRead).length;
+
+    const handleViewProfile = useCallback(async (notification: any) => {
+      const memberId = notification.data?.fromUserId || notification.data?.friendId || notification.data?.likerId;
+      if (memberId) {
+        try {
+          const member = await dispatch(fetchUserById(memberId)).unwrap();
+          setSelectedMember(member);
+          if (member.id) {
+            const imagesResult = await dispatch(getAllImagesByUserId(member.id)).unwrap();
+            const sortedImages = [...imagesResult.images].sort((a: Image, b: Image) =>
+              a.isProfilePicture && !b.isProfilePicture ? -1 : !a.isProfilePicture && b.isProfilePicture ? 1 : 0
+            );
+            setSelectedMemberImages(sortedImages);
+          }
+        } catch (err) {
+          console.error("❌ Erreur lors de la récupération du membre:", err);
+        }
+      }
+      onClose();
+    }, [dispatch, onClose]);
+
+    const handleNotificationClick = useCallback(async (notification: any) => {
+      switch (notification.type) {
+        case "new_chat":
+        case "new_private_message":
+          navigate(`/chat/private/${notification.data?.chatId || "default"}`);
+          break;
+        case "new_group_message":
+          navigate(`/chat/group/${notification.data?.groupId || "default"}`);
+          break;
+        default:
+          break;
+      }
+      handleMarkAsRead(notification.id);
+      onClose();
+    }, [navigate, onClose]);
+
+    const handleAccept = useCallback((e: React.MouseEvent, friendId: string) => {
+      e.stopPropagation();
+      handleAcceptFriendRequest(friendId, (errorMessage) => alert(errorMessage));
+    }, [handleAcceptFriendRequest]);
+
+    const handleReject = useCallback((e: React.MouseEvent, friendId: string) => {
+      e.stopPropagation();
+      handleRejectFriendRequest(friendId, (errorMessage) => alert(errorMessage));
+    }, [handleRejectFriendRequest]);
+
+    const handleRemoveFriendAction = useCallback((e: React.MouseEvent, friendId: string) => {
+      e.stopPropagation();
+      handleRemoveFriend(friendId, (errorMessage) => alert(errorMessage));
+    }, [handleRemoveFriend]);
+
+    const handleMarkAsRead = useCallback((notificationId: string) => {
+      console.log("📌 Marquage comme lu local:", notificationId);
+      setLocalNotifications((prev) =>
+        prev.map((notif) => (notif.id === notificationId ? { ...notif, isRead: true } : notif))
+      );
+      markAsReadAsync(notificationId).catch((err) =>
+        console.error("❌ Échec du marquage comme lu:", err)
+      );
+    }, [markAsReadAsync]);
+
+    const handleRemoveNotification = useCallback((notificationId: string) => {
+      console.log("🗑️ Suppression locale de la notification:", notificationId);
+      setRemovingIds((prev) => [...prev, notificationId]);
+      setLocalNotifications((prev) => prev.filter((notif) => notif.id !== notificationId));
+      setTimeout(() => {
+        removeNotificationAsync(notificationId)
+          .then(() => console.log("✅ Suppression serveur confirmée:", notificationId))
+          .catch((err) => {
+            console.error("❌ Échec de la suppression côté serveur:", err);
+            setLocalNotifications((prev) => [
+              ...prev,
+              { id: notificationId, message: "Erreur de suppression", timestamp: new Date().toISOString(), isRead: false },
+            ].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()));
+          })
+          .finally(() => setRemovingIds((prev) => prev.filter((id) => id !== notificationId)));
+      }, 300);
+    }, [removeNotificationAsync]);
+
+    const isFriendRequestPending = useCallback((friendId: string) =>
+      receivedRequests.some((request) => request.id === friendId), [receivedRequests]);
+
+    const isFriendRequestAccepted = useCallback((friendId: string) =>
+      friends.some((friend) => friend.id === friendId), [friends]);
+
+    const getIconClass = useCallback((type: string) => {
+      switch (type) {
+        case "new_chat": case "new_private_message": case "new_group_message": return "fas fa-envelope";
+        case "friend_request_received": return "fas fa-user-plus";
+        case "friend_request_accepted": return "fas fa-user-check";
+        case "friend_request_rejected": return "fas fa-user-times";
+        case "friend_removed": return "fas fa-user-slash";
+        case "user_like": return "fas fa-thumbs-up";
+        case "user_unlike": return "fas fa-thumbs-down";
+        default: return "fas fa-info";
+      }
+    }, []);
+
+    const getSecondaryIconClass = useCallback((type: string) => {
+      switch (type) {
+        case "friend_request_received": case "friend_request_accepted": case "friend_request_rejected":
+        case "friend_removed": case "user_like": case "user_unlike": return "fas fa-bell";
+        case "new_chat": case "new_private_message": case "new_group_message": return "fas fa-comment-dots";
+        default: return "fas fa-info-circle";
+      }
+    }, []);
+
+    const closeModal = useCallback(() => {
+      setSelectedMember(null);
+      setSelectedMemberImages([]);
+    }, []);
+
+    const handleEditProfile = useCallback(() => {
+      closeModal();
+      navigate("/edit-profile");
+    }, [closeModal, navigate]);
+
+    const formatValue = useCallback((value: string | number | undefined | string[]): string =>
+      Array.isArray(value) ? (value.length > 0 ? value.join(", ") : "Aucun") : value?.toString() || "Non renseigné", []);
+
+    if (status === "loading") {
+      return <div className="notification-loading">{t("notification.loading")}</div>;
+    }
+    if (status === "failed") {
+      return (
+        <div className="notification-error">
+          {t("notification.error")} {error}
+          <button onClick={() => loadNotifications(userId)}>
+            Réessayer
+          </button>
+        </div>
+      );
+    }
+
+    return (
+      <div className="navbar-notifications" ref={ref}>
+        <button
+          className={`nav-item ${unreadCount > 0 ? "has-unread" : ""}`}
+          onClick={onToggle}
+          title={t("navbar.notifications")}
+        >
+          <i className="fas fa-bell"></i>
+          {unreadCount > 0 && <span className="notification-count">{unreadCount}</span>}
         </button>
+        <div className={`dropdown-menu ${isOpen ? "active" : ""}`}>
+          <button className="dropdown-item view-all-button" onClick={() => { navigate("/notifications"); onClose(); }}>
+            <i className="fas fa-list"></i> {t("notification.viewAll")}
+          </button>
+          <div className="notification-divider"></div>
+          {noNotifications || unreadCount === 0 ? (
+            <div className="dropdown-item no-notifications">
+              <div className="icon-group">
+                <i className="fas fa-bell-slash"></i>
+              </div>
+              <span>{t("notification.noNotifications")}</span>
+            </div>
+          ) : (
+            <>
+              {localNotifications.map((notification, index) => {
+                const friendId = notification.data?.fromUserId || notification.data?.friendId || notification.data?.likerId;
+                const isPending = notification.type === "friend_request_received" && friendId && isFriendRequestPending(friendId);
+                const isAccepted = friendId && isFriendRequestAccepted(friendId);
+                const isRemoving = removingIds.includes(notification.id);
+
+                return (
+                  <React.Fragment key={notification.id}>
+                    {index > 0 && <div className="notification-divider"></div>}
+                    <NotificationItem
+                      notification={notification}
+                      userId={userId}
+                      isPending={isPending}
+                      isAccepted={isAccepted}
+                      friendId={friendId}
+                      handleMarkAsRead={handleMarkAsRead}
+                      handleRemoveNotification={handleRemoveNotification}
+                      handleViewProfile={handleViewProfile}
+                      handleAccept={handleAccept}
+                      handleReject={handleReject}
+                      handleRemoveFriendAction={handleRemoveFriendAction}
+                      handleNotificationClick={handleNotificationClick}
+                      getIconClass={getIconClass}
+                      getSecondaryIconClass={getSecondaryIconClass}
+                      t={t}
+                      isRemoving={isRemoving}
+                    />
+                  </React.Fragment>
+                );
+              })}
+              <div className="notification-divider"></div>
+              <button className="dropdown-item clear-button" onClick={() => handleClearNotifications()}>
+                <i className="fas fa-trash"></i> {t("navbar.clearNotifications")}
+              </button>
+            </>
+          )}
+        </div>
+
+        {selectedMember && (
+          <div className="modal-overlay">
+            <div className="modal-content">
+              <h2>{t("member.details")}</h2>
+              <div className="modal-avatar">
+                {selectedMemberImages.length > 0 ? (
+                  <div className="modal-images">
+                    {selectedMemberImages.map((img) => (
+                      <img key={img.id} src={`http://localhost:7000/${img.path}`} alt={img.name} className="modal-image" />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="modal-avatar-placeholder">
+                    <i className="fas fa-user-circle"></i>
+                  </div>
+                )}
+              </div>
+              <p><strong>ID :</strong> {formatValue(selectedMember.id)}</p>
+              <p><strong>Email :</strong> {formatValue(selectedMember.email)}</p>
+              <p><strong>Prénom :</strong> {formatValue(selectedMember.firstName)}</p>
+              <p><strong>Nom :</strong> {formatValue(selectedMember.lastName)}</p>
+              <p><strong>Téléphone :</strong> {formatValue(selectedMember.phone)}</p>
+              <p><strong>Adresse :</strong> {formatValue(selectedMember.address)}</p>
+              <p><strong>Sexe :</strong> {formatValue(selectedMember.sex)}</p>
+              <p><strong>Slug :</strong> {formatValue(selectedMember.slug)}</p>
+              <p><strong>Bio :</strong> {formatValue(selectedMember.bio)}</p>
+              <p><strong>Latitude :</strong> {formatValue(selectedMember.latitude)}</p>
+              <p><strong>Longitude :</strong> {formatValue(selectedMember.longitude)}</p>
+              <p><strong>Liké par :</strong> {formatValue(selectedMember.likerUserIds)}</p>
+              <p><strong>A liké :</strong> {formatValue(selectedMember.likedUserIds)}</p>
+              <p><strong>Image IDs :</strong> {formatValue(selectedMember.imageIds)}</p>
+              <div className="modal-actions">
+                {currentUser?.id === selectedMember.id && (
+                  <button className="edit-profile-button" onClick={handleEditProfile}>
+                    <i className="fas fa-edit"></i> {t("member.editProfile")}
+                  </button>
+                )}
+                <button className="close-button" onClick={closeModal}>
+                  <i className="fas fa-times"></i> {t("member.close")}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     );
   }
+);
 
-  return (
-    <div className="navbar-notifications">
-      <button
-        className={`nav-item ${unreadCount > 0 ? "has-unread" : ""}`}
-        onClick={handleToggle}
-        title={t("navbar.notifications")}
-      >
-        <i className="fas fa-bell"></i>
-        {unreadCount > 0 && <span className="notification-count">{unreadCount}</span>}
-      </button>
-      <div className={`dropdown-menu ${isOpen ? "active" : ""}`}>
-        <button
-          className="dropdown-item view-all-button"
-          onClick={handleViewAllNotifications}
-        >
-          <i className="fas fa-list"></i> {t("notification.viewAll")}
-        </button>
-        <div className="notification-divider"></div>
-        {noNotifications || unreadCount === 0 ? (
-          <div className="dropdown-item no-notifications">
-            <div className="icon-group">
-              <i className="fas fa-bell-slash"></i>
-            </div>
-            <span>{t("notification.noNotifications")}</span>
-          </div>
-        ) : (
-          <>
-            {sortedNotifications.map((notification, index) => {
-              const friendId = notification.data?.fromUserId || notification.data?.friendId || notification.data?.likerId;
-              const isPending = notification.type === "friend_request_received" && friendId && isFriendRequestPending(friendId);
-              const isAccepted = friendId && isFriendRequestAccepted(friendId);
-
-              return (
-                <div key={notification.id}>
-                  {index > 0 && <div className="notification-divider"></div>}
-                  <div
-                    className={`dropdown-item ${!notification.isRead ? "unread" : ""}`}
-                    onClick={() => handleNotificationClick(notification)}
-                  >
-                    <div className="icon-group">
-                      <i className={getIconClass(notification.type)}></i>
-                      <i className={getSecondaryIconClass(notification.type)}></i>
-                    </div>
-                    <div className="notification-content">
-                      <span className="notification-message">{notification.message}</span>
-                      <span className="notification-time">
-                        {new Date(notification.timestamp).toLocaleString()}
-                      </span>
-                    </div>
-                    <div className="action-buttons">
-                      {!notification.isRead && (
-                        <button
-                          className="mark-read-button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleMarkAsRead(notification.id, userId);
-                          }}
-                          title={t("notification.markAsRead")}
-                        >
-                          <i className="fas fa-check-circle"></i>
-                        </button>
-                      )}
-                      {friendId && (
-                        <button
-                          className="view-profile-button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleViewProfile(notification);
-                          }}
-                          title={t("notification.viewProfile")}
-                        >
-                          <i className="fas fa-user"></i>
-                        </button>
-                      )}
-                      <button
-                        className="remove-button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleRemoveNotification(notification.id, userId);
-                        }}
-                        title={t("notification.remove")}
-                      >
-                        <i className="fas fa-trash-alt"></i>
-                      </button>
-                      {notification.type === "friend_request_received" && friendId && isPending && !isAccepted && (
-                        <div className="notification-actions">
-                          <button
-                            className="accept-button"
-                            onClick={(e) => handleAccept(e, friendId)}
-                            title={t("notification.accept")}
-                          >
-                            <i className="fas fa-check"></i>
-                          </button>
-                          <button
-                            className="reject-button"
-                            onClick={(e) => handleReject(e, friendId)}
-                            title={t("notification.reject")}
-                          >
-                            <i className="fas fa-times"></i>
-                          </button>
-                        </div>
-                      )}
-                      {notification.type === "friend_request_received" && friendId && isAccepted && (
-                        <button
-                          className="remove-friend-button"
-                          onClick={(e) => handleRemoveFriendAction(e, friendId)}
-                          title={t("notification.removeFriend")}
-                        >
-                          <i className="fas fa-user-minus"></i>
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-            <div className="notification-divider"></div>
-            <button
-              className="dropdown-item clear-button"
-              onClick={() => handleClearNotifications(userId)}
-            >
-              <i className="fas fa-trash"></i> {t("navbar.clearNotifications")}
-            </button>
-          </>
-        )}
-      </div>
-
-      {selectedMember && (
-        <div className="modal-overlay">
-          <div className="modal-content">
-            <h2>{t("member.details")}</h2>
-            <div className="modal-avatar">
-              {selectedMemberImages.length > 0 ? (
-                <div className="modal-images">
-                  {selectedMemberImages.map((img) => (
-                    <img
-                      key={img.id}
-                      src={`http://localhost:7000/${img.path}`}
-                      alt={img.name}
-                      className="modal-image"
-                    />
-                  ))}
-                </div>
-              ) : (
-                <div className="modal-avatar-placeholder">
-                  <i className="fas fa-user-circle"></i>
-                </div>
-              )}
-            </div>
-            <p><strong>ID :</strong> {formatValue(selectedMember.id)}</p>
-            <p><strong>Email :</strong> {formatValue(selectedMember.email)}</p>
-            <p><strong>Prénom :</strong> {formatValue(selectedMember.firstName)}</p>
-            <p><strong>Nom :</strong> {formatValue(selectedMember.lastName)}</p>
-            <p><strong>Téléphone :</strong> {formatValue(selectedMember.phone)}</p>
-            <p><strong>Adresse :</strong> {formatValue(selectedMember.address)}</p>
-            <p><strong>Sexe :</strong> {formatValue(selectedMember.sex)}</p>
-            <p><strong>Slug :</strong> {formatValue(selectedMember.slug)}</p>
-            <p><strong>Bio :</strong> {formatValue(selectedMember.bio)}</p>
-            <p><strong>Latitude :</strong> {formatValue(selectedMember.latitude)}</p>
-            <p><strong>Longitude :</strong> {formatValue(selectedMember.longitude)}</p>
-            <p><strong>Liké par :</strong> {formatValue(selectedMember.likerUserIds)}</p>
-            <p><strong>A liké :</strong> {formatValue(selectedMember.likedUserIds)}</p>
-            <p><strong>Image IDs :</strong> {formatValue(selectedMember.imageIds)}</p>
-            <div className="modal-actions">
-              {currentUser?.id === selectedMember.id && (
-                <button className="edit-profile-button" onClick={handleEditProfile}>
-                  <i className="fas fa-edit"></i> {t("member.editProfile")}
-                </button>
-              )}
-              <button className="close-button" onClick={closeModal}>
-                <i className="fas fa-times"></i> {t("member.close")}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-};
-
-export default NotificationDropdown;
+export default memo(NotificationDropdown);

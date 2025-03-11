@@ -20,7 +20,13 @@ portfolio-frontend/
 │   ├── assets/
 │   │   └── react.svg
 │   ├── components/
+│   │   ├── common/
+│   │   │   ├── DatePicker.css
+│   │   │   └── DatePicker.tsx
 │   │   ├── ErrorBoundary.tsx
+│   │   ├── Footer/
+│   │   │   ├── Footer.css
+│   │   │   └── Footer.tsx
 │   │   ├── LanguageSelector/
 │   │   │   ├── LanguageSelector.css
 │   │   │   └── LanguageSelector.tsx
@@ -29,7 +35,9 @@ portfolio-frontend/
 │   │   │   └── MemberCard.tsx
 │   │   ├── Mobile/
 │   │   │   ├── MobileRedirect.css
-│   │   │   └── MobileRedirect.tsx
+│   │   │   ├── MobileRedirect.tsx
+│   │   │   ├── ModalMobile.css
+│   │   │   └── ModalMobile.tsx
 │   │   ├── Navbar/
 │   │   │   ├── Navbar.css
 │   │   │   └── Navbar.tsx
@@ -51,6 +59,7 @@ portfolio-frontend/
 │   ├── config/
 │   │   └── hostname.ts
 │   ├── hooks/
+│   │   ├── handleFriendNotifications.ts
 │   │   ├── useFriendActions.ts
 │   │   ├── useGoogleMaps.ts
 │   │   ├── useNotificationActions.ts
@@ -101,6 +110,7 @@ portfolio-frontend/
 │   │   │   ├── Portfolio.css
 │   │   │   ├── Portfolio.tsx
 │   │   │   ├── PortfolioGlobal/
+│   │   │   │   ├── PortfolioCardManager.tsx
 │   │   │   │   ├── PortfolioGlobal.css
 │   │   │   │   └── PortfolioGlobal.tsx
 │   │   │   ├── Projects/
@@ -188,6 +198,7 @@ portfolio-frontend/
 │   │   │   ├── interestSlice.ts
 │   │   │   ├── languageSlice.ts
 │   │   │   ├── notificationSlice.ts
+│   │   │   ├── portfolioCardSlice.ts
 │   │   │   ├── portfolioSlice.ts
 │   │   │   ├── projectSlice.ts
 │   │   │   ├── recommendationSlice.ts

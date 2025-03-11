@@ -33,8 +33,9 @@ export const useWebSocket = (token: string | null) => {
       return;
     }
 
-    console.log("🔧 Connexion WebSocket:", `${BASE_URL.replace("http", "ws")}/chat?token=${token}`);
-    const ws = new WebSocket(`${BASE_URL.replace("http", "ws")}/chat?token=${token}`);
+    const wsUrl = `${BASE_URL.replace("https", "wss").replace("http", "ws")}/chat?token=${token}`;
+    console.log("🔧 Connexion WebSocket:", wsUrl);
+    const ws = new WebSocket(wsUrl);
     wsRef.current = ws;
     setWsInstance(ws);
 
@@ -107,8 +108,9 @@ export const useWebSocket = (token: string | null) => {
                           normalizedMessage.notificationType === "friend_removed" ||
                           normalizedMessage.notificationType === "friend_request_canceled")) {
           console.error("❌ friendId non déterminé après secours:", message);
-          dispatch(fetchSentFriendRequests(userId));
-          dispatch(fetchReceivedFriendRequests(userId));
+          // Note: fetchSentFriendRequests et fetchReceivedFriendRequests ne sont pas définis ici
+          // dispatch(fetchSentFriendRequests(userId));
+          // dispatch(fetchReceivedFriendRequests(userId));
           return;
         }
 
@@ -120,7 +122,6 @@ export const useWebSocket = (token: string | null) => {
           profilePictureUrl: message.profilePictureUrl || message.data?.profilePictureUrl || null,
         };
 
-        // Gestion externalisée des notifications d'amitié
         handleFriendNotifications(
           dispatch,
           userId,
@@ -134,7 +135,6 @@ export const useWebSocket = (token: string | null) => {
           friends
         );
 
-        // Gestion des notifications non liées aux amis
         if (normalizedMessage.notificationType === "user_like" && userId === normalizedMessage.userId) {
           dispatch(addNotification({
             id: normalizedMessage.id,

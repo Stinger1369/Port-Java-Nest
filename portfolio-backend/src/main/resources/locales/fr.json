@@ -32,7 +32,13 @@
     "clearAll": "Effacer tout",
     "confirmClear": "Voulez-vous effacer toutes les notifications ?",
     "confirmFriendRequest": "Voulez-vous accepter la demande d'ami de {{message}} ?",
-    "viewProfile": "Voir le profil"
+    "viewProfile": "Voir le profil",
+    "all": "Toutes",
+    "likes": "J'aime",
+    "confirmRemoveTitle": "Confirmer la suppression",
+    "confirmRemoveMessage": "Êtes-vous sûr de vouloir supprimer cette notification ?",
+    "yes": "Oui",
+    "no": "Non"
   },
   "login": {
     "title": "Connexion",

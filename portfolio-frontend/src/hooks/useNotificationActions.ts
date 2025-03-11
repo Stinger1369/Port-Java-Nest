@@ -16,118 +16,102 @@ import { TFunction } from "i18next";
 
 export const useNotificationActions = (t?: TFunction<"translation", undefined>) => {
   const dispatch = useDispatch<AppDispatch>();
-  const { notifications, status, error } = useSelector(
-    (state: RootState) => state.notification
-  );
+  const { notifications, status, error } = useSelector((state: RootState) => state.notification);
   const { handleAcceptFriendRequest, handleRejectFriendRequest } = useFriendActions();
   const userId = localStorage.getItem("userId") || "";
 
+  // Charger les notifications uniquement si nécessaire
   const loadNotifications = (userId: string) => {
-    console.log(
-      "🔍 Tentative de chargement des notifications pour userId:",
-      userId,
-      "Statut actuel:",
-      status,
-      "Notifications existantes:",
-      notifications.length,
-      "No Notifications:",
-      notifications.length === 0
-    );
     if (status !== "loading" && status !== "succeeded") {
-      dispatch(fetchNotifications(userId))
+      return dispatch(fetchNotifications(userId))
         .unwrap()
         .then((data) => {
-          console.log("✅ Notifications chargées avec succès:", data);
+          console.log("✅ Notifications chargées avec succès:", data.length);
+          return data;
         })
         .catch((err) => {
           console.error("❌ Erreur lors du chargement des notifications:", err);
-          if (err.message.includes("Failed to fetch") || err.code === "ECONNREFUSED") {
-            dispatch({ type: "notification/resetStatus" });
-          }
+          throw err; // Propager l'erreur pour gestion dans le composant
         });
-    } else {
-      console.log("ℹ️ Chargement des notifications ignoré: déjà chargé ou en cours.");
     }
+    return Promise.resolve(notifications); // Retourner les notifications existantes si déjà chargées
   };
 
+  // Marquer une notification comme lue
   const handleMarkAsRead = (notificationId: string, userId: string) => {
     const notificationExists = notifications.some((notif) => notif.id === notificationId);
-
     if (!notificationExists) {
-      console.warn("⚠️ Notification non trouvée dans l'état local:", notificationId);
-      return;
+      console.warn("⚠️ Notification non trouvée:", notificationId);
+      return Promise.resolve();
     }
 
-    // Vérifier si la notification est locale (non persistante côté serveur)
-    const isLocalId = !notificationId.includes("-"); // Les ID locaux générés par uuid contiennent des tirets
-
-    if (isLocalId) {
-      // Marquer localement et recharger les notifications pour synchroniser
-      dispatch(markAsRead(notificationId));
-      console.log("✅ Notification locale marquée comme lue côté client:", notificationId);
-      loadNotifications(userId); // Recharge pour synchroniser avec le serveur
-    } else {
-      // Marquer côté serveur
-      dispatch(markNotificationAsRead({ notificationId, userId }))
-        .unwrap()
-        .then(() => {
-          console.log("✅ Notification marquée comme lue:", notificationId);
-          dispatch(markAsRead(notificationId)); // S'assurer que l'état local est synchronisé
-        })
-        .catch((err) => {
-          console.error("❌ Erreur lors du marquage de la notification:", err);
-          if (err === "Invalid argument: Notification introuvable") {
-            dispatch(markAsRead(notificationId));
-            console.log("ℹ️ Notification introuvable côté serveur, marquée localement:", notificationId);
-          }
-          loadNotifications(userId); // Recharge pour synchroniser
-        });
-    }
-  };
-
-  const handleRemoveNotification = (notificationId: string, userId: string) => {
     const isLocalId = !notificationId.includes("-");
-    const notificationExists = notifications.some((notif) => notif.id === notificationId);
-
-    if (isLocalId && notificationExists) {
-      dispatch(removeNotification(notificationId));
-      console.log("✅ Notification locale supprimée côté client:", notificationId);
-      loadNotifications(userId);
-    } else if (notificationExists) {
-      dispatch(deleteNotification({ notificationId, userId }))
-        .unwrap()
-        .then(() => {
-          console.log("✅ Notification supprimée du serveur:", notificationId);
-          loadNotifications(userId);
-        })
-        .catch((err) => {
-          console.error("❌ Erreur lors de la suppression de la notification:", err);
-          dispatch(removeNotification(notificationId));
-          console.log("ℹ️ Notification supprimée localement en cas d'échec serveur:", notificationId);
-          loadNotifications(userId);
-        });
-    } else {
-      console.warn("⚠️ Notification non trouvée dans l'état local:", notificationId);
+    if (isLocalId) {
+      dispatch(markAsRead(notificationId));
+      return Promise.resolve();
     }
+
+    return dispatch(markNotificationAsRead({ notificationId, userId }))
+      .unwrap()
+      .then(() => {
+        dispatch(markAsRead(notificationId));
+      })
+      .catch((err) => {
+        console.error("❌ Erreur lors du marquage comme lue:", err);
+        if (err === "Invalid argument: Notification introuvable") {
+          dispatch(markAsRead(notificationId)); // Marquer localement si introuvable sur le serveur
+        }
+      });
   };
 
+  // Supprimer une notification
+  const handleRemoveNotification = (notificationId: string, userId: string) => {
+    const notificationExists = notifications.some((notif) => notif.id === notificationId);
+    if (!notificationExists) {
+      console.warn("⚠️ Notification non trouvée:", notificationId);
+      return Promise.resolve();
+    }
+
+    const isLocalId = !notificationId.includes("-");
+    if (isLocalId) {
+      dispatch(removeNotification(notificationId));
+      return Promise.resolve();
+    }
+
+    return dispatch(deleteNotification({ notificationId, userId }))
+      .unwrap()
+      .then(() => {
+        console.log("✅ Notification supprimée du serveur:", notificationId);
+        // Pas de loadNotifications ici : l'état Redux est déjà mis à jour par deleteNotification.fulfilled
+      })
+      .catch((err) => {
+        console.error("❌ Erreur lors de la suppression:", err);
+        dispatch(removeNotification(notificationId)); // Suppression locale en cas d'échec
+        // Pas de loadNotifications : la gestion locale dans le composant suffit
+      });
+  };
+
+  // Supprimer toutes les notifications
   const handleClearNotifications = (userId: string) => {
     const confirmMessage = t ? t("notification.confirmClear") : "Voulez-vous effacer toutes les notifications ?";
-    if (window.confirm(confirmMessage)) {
-      dispatch(clearAllNotifications(userId))
-        .unwrap()
-        .then(() => {
-          console.log("✅ Toutes les notifications supprimées avec succès");
-          loadNotifications(userId);
-        })
-        .catch((err) => {
-          console.error("❌ Erreur lors de la suppression des notifications:", err);
-          dispatch(clearNotifications());
-          loadNotifications(userId);
-        });
+    if (!window.confirm(confirmMessage)) {
+      return Promise.resolve();
     }
+
+    return dispatch(clearAllNotifications(userId))
+      .unwrap()
+      .then(() => {
+        console.log("✅ Toutes les notifications supprimées avec succès");
+        // Pas de loadNotifications : l'état est déjà vidé par clearAllNotifications.fulfilled
+      })
+      .catch((err) => {
+        console.error("❌ Erreur lors de la suppression totale:", err);
+        dispatch(clearNotifications()); // Vidage local en cas d'échec
+        // Pas de loadNotifications : gestion locale dans le composant
+      });
   };
 
+  // Gérer les actions spécifiques aux notifications
   const handleNotificationAction = (notification: Notification) => {
     switch (notification.type) {
       case "friend_request_received":
@@ -153,10 +137,10 @@ export const useNotificationActions = (t?: TFunction<"translation", undefined>) 
     notifications,
     status,
     error,
-    loadNotifications,
-    handleMarkAsRead,
+    loadNotifications: (userId: string) => loadNotifications(userId),
+    handleMarkAsRead: (notificationId: string) => handleMarkAsRead(notificationId, userId),
     handleRemoveNotification: (notificationId: string) => handleRemoveNotification(notificationId, userId),
-    handleClearNotifications,
+    handleClearNotifications: () => handleClearNotifications(userId),
     handleNotificationAction,
   };
 };

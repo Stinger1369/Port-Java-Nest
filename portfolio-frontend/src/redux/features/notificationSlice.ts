@@ -176,6 +176,7 @@ const notificationSlice = createSlice({
       })
       .addCase(deleteNotification.fulfilled, (state, action: PayloadAction<string>) => {
         state.status = "succeeded";
+        console.log("🗑️ Redux: Notification supprimée de l’état:", action.meta.arg.notificationId);
         state.notifications = state.notifications.filter((notif) => notif.id !== action.payload);
         console.log("✅ Notification supprimée avec succès:", action.payload);
       })
