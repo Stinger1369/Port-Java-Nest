@@ -19,6 +19,7 @@
 │   │   │               ├── config/
 │   │   │               │   ├── AppConfig.java
 │   │   │               │   ├── ChatWebSocketHandler.java
+│   │   │               │   ├── MessageConfig.java
 │   │   │               │   ├── RequestLoggingInterceptor.java
 │   │   │               │   └── WebSocketConfig.java
 │   │   │               ├── controller/
@@ -141,8 +142,13 @@
 │   │       │   ├── fr.json
 │   │       │   └── zh.json
 │   │       ├── templates/
-│   │       │   └── contact-request-email.html
-│   │       └── application.yml
+│   │       │   ├── contact-request-email.html
+│   │       │   ├── reset-password-email.html
+│   │       │   └── verify-account-email.html
+│   │       ├── application.yml
+│   │       ├── messages_ar.properties
+│   │       ├── messages_fr.properties
+│   │       └── messages.properties
 │   └── test/
 │       └── java/
 │           └── com/
@@ -157,6 +163,7 @@
 │   │   │           ├── config/
 │   │   │           │   ├── AppConfig.class
 │   │   │           │   ├── ChatWebSocketHandler.class
+│   │   │           │   ├── MessageConfig.class
 │   │   │           │   ├── RequestLoggingInterceptor.class
 │   │   │           │   ├── RequestLoggingInterceptor$CachedBodyHttpServletRequest.class
 │   │   │           │   ├── RequestLoggingInterceptor$CachedBodyHttpServletRequest$CachedServletInputStream.class
@@ -317,8 +324,13 @@
 │   │   │   ├── fr.json
 │   │   │   └── zh.json
 │   │   ├── templates/
-│   │   │   └── contact-request-email.html
-│   │   └── application.yml
+│   │   │   ├── contact-request-email.html
+│   │   │   ├── reset-password-email.html
+│   │   │   └── verify-account-email.html
+│   │   ├── application.yml
+│   │   ├── messages_ar.properties
+│   │   ├── messages_fr.properties
+│   │   └── messages.properties
 │   ├── generated-sources/
 │   │   └── annotations/
 │   ├── generated-test-sources/

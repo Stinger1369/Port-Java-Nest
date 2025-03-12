@@ -32,7 +32,7 @@ interface NotificationItemProps {
   handleNotificationClick: (notification: any) => void;
   getIconClass: (type: string) => string;
   getSecondaryIconClass: (type: string) => string;
-  t: (key: string) => string; // Typage précis pour t
+  t: (key: string) => string;
   isRemoving: boolean;
 }
 
@@ -131,7 +131,7 @@ const NotificationItem = memo(
             {notification.type === "friend_request_received" && friendId && isAccepted && (
               <button
                 className="remove-friend-button"
-                onClick-traceback={(e) => handleRemoveFriendAction(e, friendId)}
+                onClick={(e) => handleRemoveFriendAction(e, friendId)}
                 title={t("notification.removeFriend")}
               >
                 <i className="fas fa-user-minus"></i>
@@ -175,6 +175,8 @@ const NotificationDropdown = forwardRef<HTMLDivElement, NotificationDropdownProp
     const [noNotifications, setNoNotifications] = useState(false);
     const [selectedMember, setSelectedMember] = useState<any | null>(null);
     const [selectedMemberImages, setSelectedMemberImages] = useState<Image[]>([]);
+    const [successMessage, setSuccessMessage] = useState<string | null>(null); // Nouveau state pour les messages de succès
+    const [errorMessage, setErrorMessage] = useState<string | null>(null); // Nouveau state pour les messages d'erreur
     const isInitialMount = useRef(true);
 
     useEffect(() => {
@@ -211,6 +213,18 @@ const NotificationDropdown = forwardRef<HTMLDivElement, NotificationDropdownProp
       }
     }, [status, error, dispatch]);
 
+    // Efface les messages après 3 secondes
+    useEffect(() => {
+      if (successMessage) {
+        const timer = setTimeout(() => setSuccessMessage(null), 3000);
+        return () => clearTimeout(timer);
+      }
+      if (errorMessage) {
+        const timer = setTimeout(() => setErrorMessage(null), 3000);
+        return () => clearTimeout(timer);
+      }
+    }, [successMessage, errorMessage]);
+
     const unreadCount = localNotifications.filter((notif) => !notif.isRead).length;
 
     const handleViewProfile = useCallback(async (notification: any) => {
@@ -228,6 +242,7 @@ const NotificationDropdown = forwardRef<HTMLDivElement, NotificationDropdownProp
           }
         } catch (err) {
           console.error("❌ Erreur lors de la récupération du membre:", err);
+          setErrorMessage("Erreur lors de la récupération du profil");
         }
       }
       onClose();
@@ -235,8 +250,7 @@ const NotificationDropdown = forwardRef<HTMLDivElement, NotificationDropdownProp
 
     const handleNotificationClick = useCallback(async (notification: any) => {
       switch (notification.type) {
-        case "new_chat":
-        case "new_private_message":
+        case "new_chat": case "new_private_message":
           navigate(`/chat/private/${notification.data?.chatId || "default"}`);
           break;
         case "new_group_message":
@@ -251,18 +265,36 @@ const NotificationDropdown = forwardRef<HTMLDivElement, NotificationDropdownProp
 
     const handleAccept = useCallback((e: React.MouseEvent, friendId: string) => {
       e.stopPropagation();
-      handleAcceptFriendRequest(friendId, (errorMessage) => alert(errorMessage));
-    }, [handleAcceptFriendRequest]);
+      handleAcceptFriendRequest(friendId, (errorMessage) => {
+        if (errorMessage) {
+          setErrorMessage(errorMessage);
+        } else {
+          setSuccessMessage(t("notification.accept"));
+        }
+      });
+    }, [handleAcceptFriendRequest, t]);
 
     const handleReject = useCallback((e: React.MouseEvent, friendId: string) => {
       e.stopPropagation();
-      handleRejectFriendRequest(friendId, (errorMessage) => alert(errorMessage));
-    }, [handleRejectFriendRequest]);
+      handleRejectFriendRequest(friendId, (errorMessage) => {
+        if (errorMessage) {
+          setErrorMessage(errorMessage);
+        } else {
+          setSuccessMessage(t("notification.reject"));
+        }
+      });
+    }, [handleRejectFriendRequest, t]);
 
     const handleRemoveFriendAction = useCallback((e: React.MouseEvent, friendId: string) => {
       e.stopPropagation();
-      handleRemoveFriend(friendId, (errorMessage) => alert(errorMessage));
-    }, [handleRemoveFriend]);
+      handleRemoveFriend(friendId, (errorMessage) => {
+        if (errorMessage) {
+          setErrorMessage(errorMessage);
+        } else {
+          setSuccessMessage(t("notification.removeFriend"));
+        }
+      });
+    }, [handleRemoveFriend, t]);
 
     const handleMarkAsRead = useCallback((notificationId: string) => {
       console.log("📌 Marquage comme lu local:", notificationId);
@@ -280,9 +312,13 @@ const NotificationDropdown = forwardRef<HTMLDivElement, NotificationDropdownProp
       setLocalNotifications((prev) => prev.filter((notif) => notif.id !== notificationId));
       setTimeout(() => {
         removeNotificationAsync(notificationId)
-          .then(() => console.log("✅ Suppression serveur confirmée:", notificationId))
+          .then(() => {
+            console.log("✅ Suppression serveur confirmée:", notificationId);
+            setSuccessMessage(t("notification.remove"));
+          })
           .catch((err) => {
             console.error("❌ Échec de la suppression côté serveur:", err);
+            setErrorMessage("Erreur lors de la suppression de la notification");
             setLocalNotifications((prev) => [
               ...prev,
               { id: notificationId, message: "Erreur de suppression", timestamp: new Date().toISOString(), isRead: false },
@@ -290,7 +326,7 @@ const NotificationDropdown = forwardRef<HTMLDivElement, NotificationDropdownProp
           })
           .finally(() => setRemovingIds((prev) => prev.filter((id) => id !== notificationId)));
       }, 300);
-    }, [removeNotificationAsync]);
+    }, [removeNotificationAsync, t]);
 
     const isFriendRequestPending = useCallback((friendId: string) =>
       receivedRequests.some((request) => request.id === friendId), [receivedRequests]);
@@ -358,6 +394,12 @@ const NotificationDropdown = forwardRef<HTMLDivElement, NotificationDropdownProp
           {unreadCount > 0 && <span className="notification-count">{unreadCount}</span>}
         </button>
         <div className={`dropdown-menu ${isOpen ? "active" : ""}`}>
+          {successMessage && (
+            <p className="success-message">{successMessage}</p>
+          )}
+          {errorMessage && (
+            <p className="error-message">{errorMessage}</p>
+          )}
           <button className="dropdown-item view-all-button" onClick={() => { navigate("/notifications"); onClose(); }}>
             <i className="fas fa-list"></i> {t("notification.viewAll")}
           </button>

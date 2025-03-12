@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { RootState, AppDispatch } from "../../../../redux/store";
 import { uploadImage, getAllImagesByUserId, deleteImage, setProfilePicture } from "../../../../redux/features/imageSlice";
 import { useTranslation } from "react-i18next";
-import { FaArrowLeft, FaArrowRight } from "react-icons/fa"; // Importez les icônes
+import { FaArrowLeft, FaArrowRight } from "react-icons/fa";
 import "./ImagesScreen.css";
 
 interface Image {
@@ -19,9 +19,11 @@ interface Image {
 interface Props {
   onBack?: () => void;
   onNext?: () => void;
+  setSuccessMessage?: (message: string | null) => void;
+  setErrorMessage?: (message: string | null) => void;
 }
 
-const ImagesScreen = ({ onBack, onNext }: Props) => {
+const ImagesScreen = ({ onBack, onNext, setSuccessMessage: setParentSuccessMessage, setErrorMessage: setParentErrorMessage }: Props) => {
   const { t } = useTranslation();
   const dispatch = useDispatch<AppDispatch>();
   const user = useSelector((state: RootState) => state.user.user);
@@ -35,6 +37,7 @@ const ImagesScreen = ({ onBack, onNext }: Props) => {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isImageUploading, setIsImageUploading] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
     const userId = localStorage.getItem("userId");
@@ -50,6 +53,19 @@ const ImagesScreen = ({ onBack, onNext }: Props) => {
     });
   }, [images]);
 
+  useEffect(() => {
+    if (successMessage) {
+      const timer = setTimeout(() => setSuccessMessage(null), 3000);
+      setParentSuccessMessage && setParentSuccessMessage(successMessage);
+      return () => clearTimeout(timer);
+    }
+    if (errorMessage) {
+      const timer = setTimeout(() => setErrorMessage(null), 3000);
+      setParentErrorMessage && setParentErrorMessage(errorMessage);
+      return () => clearTimeout(timer);
+    }
+  }, [successMessage, errorMessage, setParentSuccessMessage, setParentErrorMessage]);
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file && file.type.startsWith("image/")) {
@@ -60,7 +76,7 @@ const ImagesScreen = ({ onBack, onNext }: Props) => {
     } else {
       setSelectedFile(null);
       setImagePreview(null);
-      alert(t("editProfile.invalidImage", "Please select a valid image file."));
+      setErrorMessage(t("editProfile.invalidImage", "Please select a valid image file."));
     }
   };
 
@@ -79,12 +95,13 @@ const ImagesScreen = ({ onBack, onNext }: Props) => {
         })
       ).unwrap();
       await dispatch(getAllImagesByUserId(user.id)).unwrap();
+      setSuccessMessage(t("editProfile.uploadSuccess", "Image uploaded successfully."));
       setSelectedFile(null);
       setImagePreview(null);
       console.log("✅ Image uploadée avec succès");
     } catch (error) {
       console.error("❌ Échec de l'upload de l'image :", error);
-      alert(t("editProfile.uploadError", "Failed to upload image."));
+      setErrorMessage(t("editProfile.uploadError", "Failed to upload image."));
     } finally {
       setIsImageUploading(false);
     }
@@ -96,16 +113,18 @@ const ImagesScreen = ({ onBack, onNext }: Props) => {
     try {
       await dispatch(deleteImage({ userId: user.id, name: image.name })).unwrap();
       await dispatch(getAllImagesByUserId(user.id)).unwrap();
+      setSuccessMessage(t("editProfile.deleteSuccess", "Image deleted successfully."));
       console.log("✅ Image supprimée avec succès:", image.name);
     } catch (error) {
       console.error("❌ Échec de la suppression de l'image :", error);
-      alert(t("editProfile.deleteError", "Failed to delete image."));
+      setErrorMessage(t("editProfile.deleteError", "Failed to delete image."));
     }
   };
 
   const handleSetProfilePicture = async (imageId: string | null) => {
     if (!imageId || !user) {
       console.error("❌ imageId ou user manquant:", { imageId, user });
+      setErrorMessage(t("editProfile.profilePictureError", "Failed to set profile picture. Missing data."));
       return;
     }
 
@@ -116,10 +135,9 @@ const ImagesScreen = ({ onBack, onNext }: Props) => {
       await dispatch(getAllImagesByUserId(user.id)).unwrap();
       setSuccessMessage(t("editProfile.profileUpdated", "Image updated as default profile picture."));
       console.log("✅ Photo de profil définie avec succès pour imageId:", imageId);
-      setTimeout(() => setSuccessMessage(null), 3000);
     } catch (error) {
       console.error("❌ Échec de handleSetProfilePicture:", error);
-      alert(t("editProfile.profilePictureError", "Failed to set profile picture. Please try again."));
+      setErrorMessage(t("editProfile.profilePictureError", "Failed to set profile picture. Please try again."));
     }
   };
 
@@ -130,7 +148,8 @@ const ImagesScreen = ({ onBack, onNext }: Props) => {
       {imageStatus === "loading" && <p>{t("editProfile.uploadingImage", "Uploading image...")}</p>}
       {imageError && <p className="error">{t("editProfile.imageError", { message: imageError })}</p>}
       {imageMessage && <p className="success">{imageMessage}</p>}
-      {successMessage && <p className="success">{successMessage}</p>}
+      {successMessage && <p className="success-message">{successMessage}</p>}
+      {errorMessage && <p className="error-message">{errorMessage}</p>}
 
       <label>{t("editProfile.profilePicture", "Profile Picture")} :</label>
       <input

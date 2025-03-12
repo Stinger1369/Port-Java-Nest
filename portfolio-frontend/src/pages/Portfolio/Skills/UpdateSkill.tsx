@@ -10,7 +10,7 @@ interface Props {
     name: string;
     level: number;
     description?: string;
-    isPublic?: boolean; // Ajouté
+    isPublic?: boolean;
   };
   onClose: () => void;
 }
@@ -18,10 +18,23 @@ interface Props {
 const UpdateSkill = ({ skill, onClose }: Props) => {
   const dispatch = useDispatch<AppDispatch>();
   const [updatedSkill, setUpdatedSkill] = useState(skill);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
     setUpdatedSkill(skill);
   }, [skill]);
+
+  useEffect(() => {
+    if (successMessage) {
+      const timer = setTimeout(() => setSuccessMessage(null), 3000);
+      return () => clearTimeout(timer);
+    }
+    if (errorMessage) {
+      const timer = setTimeout(() => setErrorMessage(null), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [successMessage, errorMessage]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value, type, checked } = e.target;
@@ -38,12 +51,13 @@ const UpdateSkill = ({ skill, onClose }: Props) => {
       dispatch(updateSkill({ id: updatedSkill.id, skillData: updatedSkill }))
         .unwrap()
         .then(() => {
+          setSuccessMessage("Compétence mise à jour avec succès !");
           dispatch(fetchSkillsByUser(userId));
-          onClose();
+          setTimeout(() => onClose(), 3000); // Ferme après 3 secondes
         })
         .catch((err) => {
           console.error("❌ Erreur lors de la mise à jour de la compétence:", err);
-          alert("Erreur lors de la mise à jour de la compétence.");
+          setErrorMessage("Erreur lors de la mise à jour de la compétence.");
         });
     }
   };
@@ -52,6 +66,12 @@ const UpdateSkill = ({ skill, onClose }: Props) => {
     <div className="modal">
       <div className="skill-form-container">
         <h3 className="skill-form-title">Modifier la Compétence</h3>
+        {successMessage && (
+          <p className="success-message">{successMessage}</p>
+        )}
+        {errorMessage && (
+          <p className="error-message">{errorMessage}</p>
+        )}
         <form onSubmit={handleSubmit}>
           <label className="skill-label">Nom de la compétence *</label>
           <input

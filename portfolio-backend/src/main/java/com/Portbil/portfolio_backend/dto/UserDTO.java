@@ -7,6 +7,7 @@ import lombok.Builder;
 import lombok.Data;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Data
@@ -32,9 +33,9 @@ public class UserDTO {
     private List<String> imageIds;
 
     // Nouveaux champs pour les amis
-    private List<String> friendIds; // Liste des amis acceptés
-    private List<String> friendRequestSentIds; // Demandes d'amis envoyées
-    private List<String> friendRequestReceivedIds; // Demandes d'amis reçues
+    private List<String> friendIds;
+    private List<String> friendRequestSentIds;
+    private List<String> friendRequestReceivedIds;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
     private LocalDate birthdate;
@@ -52,6 +53,14 @@ public class UserDTO {
 
     // Champ pour les conversations
     private List<String> chatIds;
+
+    // Nouveaux champs pour la limitation de débit (optionnels dans le DTO)
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
+    private LocalDateTime lastVerificationCodeRequest;
+    private int verificationCodeRequestCount;
+
+    // Ajout du champ isVerified
+    private boolean isVerified; // Ajouté
 
     public Double getLatitudeAsDouble() {
         if (latitude == null) return null;

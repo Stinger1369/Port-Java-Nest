@@ -40,7 +40,7 @@ export const useWebSocket = (token: string | null) => {
     setWsInstance(ws);
 
     ws.onopen = () => {
-      console.log("✅ WebSocket connecté pour userId:", userId);
+      console.log("✅ WebSocket connecté pour userId:", userId, "URL:", wsUrl);
     };
 
     ws.onmessage = (event) => {
@@ -108,9 +108,6 @@ export const useWebSocket = (token: string | null) => {
                           normalizedMessage.notificationType === "friend_removed" ||
                           normalizedMessage.notificationType === "friend_request_canceled")) {
           console.error("❌ friendId non déterminé après secours:", message);
-          // Note: fetchSentFriendRequests et fetchReceivedFriendRequests ne sont pas définis ici
-          // dispatch(fetchSentFriendRequests(userId));
-          // dispatch(fetchReceivedFriendRequests(userId));
           return;
         }
 

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "../../../redux/store";
 import { addSkill, fetchSkillsByUser } from "../../../redux/features/skillSlice";
@@ -15,8 +15,10 @@ const AddSkill = ({ onClose }: Props) => {
     name: "",
     level: 50,
     description: "",
-    isPublic: false, // Ajouté
+    isPublic: false,
   });
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value, type, checked } = e.target;
@@ -32,25 +34,44 @@ const AddSkill = ({ onClose }: Props) => {
     const userId = localStorage.getItem("userId");
     if (!userId) {
       console.error("❌ Erreur : ID utilisateur manquant.");
+      setErrorMessage("Erreur : ID utilisateur manquant.");
       return;
     }
 
     dispatch(addSkill({ ...skill, userId }))
       .unwrap()
       .then(() => {
+        setSuccessMessage("Compétence ajoutée avec succès !");
         dispatch(fetchSkillsByUser(userId));
-        onClose();
+        setTimeout(() => onClose(), 3000); // Ferme après 3 secondes
       })
       .catch((err) => {
         console.error("❌ Erreur lors de l'ajout de la compétence:", err);
-        alert("Erreur lors de l'ajout de la compétence.");
+        setErrorMessage("Erreur lors de l’ajout de la compétence.");
       });
   };
+
+  useEffect(() => {
+    if (successMessage) {
+      const timer = setTimeout(() => setSuccessMessage(null), 3000);
+      return () => clearTimeout(timer);
+    }
+    if (errorMessage) {
+      const timer = setTimeout(() => setErrorMessage(null), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [successMessage, errorMessage]);
 
   return (
     <div className="modal">
       <div className="skill-form-container">
         <h3 className="skill-form-title">Ajouter une Compétence</h3>
+        {successMessage && (
+          <p className="success-message">{successMessage}</p>
+        )}
+        {errorMessage && (
+          <p className="error-message">{errorMessage}</p>
+        )}
         <form onSubmit={handleSubmit}>
           <label className="skill-label">Nom de la compétence *</label>
           <input

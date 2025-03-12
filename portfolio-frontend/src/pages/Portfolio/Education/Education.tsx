@@ -11,16 +11,32 @@ const Education = () => {
   const educations = useSelector((state: RootState) => state.education.educations) || [];
   const status = useSelector((state: RootState) => state.education.status);
   const error = useSelector((state: RootState) => state.education.error);
-  const userId = useSelector((state: RootState) => state.auth.userId); // Utilisation de Redux au lieu de localStorage
+  const userId = useSelector((state: RootState) => state.auth.userId);
 
   const [showAddForm, setShowAddForm] = useState(false);
   const [selectedEducation, setSelectedEducation] = useState<any>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [educationIdToDelete, setEducationIdToDelete] = useState<string | null>(null);
 
   useEffect(() => {
     if (userId) {
       dispatch(fetchEducationsByUser(userId));
     }
   }, [dispatch, userId]);
+
+  // Efface les messages après 3 secondes
+  useEffect(() => {
+    if (successMessage) {
+      const timer = setTimeout(() => setSuccessMessage(null), 3000);
+      return () => clearTimeout(timer);
+    }
+    if (errorMessage) {
+      const timer = setTimeout(() => setErrorMessage(null), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [successMessage, errorMessage]);
 
   const sortedEducations = [...educations].sort((a, b) =>
     new Date(b.startDate).getTime() - new Date(a.startDate).getTime()
@@ -46,33 +62,52 @@ const Education = () => {
       )
         .unwrap()
         .then(() => {
+          setSuccessMessage("Visibilité de la formation mise à jour avec succès !");
           dispatch(fetchEducationsByUser(userId));
         })
         .catch((err) => {
           console.error("❌ Erreur lors de la mise à jour de la visibilité de l'éducation:", err);
-          alert("Erreur lors de la mise à jour de la visibilité de l'éducation.");
+          setErrorMessage("Erreur lors de la mise à jour de la visibilité de l’éducation.");
         });
     }
   };
 
   const handleDelete = (id: string) => {
-    if (window.confirm("Voulez-vous vraiment supprimer cette formation ?")) {
-      dispatch(deleteEducation(id))
+    setEducationIdToDelete(id);
+    setShowConfirmModal(true);
+  };
+
+  const confirmDelete = () => {
+    if (educationIdToDelete && userId) {
+      dispatch(deleteEducation(educationIdToDelete))
         .unwrap()
         .then(() => {
+          setSuccessMessage("Formation supprimée avec succès !");
           dispatch(fetchEducationsByUser(userId));
         })
         .catch((err) => {
           console.error("❌ Erreur lors de la suppression de l'éducation:", err);
-          alert("Erreur lors de la suppression de l'éducation.");
+          setErrorMessage("Erreur lors de la suppression de l’éducation.");
         });
     }
+    setShowConfirmModal(false);
+    setEducationIdToDelete(null);
+  };
+
+  const cancelDelete = () => {
+    setShowConfirmModal(false);
+    setEducationIdToDelete(null);
   };
 
   return (
     <div className="education-container">
       <h2>Éducation</h2>
-
+      {successMessage && (
+        <p className="success-message">{successMessage}</p>
+      )}
+      {errorMessage && (
+        <p className="error-message">{errorMessage}</p>
+      )}
       {status === "loading" && <p className="loading-text">Chargement des formations...</p>}
       {status === "failed" && <p className="error-text">Erreur : {error}</p>}
 
@@ -106,6 +141,19 @@ const Education = () => {
 
       {showAddForm && <AddEducation onClose={() => setShowAddForm(false)} />}
       {selectedEducation && <UpdateEducation education={selectedEducation} onClose={() => setSelectedEducation(null)} />}
+
+      {showConfirmModal && (
+        <div className="confirm-modal-overlay">
+          <div className="confirm-modal-content">
+            <h3>Confirmer la suppression</h3>
+            <p>Voulez-vous vraiment supprimer cette formation ?</p>
+            <div className="confirm-modal-actions">
+              <button className="confirm-button" onClick={confirmDelete}>Oui</button>
+              <button className="cancel-button" onClick={cancelDelete}>Non</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

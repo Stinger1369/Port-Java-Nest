@@ -41,6 +41,48 @@
   animation: pulse 1.5s infinite;
 }
 
+.notification-loading,
+.notification-error {
+  text-align: center;
+  padding: 20px;
+  color: #7f8c8d;
+  font-size: 14px;
+}
+
+/* Messages de succès */
+.success-message {
+  font-size: 14px;
+  color: #28a745;
+  background: #e6ffe6;
+  padding: 10px;
+  border-radius: 5px;
+  margin: 10px 15px;
+  text-align: center;
+  animation: slideIn 0.3s ease-in-out;
+}
+
+/* Messages d'erreur */
+.error-message {
+  font-size: 14px;
+  color: #e63946;
+  background: #ffe6e6;
+  padding: 10px;
+  border-radius: 5px;
+  margin: 10px 15px;
+  text-align: center;
+  animation: slideIn 0.3s ease-in-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
 @keyframes pulse {
   0% { transform: scale(1); }
   50% { transform: scale(1.1); }

@@ -1,7 +1,7 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import removeConsole from 'vite-plugin-remove-console';
-import mkcert from 'vite-plugin-mkcert';
+// import mkcert from 'vite-plugin-mkcert'; // Commenté pour désactiver HTTPS
 
 export default defineConfig(({ command, mode }) => {
   return {
@@ -11,7 +11,7 @@ export default defineConfig(({ command, mode }) => {
         include: ['**/*.ts', '**/*.tsx'],
         exclude: [],
       }),
-      mkcert(), // Ajout du plugin mkcert
+      // mkcert(), // Commenté pour désactiver HTTPS
     ],
     build: {
       outDir: 'dist',
@@ -20,11 +20,11 @@ export default defineConfig(({ command, mode }) => {
     logLevel: mode === 'development' ? 'info' : 'error',
     server: {
       port: 5173,
-      https: true, // Activer HTTPS avec mkcert
+      // https: true, // Désactivé pour revenir à HTTP
     },
     preview: {
       port: 5173,
-      https: true, // Activer HTTPS pour preview
+      // https: true, // Désactivé pour revenir à HTTP
     },
   };
 });

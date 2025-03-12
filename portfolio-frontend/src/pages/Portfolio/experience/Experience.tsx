@@ -15,12 +15,27 @@ const Experience = () => {
 
   const [showAddForm, setShowAddForm] = useState(false);
   const [selectedExperience, setSelectedExperience] = useState<any>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [experienceIdToDelete, setExperienceIdToDelete] = useState<string | null>(null);
 
   useEffect(() => {
     if (userId) {
       dispatch(fetchExperiencesByUser(userId));
     }
   }, [dispatch, userId]);
+
+  useEffect(() => {
+    if (successMessage) {
+      const timer = setTimeout(() => setSuccessMessage(null), 3000);
+      return () => clearTimeout(timer);
+    }
+    if (errorMessage) {
+      const timer = setTimeout(() => setErrorMessage(null), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [successMessage, errorMessage]);
 
   const handleTogglePublic = (experienceId: string) => {
     const experience = experiences.find((exp) => exp.id === experienceId);
@@ -41,33 +56,52 @@ const Experience = () => {
       )
         .unwrap()
         .then(() => {
+          setSuccessMessage("Visibilité de l’expérience mise à jour avec succès !");
           dispatch(fetchExperiencesByUser(userId));
         })
         .catch((err) => {
           console.error("❌ Erreur lors de la mise à jour de la visibilité de l'expérience:", err);
-          alert("Erreur lors de la mise à jour de la visibilité de l'expérience.");
+          setErrorMessage("Erreur lors de la mise à jour de la visibilité de l’expérience.");
         });
     }
   };
 
   const handleDeleteExperience = (experienceId: string) => {
-    if (userId) {
-      dispatch(deleteExperience(experienceId))
+    setExperienceIdToDelete(experienceId);
+    setShowConfirmModal(true);
+  };
+
+  const confirmDelete = () => {
+    if (experienceIdToDelete && userId) {
+      dispatch(deleteExperience(experienceIdToDelete))
         .unwrap()
         .then(() => {
+          setSuccessMessage("Expérience supprimée avec succès !");
           dispatch(fetchExperiencesByUser(userId));
         })
         .catch((err) => {
           console.error("❌ Erreur lors de la suppression de l'expérience:", err);
-          alert("Erreur lors de la suppression de l'expérience.");
+          setErrorMessage("Erreur lors de la suppression de l’expérience.");
         });
     }
+    setShowConfirmModal(false);
+    setExperienceIdToDelete(null);
+  };
+
+  const cancelDelete = () => {
+    setShowConfirmModal(false);
+    setExperienceIdToDelete(null);
   };
 
   return (
     <div className="experience-container">
       <h2>Expériences Professionnelles</h2>
-
+      {successMessage && (
+        <p className="success-message">{successMessage}</p>
+      )}
+      {errorMessage && (
+        <p className="error-message">{errorMessage}</p>
+      )}
       {status === "loading" && <p className="loading-text">Chargement des expériences...</p>}
       {status === "failed" && <p className="error-text">Erreur : {error}</p>}
 
@@ -76,7 +110,7 @@ const Experience = () => {
           {experiences.map((exp) => (
             <li key={exp.id} className="experience-item">
               <div className="experience-info">
-                <strong>{exp.companyName}</strong> - {exp.position}
+                <strong>{exp.companyName}</strong> - {exp.jobTitle}
                 <p>{exp.startDate} - {exp.endDate || "Actuellement en poste"}</p>
                 <p>{exp.description}</p>
                 <label>
@@ -101,6 +135,19 @@ const Experience = () => {
 
       {showAddForm && <AddExperience onClose={() => setShowAddForm(false)} />}
       {selectedExperience && <UpdateExperience experience={selectedExperience} onClose={() => setSelectedExperience(null)} />}
+
+      {showConfirmModal && (
+        <div className="confirm-modal-overlay">
+          <div className="confirm-modal-content">
+            <h3>Confirmer la suppression</h3>
+            <p>Voulez-vous vraiment supprimer cette expérience ?</p>
+            <div className="confirm-modal-actions">
+              <button className="confirm-button" onClick={confirmDelete}>Oui</button>
+              <button className="cancel-button" onClick={cancelDelete}>Non</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

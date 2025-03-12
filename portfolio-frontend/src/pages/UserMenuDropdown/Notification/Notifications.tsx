@@ -40,7 +40,7 @@ const NotificationItem = memo(
   }: NotificationItemProps) => {
     useEffect(() => {
       console.log(`🔄 NotificationItem (page) re-rendu pour ID: ${notification.id}`);
-    }, [notification.id]); // Dépendance explicite pour limiter les logs
+    }, [notification.id]);
 
     return (
       <div className={`page-notification-item ${!notification.isRead ? "page-unread" : ""}`}>
@@ -126,6 +126,8 @@ const Notifications: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalAction, setModalAction] = useState<"remove" | "clear" | null>(null);
   const [notificationToRemove, setNotificationToRemove] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null); // Nouveau state pour les messages de succès
+  const [errorMessage, setErrorMessage] = useState<string | null>(null); // Nouveau state pour les messages d'erreur
   const isInitialMount = React.useRef(true);
 
   useEffect(() => {
@@ -135,6 +137,18 @@ const Notifications: React.FC = () => {
       isInitialMount.current = false;
     }
   }, [loadNotifications, userId, status]);
+
+  // Efface les messages après 3 secondes
+  useEffect(() => {
+    if (successMessage) {
+      const timer = setTimeout(() => setSuccessMessage(null), 3000);
+      return () => clearTimeout(timer);
+    }
+    if (errorMessage) {
+      const timer = setTimeout(() => setErrorMessage(null), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [successMessage, errorMessage]);
 
   const sortedNotifications = React.useMemo(
     () => [...notifications].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()),
@@ -167,18 +181,36 @@ const Notifications: React.FC = () => {
 
   const handleAccept = useCallback((e: React.MouseEvent, friendId: string) => {
     e.stopPropagation();
-    handleAcceptFriendRequest(friendId, (errorMessage) => alert(errorMessage));
-  }, [handleAcceptFriendRequest]);
+    handleAcceptFriendRequest(friendId, (errorMessage) => {
+      if (errorMessage) {
+        setErrorMessage(errorMessage);
+      } else {
+        setSuccessMessage(t("notification.accept")); // Message de succès générique
+      }
+    });
+  }, [handleAcceptFriendRequest, t]);
 
   const handleReject = useCallback((e: React.MouseEvent, friendId: string) => {
     e.stopPropagation();
-    handleRejectFriendRequest(friendId, (errorMessage) => alert(errorMessage));
-  }, [handleRejectFriendRequest]);
+    handleRejectFriendRequest(friendId, (errorMessage) => {
+      if (errorMessage) {
+        setErrorMessage(errorMessage);
+      } else {
+        setSuccessMessage(t("notification.reject")); // Message de succès générique
+      }
+    });
+  }, [handleRejectFriendRequest, t]);
 
   const handleRemoveFriendAction = useCallback((e: React.MouseEvent, friendId: string) => {
     e.stopPropagation();
-    handleRemoveFriend(friendId, (errorMessage) => alert(errorMessage));
-  }, [handleRemoveFriend]);
+    handleRemoveFriend(friendId, (errorMessage) => {
+      if (errorMessage) {
+        setErrorMessage(errorMessage);
+      } else {
+        setSuccessMessage(t("notification.removeFriend")); // Message de succès générique
+      }
+    });
+  }, [handleRemoveFriend, t]);
 
   const openRemoveModal = useCallback((notificationId: string) => {
     setModalAction("remove");
@@ -194,13 +226,15 @@ const Notifications: React.FC = () => {
   const handleConfirmModal = useCallback(() => {
     if (modalAction === "remove" && notificationToRemove) {
       handleRemoveNotification(notificationToRemove, userId);
+      setSuccessMessage(t("notification.remove")); // Message de succès après suppression
     } else if (modalAction === "clear") {
       handleClearNotifications(userId);
+      setSuccessMessage(t("notification.clearAll")); // Message de succès après tout supprimer
     }
     setIsModalOpen(false);
     setModalAction(null);
     setNotificationToRemove(null);
-  }, [modalAction, notificationToRemove, handleRemoveNotification, handleClearNotifications, userId]);
+  }, [modalAction, notificationToRemove, handleRemoveNotification, handleClearNotifications, userId, t]);
 
   const handleCancelModal = useCallback(() => {
     setIsModalOpen(false);
@@ -259,6 +293,12 @@ const Notifications: React.FC = () => {
   return (
     <div className="page-notifications-container">
       <h1>{t("notification.title")}</h1>
+      {successMessage && (
+        <p className="page-success-message">{successMessage}</p>
+      )}
+      {errorMessage && (
+        <p className="page-error-message">{errorMessage}</p>
+      )}
       <div className="page-notification-filter-buttons">
         <button
           className={`page-filter-button ${filter === "all" ? "active" : ""}`}

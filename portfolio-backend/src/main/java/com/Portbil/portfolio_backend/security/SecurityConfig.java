@@ -43,6 +43,7 @@ public class SecurityConfig {
                                 "/api/auth/register",
                                 "/api/auth/verify",
                                 "/api/auth/forgot-password",
+                                "/api/auth/resend-verification",
                                 "/api/auth/reset-password",
                                 "/api/translations/**",
                                 "/api/contacts/request",

@@ -8,7 +8,7 @@ import PersonalInfoScreen from "./PersonalInfoScreen/PersonalInfoScreen";
 import AddressScreen from "./AddressScreen/AddressScreen";
 import ImagesScreen from "./ImagesScreen/ImagesScreen";
 import ConfirmationScreen from "./ConfirmationScreen/ConfirmationScreen";
-import { FaArrowLeft, FaArrowRight } from "react-icons/fa"; // Importez les icônes
+import { FaArrowLeft, FaArrowRight } from "react-icons/fa";
 import "./EditProfileContainer.css";
 
 const EditProfileContainer = () => {
@@ -20,6 +20,10 @@ const EditProfileContainer = () => {
 
   const [currentScreen, setCurrentScreen] = useState(1);
   const totalScreens = 4;
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [pendingNavigation, setPendingNavigation] = useState<(() => void) | null>(null);
 
   const [initialFormData, setInitialFormData] = useState({
     id: "",
@@ -63,7 +67,8 @@ const EditProfileContainer = () => {
       dispatch(fetchUser());
     } else {
       console.error("❌ Aucun userId trouvé dans localStorage, redirection vers /login");
-      navigate("/login");
+      setErrorMessage("Aucun utilisateur connecté. Redirection vers la page de connexion.");
+      setTimeout(() => navigate("/login"), 3000);
     }
   }, [dispatch, navigate]);
 
@@ -108,6 +113,17 @@ const EditProfileContainer = () => {
     }
   }, [address, latitude, longitude, city, country, isInitialDataSet]);
 
+  useEffect(() => {
+    if (successMessage) {
+      const timer = setTimeout(() => setSuccessMessage(null), 3000);
+      return () => clearTimeout(timer);
+    }
+    if (errorMessage) {
+      const timer = setTimeout(() => setErrorMessage(null), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [successMessage, errorMessage]);
+
   const hasChanges = () => {
     return (
       formData.id === initialFormData.id && (
@@ -128,27 +144,81 @@ const EditProfileContainer = () => {
   };
 
   const handleNext = () => {
-    if (currentScreen < totalScreens) setCurrentScreen(currentScreen + 1);
-    else navigate("/profile");
+    if (currentScreen < totalScreens) {
+      setCurrentScreen(currentScreen + 1);
+    } else {
+      navigate("/profile");
+    }
   };
 
   const handleBack = () => {
-    if (currentScreen > 1) setCurrentScreen(currentScreen - 1);
-    else navigate("/profile");
+    if (hasChanges()) {
+      setPendingNavigation(() => () => {
+        if (currentScreen > 1) setCurrentScreen(currentScreen - 1);
+        else navigate("/profile");
+      });
+      setShowConfirmModal(true);
+    } else {
+      if (currentScreen > 1) setCurrentScreen(currentScreen - 1);
+      else navigate("/profile");
+    }
   };
 
   const handleClose = () => {
-    navigate("/profile");
+    if (hasChanges()) {
+      setPendingNavigation(() => () => navigate("/profile"));
+      setShowConfirmModal(true);
+    } else {
+      navigate("/profile");
+    }
+  };
+
+  const confirmNavigation = () => {
+    if (pendingNavigation) {
+      pendingNavigation();
+    }
+    setShowConfirmModal(false);
+    setPendingNavigation(null);
+  };
+
+  const cancelNavigation = () => {
+    setShowConfirmModal(false);
+    setPendingNavigation(null);
   };
 
   const renderScreen = () => {
     switch (currentScreen) {
       case 1:
-        return <PersonalInfoScreen formData={formData} setFormData={setFormData} onBack={handleBack} onNext={handleNext} />;
+        return (
+          <PersonalInfoScreen
+            formData={formData}
+            setFormData={setFormData}
+            onBack={handleBack}
+            onNext={handleNext}
+            setSuccessMessage={setSuccessMessage}
+            setErrorMessage={setErrorMessage}
+          />
+        );
       case 2:
-        return <AddressScreen formData={formData} setFormData={setFormData} onBack={handleBack} onNext={handleNext} />;
+        return (
+          <AddressScreen
+            formData={formData}
+            setFormData={setFormData}
+            onBack={handleBack}
+            onNext={handleNext}
+            setSuccessMessage={setSuccessMessage}
+            setErrorMessage={setErrorMessage}
+          />
+        );
       case 3:
-        return <ImagesScreen onBack={handleBack} onNext={handleNext} />;
+        return (
+          <ImagesScreen
+            onBack={handleBack}
+            onNext={handleNext}
+            setSuccessMessage={setSuccessMessage}
+            setErrorMessage={setErrorMessage}
+          />
+        );
       case 4:
         return (
           <ConfirmationScreen
@@ -156,6 +226,8 @@ const EditProfileContainer = () => {
             hasChanges={hasChanges}
             onBack={handleBack}
             onNext={handleNext}
+            setSuccessMessage={setSuccessMessage}
+            setErrorMessage={setErrorMessage}
           />
         );
       default:
@@ -180,8 +252,25 @@ const EditProfileContainer = () => {
         ))}
         <div className="progress-line" style={{ "--current-screen": currentScreen } as React.CSSProperties}></div>
       </div>
+      {successMessage && (
+        <p className="success-message">{successMessage}</p>
+      )}
+      {errorMessage && (
+        <p className="error-message">{errorMessage}</p>
+      )}
       {renderScreen()}
-      {/* Les boutons sont maintenant dans les écrans enfants */}
+      {showConfirmModal && (
+        <div className="confirm-modal-overlay">
+          <div className="confirm-modal-content">
+            <h3>{t("editProfile.confirmExitTitle", "Confirmer la sortie")}</h3>
+            <p>{t("editProfile.confirmExitMessage", "Vous avez des modifications non sauvegardées. Voulez-vous vraiment quitter ?")}</p>
+            <div className="confirm-modal-actions">
+              <button className="confirm-button" onClick={confirmNavigation}>{t("editProfile.yes", "Oui")}</button>
+              <button className="cancel-button" onClick={cancelNavigation}>{t("editProfile.no", "Non")}</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

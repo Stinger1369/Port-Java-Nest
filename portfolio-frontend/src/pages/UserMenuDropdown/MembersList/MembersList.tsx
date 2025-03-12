@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState, AppDispatch } from "../../../redux/store";
-import { fetchAllUsers, User, fetchUserById } from "../../../redux/features/userSlice";
+import { fetchVerifiedUsers, User, fetchUserById } from "../../../redux/features/userSlice";
 import { getImagesByIds, getAllImagesByUserId, Image } from "../../../redux/features/imageSlice";
 import { useNavigate } from "react-router-dom";
 import MemberCard from "../../../components/MemberCard/MemberCard";
@@ -35,10 +35,15 @@ const MembersList: React.FC = () => {
     }
 
     if (status === "idle") {
-      dispatch(fetchAllUsers())
+      console.log("🔍 Début de fetchVerifiedUsers...");
+      dispatch(fetchVerifiedUsers())
         .unwrap()
-        .then((result) => console.log("✅ Utilisateurs chargés:", result.length))
-        .catch((err) => console.error("❌ Erreur chargement utilisateurs:", err));
+        .then((result) => {
+          console.log("✅ Utilisateurs vérifiés chargés:", result.length, result);
+        })
+        .catch((err) => {
+          console.error("❌ Erreur chargement utilisateurs vérifiés:", err);
+        });
     }
 
     if (user?.id && status !== "loading") {
@@ -126,7 +131,7 @@ const MembersList: React.FC = () => {
     return (
       <div className="members-list-container">
         <h1>Liste des membres</h1>
-        <p>Aucun membre trouvé.</p>
+        <p>Aucun membre vérifié trouvé.</p>
       </div>
     );
   }

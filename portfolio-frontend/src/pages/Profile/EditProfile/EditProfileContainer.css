@@ -1,11 +1,11 @@
 /* Variables globales pour un design moderne */
 :root {
-  --primary-color: #5e43ff; /* Violet profond */
-  --secondary-color: #00e7ff; /* Cyan lumineux */
-  --background-color: #eef2f7; /* Fond gris clair doux */
-  --text-color: #0f172a; /* Bleu-noir profond */
+  --primary-color: #5e43ff;
+  --secondary-color: #00e7ff;
+  --background-color: #eef2f7;
+  --text-color: #0f172a;
   --button-bg: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-  --button-hover: linear-gradient(135deg, #4835d4, #00b8d4);
+  --button-hover: linear-gradient(135deg, #483, var(--secondary-color), var(--primary-color));
   --shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
   --border-radius: 16px;
   --transition: all 0.3s ease;
@@ -21,7 +21,7 @@
   box-shadow: var(--shadow);
   position: relative;
   overflow: hidden;
-  z-index: 5; /* Réduit pour permettre au DatePicker de passer au-dessus */
+  z-index: 5;
   animation: slideIn 0.5s ease-out;
 }
 
@@ -39,6 +39,30 @@
   letter-spacing: 1px;
 }
 
+/* Messages de succès */
+.success-message {
+  font-size: 14px;
+  color: #28a745;
+  background: #e6ffe6;
+  padding: 10px;
+  border-radius: 5px;
+  margin: 10px 0;
+  text-align: center;
+  animation: slideIn 0.3s ease-in-out;
+}
+
+/* Messages d'erreur */
+.error-message {
+  font-size: 14px;
+  color: #e63946;
+  background: #ffe6e6;
+  padding: 10px;
+  border-radius: 5px;
+  margin: 10px 0;
+  text-align: center;
+  animation: slideIn 0.3s ease-in-out;
+}
+
 /* Étapes de progression */
 .progress-steps {
   display: flex;
@@ -46,7 +70,7 @@
   align-items: center;
   position: relative;
   margin-bottom: 2rem;
-  z-index: 6; /* Au-dessus du conteneur principal */
+  z-index: 6;
 }
 
 .step {
@@ -62,7 +86,7 @@
   color: var(--text-color);
   cursor: pointer;
   transition: var(--transition);
-  z-index: 7; /* Au-dessus des étapes */
+  z-index: 7;
 }
 
 .step.active {
@@ -85,7 +109,7 @@
   height: 4px;
   background: rgba(94, 67, 255, 0.2);
   transform: translateY(-50%);
-  z-index: 6; /* Au-dessus du conteneur principal */
+  z-index: 6;
 }
 
 .progress-line::after {
@@ -105,7 +129,7 @@
   display: flex;
   justify-content: space-between;
   margin-top: 2.5rem;
-  z-index: 6; /* Au-dessus du conteneur principal */
+  z-index: 6;
 }
 
 .navigation-buttons button {
@@ -119,7 +143,7 @@
   cursor: pointer;
   transition: var(--transition);
   box-shadow: var(--shadow);
-  z-index: 7; /* Au-dessus des boutons */
+  z-index: 7;
 }
 
 .navigation-buttons button:hover {
@@ -134,7 +158,7 @@
 }
 
 .navigation-buttons button:first-child {
-  background: linear-gradient(135deg, #6b7280, #4b5563); /* Gris pour "Back" */
+  background: linear-gradient(135deg, #6b7280, #4b5563);
 }
 
 .navigation-buttons button:first-child:hover {
@@ -147,7 +171,7 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 1.5rem;
-  z-index: 6; /* Au-dessus du conteneur principal */
+  z-index: 6;
 }
 
 .close-icon {
@@ -157,7 +181,7 @@
   transition: var(--transition);
   padding: 0.5rem;
   border-radius: 50%;
-  z-index: 7; /* Au-dessus de l'en-tête */
+  z-index: 7;
 }
 
 .close-icon:hover {
@@ -166,18 +190,77 @@
   transform: scale(1.2);
 }
 
-@media (max-width: 768px) {
-  .close-icon {
-    font-size: 1.3rem;
-    padding: 0.4rem;
-  }
+/* Modal de confirmation */
+.confirm-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
 }
 
-@media (max-width: 480px) {
-  .close-icon {
-    font-size: 1.1rem;
-    padding: 0.3rem;
-  }
+.confirm-modal-content {
+  background: #ffffff;
+  padding: 20px;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 400px;
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.confirm-modal-content h3 {
+  font-size: 1.5rem;
+  color: #34495e;
+  margin-bottom: 15px;
+  font-weight: 600;
+}
+
+.confirm-modal-content p {
+  font-size: 1rem;
+  color: #64748b;
+  margin-bottom: 20px;
+}
+
+.confirm-modal-actions {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
+.confirm-button,
+.cancel-button {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.confirm-button {
+  background-color: #e74c3c;
+  color: #ffffff;
+}
+
+.confirm-button:hover {
+  background-color: #c0392b;
+  transform: scale(1.05);
+}
+
+.cancel-button {
+  background-color: var(--primary-color);
+  color: #ffffff;
+}
+
+.cancel-button:hover {
+  background-color: #4835d4;
+  transform: scale(1.05);
 }
 
 /* Animation d'entrée */
@@ -226,6 +309,11 @@
     width: 100%;
     padding: 0.7rem;
   }
+
+  .close-icon {
+    font-size: 1.3rem;
+    padding: 0.4rem;
+  }
 }
 
 @media (max-width: 480px) {
@@ -252,6 +340,30 @@
   }
 
   .navigation-buttons button {
+    font-size: 0.9rem;
+  }
+
+  .close-icon {
+    font-size: 1.1rem;
+    padding: 0.3rem;
+  }
+
+  .confirm-modal-content {
+    padding: 15px;
+    max-width: 300px;
+  }
+
+  .confirm-modal-content h3 {
+    font-size: 1.3rem;
+  }
+
+  .confirm-modal-content p {
+    font-size: 0.9rem;
+  }
+
+  .confirm-button,
+  .cancel-button {
+    padding: 8px 15px;
     font-size: 0.9rem;
   }
 }

@@ -19,12 +19,26 @@ const Certifications = () => {
 
   const [showAddForm, setShowAddForm] = useState(false);
   const [selectedCertification, setSelectedCertification] = useState<any>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null); // Nouveau state pour le succès
+  const [errorMessage, setErrorMessage] = useState<string | null>(null); // Nouveau state pour les erreurs
 
   useEffect(() => {
     if (userId) {
       dispatch(fetchCertificationsByUser(userId));
     }
   }, [dispatch, userId]);
+
+  // Efface les messages après 3 secondes
+  useEffect(() => {
+    if (successMessage) {
+      const timer = setTimeout(() => setSuccessMessage(null), 3000);
+      return () => clearTimeout(timer);
+    }
+    if (errorMessage) {
+      const timer = setTimeout(() => setErrorMessage(null), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [successMessage, errorMessage]);
 
   const handleTogglePublic = (certificationId: string) => {
     const certification = certifications.find((cert) => cert.id === certificationId);
@@ -46,11 +60,12 @@ const Certifications = () => {
       )
         .unwrap()
         .then(() => {
+          setSuccessMessage("Visibilité de la certification mise à jour avec succès !");
           dispatch(fetchCertificationsByUser(userId));
         })
         .catch((err) => {
           console.error("❌ Erreur lors de la mise à jour de la certification:", err);
-          alert("Erreur lors de la mise à jour de la certification.");
+          setErrorMessage("Erreur lors de la mise à jour de la certification.");
         });
     }
   };
@@ -60,11 +75,12 @@ const Certifications = () => {
       dispatch(deleteCertification(certificationId))
         .unwrap()
         .then(() => {
+          setSuccessMessage("Certification supprimée avec succès !");
           dispatch(fetchCertificationsByUser(userId));
         })
         .catch((err) => {
           console.error("❌ Erreur lors de la suppression de la certification:", err);
-          alert("Erreur lors de la suppression de la certification.");
+          setErrorMessage("Erreur lors de la suppression de la certification.");
         });
     }
   };
@@ -72,7 +88,12 @@ const Certifications = () => {
   return (
     <div className="certifications-container">
       <h2>Certifications</h2>
-
+      {successMessage && (
+        <p className="success-message">{successMessage}</p>
+      )}
+      {errorMessage && (
+        <p className="error-message">{errorMessage}</p>
+      )}
       {status === "loading" && <p className="loading-text">Chargement des certifications...</p>}
       {status === "failed" && <p className="error-text">Erreur : {error}</p>}
 

@@ -16,7 +16,7 @@ interface Props {
     startDate: string;
     endDate?: string;
     currentlyWorkingOn: boolean;
-    isPublic?: boolean; // Ajouté
+    isPublic?: boolean;
   };
   onClose: () => void;
 }
@@ -26,10 +26,22 @@ const UpdateProject = ({ project, onClose }: Props) => {
 
   const [updatedProject, setUpdatedProject] = useState(project);
   const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   useEffect(() => {
     setUpdatedProject(project);
   }, [project]);
+
+  useEffect(() => {
+    if (successMessage) {
+      const timer = setTimeout(() => setSuccessMessage(null), 3000);
+      return () => clearTimeout(timer);
+    }
+    if (error) {
+      const timer = setTimeout(() => setError(null), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [successMessage, error]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value, type, checked } = e.target;
@@ -67,25 +79,36 @@ const UpdateProject = ({ project, onClose }: Props) => {
       return;
     }
 
-    dispatch(updateProject({ id: updatedProject.id, projectData: updatedProject }))
-      .unwrap()
-      .then(() => {
-        const userId = localStorage.getItem("userId");
-        if (userId) {
-          dispatch(fetchProjectsByUser(userId));
-          onClose();
+    const userId = localStorage.getItem("userId");
+    if (userId) {
+      dispatch(updateProject({
+        id: updatedProject.id,
+        projectData: {
+          ...updatedProject,
+          technologies: updatedProject.technologies, // Already an array, no need to split
         }
-      })
-      .catch((err) => {
-        setError("Erreur lors de la mise à jour du projet. Veuillez réessayer.");
-        console.error(err);
-      });
+      }))
+        .unwrap()
+        .then(() => {
+          setSuccessMessage("Projet mis à jour avec succès !");
+          dispatch(fetchProjectsByUser(userId));
+          setTimeout(() => onClose(), 3000); // Ferme après 3 secondes
+        })
+        .catch((err) => {
+          setError("Erreur lors de la mise à jour du projet. Veuillez réessayer.");
+          console.error(err);
+        });
+    }
   };
 
   return (
     <div className="modal">
       <div className="project-form-container">
         <h3 className="project-form-title">Modifier le Projet</h3>
+        {successMessage && (
+          <p className="success-message">{successMessage}</p>
+        )}
+        {error && <p className="project-error-message">{error}</p>}
         <form onSubmit={handleSubmit}>
           <input
             type="text"
@@ -157,7 +180,6 @@ const UpdateProject = ({ project, onClose }: Props) => {
             />
             Public
           </label>
-          {error && <p className="project-error-message">{error}</p>}
           <button type="submit" className="project-button project-button-submit">Mettre à jour</button>
           <button type="button" className="project-button project-button-cancel" onClick={onClose}>Annuler</button>
         </form>

@@ -5,7 +5,7 @@ import { likeUser, unlikeUser, User } from "../../redux/features/userSlice";
 import { fetchPrivateMessages } from "../../redux/features/chatSlice";
 import { useNavigate } from "react-router-dom";
 import { useFriendActions } from "../../hooks/useFriendActions";
-import { getFriendButtonProps } from "../../utils/friendButtonUtils"; // Import externe
+import { getFriendButtonProps } from "../../utils/friendButtonUtils";
 import "./MemberCard.css";
 
 interface MemberCardProps {
@@ -29,6 +29,8 @@ const MemberCard: React.FC<MemberCardProps> = ({ member, profileImage, onClick }
     handleRejectFriendRequest,
   } = useFriendActions();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null); // Nouveau state pour les messages de succès
+  const [errorMessage, setErrorMessage] = useState<string | null>(null); // Nouveau state pour les messages d'erreur
 
   const isCurrentUser = currentUser?.id === member.id;
   const hasLiked = currentUser?.likedUserIds?.includes(member.id);
@@ -41,6 +43,18 @@ const MemberCard: React.FC<MemberCardProps> = ({ member, profileImage, onClick }
       `🔍 État pour ${member.id} - isFriend: ${isFriend}, hasSentRequest: ${hasSentRequest}, hasReceivedRequest: ${hasReceivedRequest}`
     );
   }, [isFriend, hasSentRequest, hasReceivedRequest, member.id]);
+
+  // Efface les messages après 3 secondes
+  useEffect(() => {
+    if (successMessage) {
+      const timer = setTimeout(() => setSuccessMessage(null), 3000);
+      return () => clearTimeout(timer);
+    }
+    if (errorMessage) {
+      const timer = setTimeout(() => setErrorMessage(null), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [successMessage, errorMessage]);
 
   const isProfileIncomplete = useCallback(() => {
     const incomplete =
@@ -101,14 +115,37 @@ const MemberCard: React.FC<MemberCardProps> = ({ member, profileImage, onClick }
       if (!currentUser || isCurrentUser) return;
 
       if (isFriend) {
-        handleRemoveFriend(member.id, (errorMessage) => alert(errorMessage));
-      } else if (hasSentRequest) { // Annulation si une demande a été envoyée par l'utilisateur courant
-        handleCancelFriendRequest(member.id, (errorMessage) => alert(errorMessage));
+        handleRemoveFriend(member.id, (errorMessage) => {
+          if (errorMessage) {
+            setErrorMessage(errorMessage);
+          } else {
+            setSuccessMessage("Ami supprimé avec succès");
+          }
+        });
+      } else if (hasSentRequest) {
+        handleCancelFriendRequest(member.id, (errorMessage) => {
+          if (errorMessage) {
+            setErrorMessage(errorMessage);
+          } else {
+            setSuccessMessage("Demande d’ami annulée");
+          }
+        });
       } else if (hasReceivedRequest) {
-        handleAcceptFriendRequest(member.id, (errorMessage) => alert(errorMessage));
-        // handleRejectFriendRequest(member.id, (errorMessage) => alert(errorMessage)); // Décommenter si besoin
+        handleAcceptFriendRequest(member.id, (errorMessage) => {
+          if (errorMessage) {
+            setErrorMessage(errorMessage);
+          } else {
+            setSuccessMessage("Demande d’ami acceptée");
+          }
+        });
       } else {
-        handleSendFriendRequest(member.id, (errorMessage) => alert(errorMessage));
+        handleSendFriendRequest(member.id, (errorMessage) => {
+          if (errorMessage) {
+            setErrorMessage(errorMessage);
+          } else {
+            setSuccessMessage("Demande d’ami envoyée");
+          }
+        });
       }
     },
     [
@@ -121,7 +158,6 @@ const MemberCard: React.FC<MemberCardProps> = ({ member, profileImage, onClick }
       handleRemoveFriend,
       handleCancelFriendRequest,
       handleAcceptFriendRequest,
-      handleRejectFriendRequest,
       handleSendFriendRequest,
     ]
   );
@@ -129,7 +165,13 @@ const MemberCard: React.FC<MemberCardProps> = ({ member, profileImage, onClick }
   const handleAccept = useCallback(
     (e: React.MouseEvent) => {
       e.stopPropagation();
-      handleAcceptFriendRequest(member.id, (errorMessage) => alert(errorMessage));
+      handleAcceptFriendRequest(member.id, (errorMessage) => {
+        if (errorMessage) {
+          setErrorMessage(errorMessage);
+        } else {
+          setSuccessMessage("Demande d’ami acceptée");
+        }
+      });
     },
     [member.id, handleAcceptFriendRequest]
   );
@@ -137,7 +179,13 @@ const MemberCard: React.FC<MemberCardProps> = ({ member, profileImage, onClick }
   const handleReject = useCallback(
     (e: React.MouseEvent) => {
       e.stopPropagation();
-      handleRejectFriendRequest(member.id, (errorMessage) => alert(errorMessage));
+      handleRejectFriendRequest(member.id, (errorMessage) => {
+        if (errorMessage) {
+          setErrorMessage(errorMessage);
+        } else {
+          setSuccessMessage("Demande d’ami refusée");
+        }
+      });
     },
     [member.id, handleRejectFriendRequest]
   );
@@ -166,6 +214,12 @@ const MemberCard: React.FC<MemberCardProps> = ({ member, profileImage, onClick }
         </h3>
         <p className="email">{member.email}</p>
       </div>
+      {successMessage && (
+        <p className="success-message">{successMessage}</p>
+      )}
+      {errorMessage && (
+        <p className="error-message">{errorMessage}</p>
+      )}
       <div className="member-details">
         {member.phone && (
           <p>

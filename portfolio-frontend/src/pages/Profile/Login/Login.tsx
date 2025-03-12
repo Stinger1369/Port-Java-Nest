@@ -1,24 +1,48 @@
-import { useState, Suspense } from "react";
+import { useState, Suspense, useEffect } from "react";
 import { useDispatch } from "react-redux";
-import { login, forgotPassword } from "../../../redux/features/authSlice";
+import { login, resendVerificationCode } from "../../../redux/features/authSlice";
 import { useNavigate, Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import "./Login.css";
 
 const Login = () => {
-  const { t, ready } = useTranslation();
+  const { t, i18n, ready } = useTranslation();
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null); // Stocke la clé ou le message brut
+  const [successMessage, setSuccessMessage] = useState<string | null>(null); // Nouveau state pour les messages de succès
   const [unverified, setUnverified] = useState(false);
   const [userNotFound, setUserNotFound] = useState(false);
   const [resendLoading, setResendLoading] = useState(false);
 
-  const handleLogin = async (e) => {
+  // Met à jour dynamiquement les erreurs statiques locales en fonction de la langue
+  useEffect(() => {
+    if (error) {
+      if (error === "login.error.unverified") {
+        setError(t("login.error.unverified"));
+      } else if (error === "login.error.userNotFound") {
+        setError(t("login.error.userNotFound"));
+      } else if (error === "login.error.generic") {
+        setError(t("login.error.generic"));
+      }
+      // Les erreurs backend (ex. "too.many.requests.code") ne sont pas retraduites ici
+    }
+  }, [i18n.language, error, t]);
+
+  // Efface le message de succès après 3 secondes
+  useEffect(() => {
+    if (successMessage) {
+      const timer = setTimeout(() => setSuccessMessage(null), 3000);
+      return () => clearTimeout(timer); // Nettoyage du timer
+    }
+  }, [successMessage]);
+
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    setSuccessMessage(null);
     setUnverified(false);
     setUserNotFound(false);
 
@@ -26,41 +50,55 @@ const Login = () => {
 
     try {
       const result = await dispatch(login({ email, password })).unwrap();
-      navigate("/"); // ✅ Redirection vers la page d'accueil au lieu de /profile
+      navigate("/");
     } catch (err) {
       console.error("❌ Échec de connexion :", err);
-      if (err === "Account not verified. Check your email.") {
-        setError(t("login.error.unverified", "Your account is not yet verified. Check your email."));
+      const errorMsg = String(err);
+      if (errorMsg.includes("Account not verified")) {
+        setError("login.error.unverified"); // Stocke la clé
         setUnverified(true);
-      } else if (err === "User not found.") {
-        setError(t("login.error.userNotFound", "User not found. Would you like to create an account?"));
+      } else if (errorMsg.includes("User not found")) {
+        setError("login.error.userNotFound"); // Stocke la clé
         setUserNotFound(true);
       } else {
-        setError(t("login.error.generic", "Login failed, please check your credentials."));
+        setError(errorMsg); // Utilise directement l'erreur renvoyée par le slice
       }
     }
   };
 
   const handleResendCode = async () => {
     setResendLoading(true);
+    setError(null);
+    setSuccessMessage(null);
     try {
-      await dispatch(forgotPassword({ email })).unwrap();
-      alert(t("login.resendSuccess", "A new verification code has been sent to your email."));
+      const result = await dispatch(resendVerificationCode({ email })).unwrap();
+      setSuccessMessage(t("login.resendSuccess"));
     } catch (err) {
-      alert(t("login.resendError", "Error sending the code."));
+      console.error("❌ Échec de l'envoi du code :", err);
+      const errorMsg = String(err);
+      setError(errorMsg); // Utilise directement l'erreur renvoyée par le backend
     } finally {
       setResendLoading(false);
     }
   };
 
   if (!ready) {
-    return <div>Loading translations...</div>;
+    return <div>{t("login.loadingTranslations")}</div>;
   }
 
   return (
     <div className="login-container">
       <h2>{t("login.title")}</h2>
-      {error && <p className="error-message">{error}</p>}
+      {error && (
+        <p className="error-message">
+          {t(error.includes("login.error.") ? error : "login.error.generic", { defaultValue: error })}
+        </p>
+      )}
+      {successMessage && (
+        <p className="success-message">
+          {successMessage}
+        </p>
+      )}
 
       <form onSubmit={handleLogin}>
         <input
@@ -91,7 +129,7 @@ const Login = () => {
           </button>
           <button
             onClick={handleResendCode}
-            disabled={resendLoading}
+            disabled={resendLoading || !email}
             className="resend-btn"
           >
             {resendLoading ? t("login.resendLoading") : t("login.resendButton")}

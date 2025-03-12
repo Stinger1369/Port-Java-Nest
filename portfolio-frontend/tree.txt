@@ -19,6 +19,7 @@ portfolio-frontend/
 │   ├── App.tsx
 │   ├── assets/
 │   │   └── react.svg
+│   ├── axiosConfig.ts
 │   ├── components/
 │   │   ├── common/
 │   │   │   ├── DatePicker.css

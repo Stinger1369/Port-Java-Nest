@@ -21,7 +21,8 @@ interface User {
   showBirthdate?: boolean;
   likedUserIds?: string[];
   likerUserIds?: string[];
-  imageIds?: string[]; // Déjà présent, mais vérifié
+  imageIds?: string[];
+  isVerified?: boolean; // Ajouté pour refléter le champ du backend
 }
 
 interface UserState {
@@ -81,6 +82,7 @@ export const fetchUser = createAsyncThunk(
         likedUserIds: data.likedUserIds || [],
         likerUserIds: data.likerUserIds || [],
         imageIds: data.imageIds || [],
+        isVerified: data.isVerified || false, // Ajouté
       };
 
       console.log("✅ Utilisateur récupéré:", normalizedData);
@@ -92,6 +94,7 @@ export const fetchUser = createAsyncThunk(
     }
   }
 );
+
 // Récupérer tous les utilisateurs
 export const fetchAllUsers = createAsyncThunk(
   "user/fetchAllUsers",
@@ -116,6 +119,7 @@ export const fetchAllUsers = createAsyncThunk(
           likedUserIds: user.likedUserIds || [],
           likerUserIds: user.likerUserIds || [],
           imageIds: user.imageIds || [],
+          isVerified: user.isVerified || false, // Ajouté
         };
         console.log(`🔍 Utilisateur ${normalizedUser.id} - imageIds:`, normalizedUser.imageIds);
         return normalizedUser;
@@ -126,6 +130,45 @@ export const fetchAllUsers = createAsyncThunk(
     } catch (error: any) {
       console.error("❌ Échec de fetchAllUsers:", error.response?.data || error.message);
       return rejectWithValue(error.response?.data?.error || "Failed to fetch all users");
+    }
+  }
+);
+
+// Récupérer les utilisateurs vérifiés avec profil complet
+export const fetchVerifiedUsers = createAsyncThunk(
+  "user/fetchVerifiedUsers",
+  async (_, { rejectWithValue }) => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        console.warn("❌ Aucun token trouvé dans localStorage");
+        return rejectWithValue("No token found");
+      }
+
+      console.log("🔹 Récupération des utilisateurs vérifiés...");
+      const response = await axios.get(`${BASE_URL}/api/users/verified`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      const users = response.data.map((user: any) => {
+        const normalizedUser: User = {
+          ...user,
+          id: user.id || (user._id?.$oid ?? user._id),
+          birthdate: normalizeBirthdate(user.birthdate),
+          likedUserIds: user.likedUserIds || [],
+          likerUserIds: user.likerUserIds || [],
+          imageIds: user.imageIds || [],
+          isVerified: user.isVerified || false, // Ajouté
+        };
+        console.log(`🔍 Utilisateur vérifié ${normalizedUser.id} - imageIds:`, normalizedUser.imageIds);
+        return normalizedUser;
+      });
+
+      console.log("✅ Liste des utilisateurs vérifiés récupérée:", users);
+      return users;
+    } catch (error: any) {
+      console.error("❌ Échec de fetchVerifiedUsers:", error.response?.data || error.message);
+      return rejectWithValue(error.response?.data?.error || "Failed to fetch verified users");
     }
   }
 );
@@ -148,12 +191,13 @@ export const fetchUserById = createAsyncThunk(
 
       const data = response.data;
       const normalizedData: User = {
-        ...data, // Corrigé : remplacé ...user par ...data
+        ...data,
         id: data.id || (data._id?.$oid ?? data._id),
         birthdate: normalizeBirthdate(data.birthdate),
         likedUserIds: data.likedUserIds || [],
         likerUserIds: data.likerUserIds || [],
         imageIds: data.imageIds || [],
+        isVerified: data.isVerified || false, // Ajouté
       };
 
       console.log("✅ Utilisateur récupéré:", normalizedData);
@@ -184,7 +228,8 @@ export const updateUser = createAsyncThunk(
         showBirthdate: userData.showBirthdate,
         likedUserIds: userData.likedUserIds,
         likerUserIds: userData.likerUserIds,
-        imageIds: userData.imageIds, // Inclure imageIds si fourni
+        imageIds: userData.imageIds,
+        isVerified: userData.isVerified, // Ajouté
       };
 
       Object.keys(payload).forEach((key) => {
@@ -204,7 +249,8 @@ export const updateUser = createAsyncThunk(
         birthdate: normalizeBirthdate(data.birthdate),
         likedUserIds: data.likedUserIds || [],
         likerUserIds: data.likerUserIds || [],
-        imageIds: data.imageIds || [], // Ajout explicite
+        imageIds: data.imageIds || [],
+        isVerified: data.isVerified || false, // Ajouté
       };
 
       console.log("✅ Mise à jour réussie:", normalizedData);
@@ -329,6 +375,19 @@ const userSlice = createSlice({
         state.error = null;
       })
       .addCase(fetchAllUsers.rejected, (state, action) => {
+        state.status = "failed";
+        state.error = action.payload as string;
+      })
+      .addCase(fetchVerifiedUsers.pending, (state) => {
+        state.status = "loading";
+        state.error = null;
+      })
+      .addCase(fetchVerifiedUsers.fulfilled, (state, action: PayloadAction<User[]>) => {
+        state.status = "succeeded";
+        state.members = action.payload;
+        state.error = null;
+      })
+      .addCase(fetchVerifiedUsers.rejected, (state, action) => {
         state.status = "failed";
         state.error = action.payload as string;
       })

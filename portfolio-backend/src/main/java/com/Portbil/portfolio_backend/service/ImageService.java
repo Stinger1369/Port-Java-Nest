@@ -12,6 +12,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -26,7 +27,7 @@ public class ImageService {
     /**
      * Upload d'une image unique
      */
-    public ImageDTO uploadImage(String userId, String name, MultipartFile file, String imageUrl, boolean isNSFW, boolean isProfilePicture) {
+    public ImageDTO uploadImage(String userId, String name, MultipartFile file, String imageUrl, boolean isNSFW, boolean isProfilePicture, Locale locale) {
         try {
             System.out.println("🔹 Début de l'upload d'image pour userId: " + userId + ", name: " + name + ", isProfilePicture: " + isProfilePicture);
             String fullName = imageUrl.substring(imageUrl.lastIndexOf("/") + 1);
@@ -57,7 +58,7 @@ public class ImageService {
                             img.setIsProfilePicture(false);
                             imageRepository.save(img);
                         });
-                userService.updateProfilePictureUrl(userId, "http://localhost:7000/" + savedImage.getPath());
+                userService.updateProfilePictureUrl(userId, "http://localhost:7000/" + savedImage.getPath(), locale);
             }
 
             userRepository.save(user);
@@ -88,7 +89,7 @@ public class ImageService {
     /**
      * Supprimer une image dans MongoDB et mettre à jour l'utilisateur
      */
-    public void deleteImage(String userId, String name) {
+    public void deleteImage(String userId, String name, Locale locale) {
         try {
             System.out.println("🔹 Début de la suppression d'image dans MongoDB pour userId: " + userId + ", name: " + name);
 
@@ -122,7 +123,7 @@ public class ImageService {
                     }
                 }
                 String newProfilePictureUrl = newProfileImage != null ? "http://localhost:7000/" + newProfileImage.getPath() : null;
-                userService.updateProfilePictureUrl(userId, newProfilePictureUrl);
+                userService.updateProfilePictureUrl(userId, newProfilePictureUrl, locale);
             }
 
             userRepository.save(user);
@@ -174,13 +175,12 @@ public class ImageService {
     /**
      * Définir une image comme photo de profil
      */
-    public ImageDTO setProfilePicture(String imageId) {
+    public ImageDTO setProfilePicture(String imageId, Locale locale) {
         try {
             Image image = imageRepository.findById(imageId)
                     .orElseThrow(() -> new IllegalArgumentException("Image introuvable : " + imageId));
             String userId = image.getUserId();
 
-            // Désactiver toutes les autres photos de profil pour cet utilisateur
             imageRepository.findByUserId(userId).stream()
                     .filter(img -> !img.getId().equals(imageId) && img.isProfilePicture())
                     .forEach(img -> {
@@ -188,12 +188,10 @@ public class ImageService {
                         imageRepository.save(img);
                     });
 
-            // Activer cette image comme photo de profil
             image.setIsProfilePicture(true);
             Image updatedImage = imageRepository.save(image);
 
-            // Mettre à jour l'URL de la photo de profil dans User
-            userService.updateProfilePictureUrl(userId, "http://localhost:7000/" + updatedImage.getPath());
+            userService.updateProfilePictureUrl(userId, "http://localhost:7000/" + updatedImage.getPath(), locale);
 
             System.out.println("✅ Image " + imageId + " définie comme photo de profil pour userId: " + userId);
             return mapToDTO(updatedImage);

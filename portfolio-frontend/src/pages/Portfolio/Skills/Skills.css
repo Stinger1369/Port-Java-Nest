@@ -8,14 +8,20 @@
   background-color: #f9f9f9;
   border-radius: 8px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  transition: box-shadow 0.3s ease;
+}
+
+.skills-container:hover {
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
 }
 
 /* Titre principal */
 h2 {
   text-align: center;
-  color: #8e44ad; /* Violet pour un look créatif */
+  color: #8e44ad;
   font-size: 1.8rem;
   margin-bottom: 1.5rem;
+  font-weight: 700;
 }
 
 /* Messages d'état */
@@ -28,7 +34,31 @@ h2 {
 }
 
 .error-text {
-  color: #e74c3c; /* Rouge pour les erreurs */
+  color: #e74c3c;
+}
+
+/* Messages de succès */
+.success-message {
+  font-size: 14px;
+  color: #28a745;
+  background: #e6ffe6;
+  padding: 10px;
+  border-radius: 5px;
+  margin: 10px 0;
+  text-align: center;
+  animation: slideIn 0.3s ease-in-out;
+}
+
+/* Messages d'erreur */
+.error-message {
+  font-size: 14px;
+  color: #e63946;
+  background: #ffe6e6;
+  padding: 10px;
+  border-radius: 5px;
+  margin: 10px 0;
+  text-align: center;
+  animation: slideIn 0.3s ease-in-out;
 }
 
 /* Liste des compétences */
@@ -42,16 +72,17 @@ h2 {
   padding: 15px;
   margin-bottom: 10px;
   border-radius: 5px;
-  border-left: 5px solid #9b59b6; /* Violet foncé pour les compétences */
+  border-left: 5px solid #9b59b6;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  transition: transform 0.2s ease;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .skill-item:hover {
-  transform: translateY(-2px); /* Effet de soulèvement au survol */
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 }
 
 /* Boutons d'action dans la liste */
@@ -63,7 +94,7 @@ h2 {
   padding: 8px 12px;
   border-radius: 5px;
   font-size: 16px;
-  transition: background-color 0.3s ease;
+  transition: background-color 0.3s ease, transform 0.2s ease;
 }
 
 .add-button {
@@ -76,6 +107,7 @@ h2 {
 
 .add-button:hover {
   background-color: #8e44ad;
+  transform: scale(1.05);
 }
 
 .edit-button {
@@ -86,6 +118,7 @@ h2 {
 
 .edit-button:hover {
   background-color: #d4ac0d;
+  transform: scale(1.05);
 }
 
 .delete-button {
@@ -96,6 +129,7 @@ h2 {
 
 .delete-button:hover {
   background-color: #c0392b;
+  transform: scale(1.05);
 }
 
 /* Modal */
@@ -112,6 +146,79 @@ h2 {
   z-index: 1000;
 }
 
+/* Modal de confirmation */
+.confirm-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.confirm-modal-content {
+  background: #ffffff;
+  padding: 20px;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 400px;
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.confirm-modal-content h3 {
+  font-size: 1.5rem;
+  color: #34495e;
+  margin-bottom: 15px;
+  font-weight: 600;
+}
+
+.confirm-modal-content p {
+  font-size: 1rem;
+  color: #64748b;
+  margin-bottom: 20px;
+}
+
+.confirm-modal-actions {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
+.confirm-button,
+.cancel-button {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.confirm-button {
+  background-color: #e74c3c;
+  color: #ffffff;
+}
+
+.confirm-button:hover {
+  background-color: #c0392b;
+  transform: scale(1.05);
+}
+
+.cancel-button {
+  background-color: #9b59b6;
+  color: #ffffff;
+}
+
+.cancel-button:hover {
+  background-color: #8e44ad;
+  transform: scale(1.05);
+}
+
 /* Conteneur principal du formulaire */
 .skill-form-container {
   background: #ffffff;
@@ -120,6 +227,11 @@ h2 {
   width: 400px;
   max-width: 90%;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transition: transform 0.3s ease;
+}
+
+.skill-form-container:hover {
+  transform: scale(1.01);
 }
 
 /* Titre du formulaire */
@@ -136,15 +248,15 @@ h2 {
   width: 100%;
   padding: 0.75rem;
   margin-bottom: 1rem;
-  border: 2px solid #d7bde2; /* Violet clair */
+  border: 2px solid #d7bde2;
   border-radius: 5px;
   font-size: 1rem;
-  background-color: #f4ecf7; /* Fond violet très clair */
+  background-color: #f4ecf7;
   transition: border-color 0.3s ease;
 }
 
 .skill-input:focus {
-  border-color: #9b59b6; /* Violet foncé au focus */
+  border-color: #9b59b6;
   outline: none;
 }
 
@@ -175,6 +287,26 @@ h2 {
   display: block;
 }
 
+/* Style des cases à cocher */
+.skill-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  color: #8e44ad;
+}
+
+.skill-checkbox-label input[type="checkbox"] {
+  width: 1.2rem;
+  height: 1.2rem;
+  accent-color: #9b59b6;
+  transition: transform 0.2s ease;
+}
+
+.skill-checkbox-label input[type="checkbox"]:hover {
+  transform: scale(1.1);
+}
+
 /* Style des boutons du formulaire */
 .skill-button {
   width: 100%;
@@ -185,7 +317,7 @@ h2 {
   cursor: pointer;
   font-size: 1rem;
   font-weight: 500;
-  transition: background-color 0.3s ease;
+  transition: background-color 0.3s ease, transform 0.2s ease;
 }
 
 .skill-button-submit {
@@ -195,6 +327,7 @@ h2 {
 
 .skill-button-submit:hover {
   background-color: #8e44ad;
+  transform: scale(1.05);
 }
 
 .skill-button-cancel {
@@ -204,6 +337,19 @@ h2 {
 
 .skill-button-cancel:hover {
   background-color: #c9a9d0;
+  transform: scale(1.05);
+}
+
+/* Animation pour les messages */
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* Style responsif */
@@ -239,6 +385,25 @@ h2 {
   .skill-input,
   .skill-textarea,
   .skill-button {
+    font-size: 0.9rem;
+  }
+
+  .confirm-modal-content {
+    padding: 15px;
+    max-width: 300px;
+  }
+
+  .confirm-modal-content h3 {
+    font-size: 1.3rem;
+  }
+
+  .confirm-modal-content p {
+    font-size: 0.9rem;
+  }
+
+  .confirm-button,
+  .cancel-button {
+    padding: 8px 15px;
     font-size: 0.9rem;
   }
 }

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "../../../redux/store";
 import { addExperience, fetchExperiencesByUser } from "../../../redux/features/experienceSlice";
@@ -21,14 +21,15 @@ const AddExperience = ({ onClose }: Props) => {
     description: "",
     isPublic: false,
   });
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  // Vérifier si tous les champs obligatoires sont remplis
   const isFormValid = () => {
     const requiredFields = experience.companyName && experience.jobTitle && experience.startDate;
     if (experience.currentlyWorking) {
-      return requiredFields; // Pas besoin de endDate si currentlyWorking est true
+      return requiredFields;
     }
-    return requiredFields && experience.endDate; // endDate est requis si currentlyWorking est false
+    return requiredFields && experience.endDate;
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -38,7 +39,6 @@ const AddExperience = ({ onClose }: Props) => {
         ...prev,
         [name]: type === "checkbox" ? checked : value,
       };
-      // Si currentlyWorking est true, vide le champ endDate
       if (name === "currentlyWorking" && checked) {
         updatedExperience.endDate = "";
       }
@@ -59,25 +59,44 @@ const AddExperience = ({ onClose }: Props) => {
     const userId = localStorage.getItem("userId");
     if (!userId) {
       console.error("❌ Erreur : ID utilisateur manquant.");
+      setErrorMessage("Erreur : ID utilisateur manquant.");
       return;
     }
 
     dispatch(addExperience({ ...experience, userId }))
       .unwrap()
       .then(() => {
+        setSuccessMessage("Expérience ajoutée avec succès !");
         dispatch(fetchExperiencesByUser(userId));
-        onClose();
+        setTimeout(() => onClose(), 3000); // Ferme après 3 secondes
       })
       .catch((err) => {
         console.error("❌ Erreur lors de l'ajout de l'expérience:", err);
-        alert("Erreur lors de l'ajout de l'expérience.");
+        setErrorMessage("Erreur lors de l’ajout de l’expérience.");
       });
   };
+
+  useEffect(() => {
+    if (successMessage) {
+      const timer = setTimeout(() => setSuccessMessage(null), 3000);
+      return () => clearTimeout(timer);
+    }
+    if (errorMessage) {
+      const timer = setTimeout(() => setErrorMessage(null), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [successMessage, errorMessage]);
 
   return (
     <div className="modal">
       <div className="experience-form-container">
         <h3 className="experience-form-title">Ajouter une Expérience</h3>
+        {successMessage && (
+          <p className="success-message">{successMessage}</p>
+        )}
+        {errorMessage && (
+          <p className="error-message">{errorMessage}</p>
+        )}
         <form onSubmit={handleSubmit}>
           <label className="experience-label">Nom de l'entreprise *</label>
           <input
@@ -152,7 +171,7 @@ const AddExperience = ({ onClose }: Props) => {
           <button
             type="submit"
             className="experience-button experience-button-submit"
-            disabled={!isFormValid()} // Désactiver si le formulaire n'est pas valide
+            disabled={!isFormValid()}
           >
             Ajouter
           </button>

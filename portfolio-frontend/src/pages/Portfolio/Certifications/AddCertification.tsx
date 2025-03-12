@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "../../../redux/store";
 import { addCertification, fetchCertificationsByUser } from "../../../redux/features/certificationSlice";
@@ -22,6 +22,8 @@ const AddCertification = ({ onClose }: Props) => {
     credentialUrl: "",
     isPublic: false,
   });
+  const [successMessage, setSuccessMessage] = useState<string | null>(null); // Nouveau state pour le succès
+  const [errorMessage, setErrorMessage] = useState<string | null>(null); // Nouveau state pour les erreurs
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
@@ -44,10 +46,10 @@ const AddCertification = ({ onClose }: Props) => {
     const userId = localStorage.getItem("userId");
     if (!userId) {
       console.error("❌ Erreur : ID utilisateur manquant.");
+      setErrorMessage("Erreur : ID utilisateur manquant.");
       return;
     }
 
-    // Si la certification n'expire pas, on ignore expirationDate
     const certificationData = certification.doesNotExpire
       ? { ...certification, expirationDate: null }
       : certification;
@@ -55,19 +57,38 @@ const AddCertification = ({ onClose }: Props) => {
     dispatch(addCertification({ ...certificationData, userId }))
       .unwrap()
       .then(() => {
+        setSuccessMessage("Certification ajoutée avec succès !");
         dispatch(fetchCertificationsByUser(userId));
-        onClose();
+        setTimeout(() => onClose(), 3000); // Ferme après 3 secondes
       })
       .catch((err) => {
         console.error("❌ Erreur lors de l'ajout de la certification:", err);
-        alert("Erreur lors de l'ajout de la certification.");
+        setErrorMessage("Erreur lors de l’ajout de la certification.");
       });
   };
+
+  // Efface les messages après 3 secondes
+  useEffect(() => {
+    if (successMessage) {
+      const timer = setTimeout(() => setSuccessMessage(null), 3000);
+      return () => clearTimeout(timer);
+    }
+    if (errorMessage) {
+      const timer = setTimeout(() => setErrorMessage(null), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [successMessage, errorMessage]);
 
   return (
     <div className="modal">
       <div className="certification-form-container">
         <h3 className="certification-form-title">Ajouter une Certification</h3>
+        {successMessage && (
+          <p className="success-message">{successMessage}</p>
+        )}
+        {errorMessage && (
+          <p className="error-message">{errorMessage}</p>
+        )}
         <form onSubmit={handleSubmit}>
           <label className="certification-label">Nom de la certification *</label>
           <input

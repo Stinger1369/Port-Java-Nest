@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "../../../../redux/store";
 import { addEducation, fetchEducationsByUser } from "../../../../redux/features/educationSlice";
@@ -20,16 +20,17 @@ const AddEducation = ({ onClose }: Props) => {
     endDate: "",
     currentlyStudying: false,
     description: "",
-    isPublic: false, // Ajouté
+    isPublic: false,
   });
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  // Vérifier si tous les champs obligatoires sont remplis
   const isFormValid = () => {
     const requiredFields = education.schoolName && education.degree && education.startDate;
     if (education.currentlyStudying) {
-      return requiredFields; // Pas besoin de endDate si currentlyStudying est true
+      return requiredFields;
     }
-    return requiredFields && education.endDate; // endDate est requis si currentlyStudying est false
+    return requiredFields && education.endDate;
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -39,7 +40,6 @@ const AddEducation = ({ onClose }: Props) => {
         ...prev,
         [name]: type === "checkbox" ? checked : value,
       };
-      // Si currentlyStudying est true, vide le champ endDate
       if (name === "currentlyStudying" && checked) {
         updatedEducation.endDate = "";
       }
@@ -57,28 +57,47 @@ const AddEducation = ({ onClose }: Props) => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    const userId = localStorage.getItem("userId"); // Utilisation de localStorage comme fallback
+    const userId = localStorage.getItem("userId");
     if (!userId) {
       console.error("❌ Erreur : ID utilisateur manquant.");
+      setErrorMessage("Erreur : ID utilisateur manquant.");
       return;
     }
 
     dispatch(addEducation({ ...education, userId }))
       .unwrap()
       .then(() => {
-        dispatch(fetchEducationsByUser(userId)); // Rafraîchit la liste
-        onClose();
+        setSuccessMessage("Formation ajoutée avec succès !");
+        dispatch(fetchEducationsByUser(userId));
+        setTimeout(() => onClose(), 3000); // Ferme après 3 secondes
       })
       .catch((err) => {
         console.error("❌ Erreur lors de l'ajout de la formation:", err);
-        alert("Erreur lors de l'ajout de la formation.");
+        setErrorMessage("Erreur lors de l’ajout de la formation.");
       });
   };
+
+  useEffect(() => {
+    if (successMessage) {
+      const timer = setTimeout(() => setSuccessMessage(null), 3000);
+      return () => clearTimeout(timer);
+    }
+    if (errorMessage) {
+      const timer = setTimeout(() => setErrorMessage(null), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [successMessage, errorMessage]);
 
   return (
     <div className="modal-overlay">
       <div className="education-form-container">
         <h3 className="education-form-title">Ajouter une Formation</h3>
+        {successMessage && (
+          <p className="success-message">{successMessage}</p>
+        )}
+        {errorMessage && (
+          <p className="error-message">{errorMessage}</p>
+        )}
         <form onSubmit={handleSubmit}>
           <label className="education-label">Nom de l'école *</label>
           <input

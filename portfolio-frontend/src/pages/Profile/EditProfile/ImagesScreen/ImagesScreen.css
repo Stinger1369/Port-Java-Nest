@@ -1,18 +1,20 @@
+/* src/pages/Profile/EditProfile/ImagesScreen/ImagesScreen.css */
+
 /* Variables globales pour cohérence */
 :root {
-  --primary-color: #7b3fe4; /* Violet moderne */
-  --secondary-color: #00e7ff; /* Cyan lumineux */
-  --background-color: #f8fafc; /* Fond gris très clair */
-  --card-background: #ffffff; /* Fond blanc pour les cartes */
-  --text-color: #1e293b; /* Gris foncé élégant */
+  --primary-color: #7b3fe4;
+  --secondary-color: #00e7ff;
+  --background-color: #f8fafc;
+  --card-background: #ffffff;
+  --text-color: #1e293b;
   --button-bg: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
   --button-hover: linear-gradient(135deg, #6a2bc3, #00b8d4);
   --shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   --border-radius: 12px;
   --transition: all 0.3s ease;
-  --error-color: #ef4444; /* Rouge moderne */
-  --success-color: #10b981; /* Vert émeraude */
-  --icon-active-color: #9ca3af; /* Gris pour icône active */
+  --error-color: #ef4444;
+  --success-color: #10b981;
+  --icon-active-color: #9ca3af;
 }
 
 /* Conteneur principal */
@@ -61,6 +63,30 @@
 
 .images-screen .success {
   color: var(--success-color);
+}
+
+/* Messages de succès */
+.success-message {
+  font-size: 1rem;
+  color: var(--success-color);
+  background: rgba(16, 185, 129, 0.1); /* Fond vert clair */
+  padding: 0.75rem;
+  border-radius: var(--border-radius);
+  margin: 0.5rem 0;
+  text-align: center;
+  animation: slideIn 0.3s ease-in-out;
+}
+
+/* Messages d'erreur */
+.error-message {
+  font-size: 1rem;
+  color: var(--error-color);
+  background: rgba(239, 68, 68, 0.1); /* Fond rouge clair */
+  padding: 0.75rem;
+  border-radius: var(--border-radius);
+  margin: 0.5rem 0;
+  text-align: center;
+  animation: slideIn 0.3s ease-in-out;
 }
 
 /* Label */
@@ -250,11 +276,46 @@
   margin-top: 2rem;
 }
 
+/* Boutons de navigation */
+.navigation-buttons {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 20px;
+}
+
+.nav-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: var(--button-bg);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: var(--transition);
+  box-shadow: var(--shadow);
+}
+
+.nav-button:hover {
+  background: var(--button-hover);
+  transform: translateY(-2px);
+}
+
+.back-button {
+  background: linear-gradient(135deg, #6b7280, #4b5563);
+}
+
+.back-button:hover {
+  background: linear-gradient(135deg, #4b5563, #374151);
+}
+
 /* Animation */
-@keyframes fadeIn {
+@keyframes slideIn {
   from {
     opacity: 0;
-    transform: translateY(20px);
+    transform: translateY(10px);
   }
   to {
     opacity: 1;
@@ -302,5 +363,10 @@
 
   .images-grid {
     grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  }
+
+  .nav-button {
+    width: 35px;
+    height: 35px;
   }
 }

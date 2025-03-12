@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "../../../redux/store";
 import { addProject, fetchProjectsByUser } from "../../../redux/features/projectSlice";
@@ -21,10 +21,10 @@ const AddProject = ({ onClose }: Props) => {
     startDate: "",
     endDate: "",
     currentlyWorkingOn: false,
-    isPublic: false, // Ajouté
+    isPublic: false,
   });
-
   const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [displayStartDate, setDisplayStartDate] = useState("");
   const [displayEndDate, setDisplayEndDate] = useState("");
 
@@ -86,19 +86,35 @@ const AddProject = ({ onClose }: Props) => {
     }))
       .unwrap()
       .then(() => {
+        setSuccessMessage("Projet ajouté avec succès !");
         dispatch(fetchProjectsByUser(userId));
-        onClose();
+        setTimeout(() => onClose(), 3000); // Ferme après 3 secondes
       })
       .catch((err) => {
-        setError("Erreur lors de l'ajout du projet. Veuillez réessayer.");
+        setError("Erreur lors de l’ajout du projet. Veuillez réessayer.");
         console.error(err);
       });
   };
+
+  useEffect(() => {
+    if (successMessage) {
+      const timer = setTimeout(() => setSuccessMessage(null), 3000);
+      return () => clearTimeout(timer);
+    }
+    if (error) {
+      const timer = setTimeout(() => setError(null), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [successMessage, error]);
 
   return (
     <div className="modal">
       <div className="project-form-container">
         <h3 className="project-form-title">Ajouter un Projet</h3>
+        {successMessage && (
+          <p className="success-message">{successMessage}</p>
+        )}
+        {error && <p className="project-error-message">{error}</p>}
         <form onSubmit={handleSubmit}>
           <input
             type="text"
@@ -175,7 +191,6 @@ const AddProject = ({ onClose }: Props) => {
             />
             Public
           </label>
-          {error && <p className="project-error-message">{error}</p>}
           <button type="submit" className="project-button project-button-submit">Ajouter</button>
           <button type="button" className="project-button project-button-cancel" onClick={onClose}>Annuler</button>
         </form>

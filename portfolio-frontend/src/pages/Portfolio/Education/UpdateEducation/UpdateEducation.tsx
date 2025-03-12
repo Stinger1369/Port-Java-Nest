@@ -15,7 +15,7 @@ interface Props {
     endDate?: string;
     currentlyStudying: boolean;
     description?: string;
-    isPublic?: boolean; // Ajouté
+    isPublic?: boolean;
   };
   onClose: () => void;
 }
@@ -24,18 +24,30 @@ const UpdateEducation = ({ education, onClose }: Props) => {
   const dispatch = useDispatch<AppDispatch>();
 
   const [updatedEducation, setUpdatedEducation] = useState(education);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
     setUpdatedEducation(education);
   }, [education]);
 
-  // Vérifier si tous les champs obligatoires sont remplis
+  useEffect(() => {
+    if (successMessage) {
+      const timer = setTimeout(() => setSuccessMessage(null), 3000);
+      return () => clearTimeout(timer);
+    }
+    if (errorMessage) {
+      const timer = setTimeout(() => setErrorMessage(null), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [successMessage, errorMessage]);
+
   const isFormValid = () => {
     const requiredFields = updatedEducation.schoolName && updatedEducation.degree && updatedEducation.startDate;
     if (updatedEducation.currentlyStudying) {
-      return requiredFields; // Pas besoin de endDate si currentlyStudying est true
+      return requiredFields;
     }
-    return requiredFields && updatedEducation.endDate; // endDate est requis si currentlyStudying est false
+    return requiredFields && updatedEducation.endDate;
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -55,21 +67,23 @@ const UpdateEducation = ({ education, onClose }: Props) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const userId = localStorage.getItem("userId"); // Utilisation de localStorage comme fallback
+    const userId = localStorage.getItem("userId");
     if (!userId) {
       console.error("❌ Erreur : ID utilisateur manquant.");
+      setErrorMessage("Erreur : ID utilisateur manquant.");
       return;
     }
 
     dispatch(updateEducation({ id: updatedEducation.id, educationData: updatedEducation }))
       .unwrap()
       .then(() => {
-        dispatch(fetchEducationsByUser(userId)); // Rafraîchit la liste
-        onClose();
+        setSuccessMessage("Formation mise à jour avec succès !");
+        dispatch(fetchEducationsByUser(userId));
+        setTimeout(() => onClose(), 3000); // Ferme après 3 secondes
       })
       .catch((err) => {
         console.error("❌ Erreur lors de la mise à jour de la formation:", err);
-        alert("Erreur lors de la mise à jour de la formation.");
+        setErrorMessage("Erreur lors de la mise à jour de la formation.");
       });
   };
 
@@ -77,6 +91,12 @@ const UpdateEducation = ({ education, onClose }: Props) => {
     <div className="modal-overlay">
       <div className="education-form-container">
         <h3 className="education-form-title">Modifier la Formation</h3>
+        {successMessage && (
+          <p className="success-message">{successMessage}</p>
+        )}
+        {errorMessage && (
+          <p className="error-message">{errorMessage}</p>
+        )}
         <form onSubmit={handleSubmit}>
           <label className="education-label">Nom de l'école *</label>
           <input

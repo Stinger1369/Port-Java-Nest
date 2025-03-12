@@ -36,6 +36,8 @@ const UpdateCertification = ({ certification, onClose }: Props) => {
     credentialUrl: certification.credentialUrl || "",
     isPublic: certification.isPublic || false,
   });
+  const [successMessage, setSuccessMessage] = useState<string | null>(null); // Nouveau state pour le succès
+  const [errorMessage, setErrorMessage] = useState<string | null>(null); // Nouveau state pour les erreurs
 
   useEffect(() => {
     if (certification) {
@@ -52,6 +54,18 @@ const UpdateCertification = ({ certification, onClose }: Props) => {
       });
     }
   }, [certification]);
+
+  // Efface les messages après 3 secondes
+  useEffect(() => {
+    if (successMessage) {
+      const timer = setTimeout(() => setSuccessMessage(null), 3000);
+      return () => clearTimeout(timer);
+    }
+    if (errorMessage) {
+      const timer = setTimeout(() => setErrorMessage(null), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [successMessage, errorMessage]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
@@ -72,7 +86,6 @@ const UpdateCertification = ({ certification, onClose }: Props) => {
     e.preventDefault();
     const userId = localStorage.getItem("userId");
     if (userId) {
-      // Si la certification n'expire pas, on ignore expirationDate
       const certificationData = updatedCertification.doesNotExpire
         ? { ...updatedCertification, expirationDate: null }
         : updatedCertification;
@@ -80,12 +93,13 @@ const UpdateCertification = ({ certification, onClose }: Props) => {
       dispatch(updateCertification({ id: updatedCertification.id, certificationData }))
         .unwrap()
         .then(() => {
+          setSuccessMessage("Certification mise à jour avec succès !");
           dispatch(fetchCertificationsByUser(userId));
-          onClose();
+          setTimeout(() => onClose(), 3000); // Ferme après 3 secondes
         })
         .catch((err) => {
           console.error("❌ Erreur lors de la mise à jour de la certification:", err);
-          alert("Erreur lors de la mise à jour de la certification.");
+          setErrorMessage("Erreur lors de la mise à jour de la certification.");
         });
     }
   };
@@ -94,6 +108,12 @@ const UpdateCertification = ({ certification, onClose }: Props) => {
     <div className="modal">
       <div className="certification-form-container">
         <h3 className="certification-form-title">Modifier la Certification</h3>
+        {successMessage && (
+          <p className="success-message">{successMessage}</p>
+        )}
+        {errorMessage && (
+          <p className="error-message">{errorMessage}</p>
+        )}
         <form onSubmit={handleSubmit}>
           <label className="certification-label">Nom de la certification *</label>
           <input

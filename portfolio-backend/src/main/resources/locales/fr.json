@@ -16,6 +16,20 @@
     "clearNotifications": "Effacer les notifications",
     "contactHistory": "Historique des contacts"
   },
+  "verifyAccount": {
+    "title": "Vérification du compte",
+    "message": "Un code de vérification a été envoyé à ",
+    "validity": "Il est valide pendant 15 minutes.",
+    "invalidCode": "Veuillez entrer un code de 6 chiffres.",
+    "success": "Votre compte a été vérifié avec succès ! Vous pouvez maintenant vous connecter.",
+    "verificationFailed": "Échec de la vérification. Veuillez vérifier votre code.",
+    "resendSuccess": "Un nouveau code a été envoyé à votre email.",
+    "resendError": "Erreur lors de l'envoi du nouveau code.",
+    "resendLoading": "Envoi en cours...",
+    "resendButton": "Renvoyer un nouveau code",
+    "resendDisabled": "Attendre {{minutes}} min",
+    "tooManyRequests": "Trop de demandes de code. Veuillez attendre {{minutes}} minutes."
+  },
   "notification": {
     "title": "Notifications",
     "friends": "Amis",
@@ -50,14 +64,16 @@
       "userNotFound": "Utilisateur non trouvé. Voulez-vous créer un compte ?",
       "generic": "Échec de la connexion, vérifiez vos identifiants."
     },
-    "verifyPrompt": "Votre compte n'est pas encore vérifié.",
-    "verifyButton": "Vérifier mon compte",
-    "resendButton": "Renvoyer le code",
-    "resendLoading": "Envoi en cours...",
+    "verifyPrompt": "Vérifiez votre compte pour continuer.",
+    "verifyButton": "Vérifier maintenant",
     "resendSuccess": "Un nouveau code de vérification a été envoyé à votre email.",
     "resendError": "Erreur lors de l'envoi du code.",
+    "resendLoading": "Envoi en cours...",
+    "resendButton": "Renvoyer le code",
     "registerButton": "Créer un compte",
-    "forgotPassword": "Mot de passe oublié ?"
+    "forgotPassword": "Mot de passe oublié ?",
+    "loadingTranslations": "Chargement des traductions...",
+    "tooManyRequests": "Trop de demandes de code. Veuillez attendre {{minutes}} minutes."
   },
   "register": {
     "title": "Créer un compte",

@@ -6,6 +6,8 @@ import com.Portbil.portfolio_backend.service.UserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Locale;
+
 @RestController
 @RequestMapping("/api/google-maps")
 public class GoogleMapsController {
@@ -19,8 +21,11 @@ public class GoogleMapsController {
     }
 
     @PutMapping("/address/{userId}")
-    public ResponseEntity<User> updateUserAddress(@PathVariable String userId) {
-        User updatedUser = userService.updateUserAddressFromCoordinates(userId);
+    public ResponseEntity<User> updateUserAddress(
+            @PathVariable String userId,
+            @RequestHeader(value = "Accept-Language", defaultValue = "en") String lang) {
+        Locale locale = Locale.forLanguageTag(lang);
+        User updatedUser = userService.updateUserAddressFromCoordinates(userId, locale);
         return ResponseEntity.ok(updatedUser);
     }
 }

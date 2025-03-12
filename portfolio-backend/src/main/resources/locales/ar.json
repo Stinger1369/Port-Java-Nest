@@ -13,6 +13,20 @@
     "offersReceived": "العروض المستلمة",
     "messagesReceived": "الرسائل المستلمة"
   },
+  "verifyAccount": {
+    "title": "تأكيد الحساب",
+    "message": "تم إرسال رمز التحقق إلى ",
+    "validity": "وهو صالح لمدة 15 دقيقة.",
+    "invalidCode": "يرجى إدخال رمز مكون من 6 أرقام.",
+    "success": "تم التحقق من حسابك بنجاح! يمكنك الآن تسجيل الدخول.",
+    "verificationFailed": "فشل التحقق. يرجى التحقق من رمزك.",
+    "resendSuccess": "تم إرسال رمز جديد إلى بريدك الإلكتروني.",
+    "resendError": "خطأ أثناء إرسال الرمز الجديد.",
+    "resendLoading": "جارٍ الإرسال...",
+    "resendButton": "إعادة إرسال رمز جديد",
+    "resendDisabled": "انتظر {{minutes}} دقيقة",
+    "tooManyRequests": "طلبات رمز كثيرة جدًا. يرجى الانتظار {{minutes}} دقيقة."
+  },
   "profile": {
     "title": "ملفي الشخصي",
     "name": "الاسم",
@@ -44,14 +58,16 @@
       "userNotFound": "المستخدم غير موجود. هل تريد إنشاء حساب؟",
       "generic": "فشل تسجيل الدخول، تحقق من بياناتك."
     },
-    "verifyPrompt": "حسابك لم يتم التحقق منه بعد.",
-    "verifyButton": "التحقق من حسابي",
-    "resendButton": "إعادة إرسال الرمز",
-    "resendLoading": "جارٍ الإرسال...",
+    "verifyPrompt": "تحقق من حسابك للمتابعة.",
+    "verifyButton": "تحقق الآن",
     "resendSuccess": "تم إرسال رمز تحقق جديد إلى بريدك الإلكتروني.",
     "resendError": "خطأ أثناء إرسال الرمز.",
+    "resendLoading": "جارٍ الإرسال...",
+    "resendButton": "إعادة إرسال الرمز",
     "registerButton": "إنشاء حساب",
-    "forgotPassword": "نسيت كلمة المرور؟"
+    "forgotPassword": "نسيت كلمة المرور؟",
+    "loadingTranslations": "جارٍ تحميل الترجمات...",
+    "tooManyRequests": "طلبات رمز كثيرة جدًا. يرجى الانتظار {{minutes}} دقيقة."
   },
   "register": {
     "title": "إنشاء حساب",

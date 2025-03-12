@@ -15,12 +15,27 @@ const Projects = () => {
 
   const [showAddForm, setShowAddForm] = useState(false);
   const [selectedProject, setSelectedProject] = useState<any>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [projectIdToDelete, setProjectIdToDelete] = useState<string | null>(null);
 
   useEffect(() => {
     if (userId) {
       dispatch(fetchProjectsByUser(userId));
     }
   }, [dispatch, userId]);
+
+  useEffect(() => {
+    if (successMessage) {
+      const timer = setTimeout(() => setSuccessMessage(null), 3000);
+      return () => clearTimeout(timer);
+    }
+    if (errorMessage) {
+      const timer = setTimeout(() => setErrorMessage(null), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [successMessage, errorMessage]);
 
   const handleTogglePublic = (projectId: string) => {
     const project = projects.find((proj) => proj.id === projectId);
@@ -43,33 +58,52 @@ const Projects = () => {
       )
         .unwrap()
         .then(() => {
+          setSuccessMessage("Visibilité du projet mise à jour avec succès !");
           dispatch(fetchProjectsByUser(userId));
         })
         .catch((err) => {
           console.error("❌ Erreur lors de la mise à jour de la visibilité du projet:", err);
-          alert("Erreur lors de la mise à jour de la visibilité du projet.");
+          setErrorMessage("Erreur lors de la mise à jour de la visibilité du projet.");
         });
     }
   };
 
   const handleDeleteProject = (projectId: string) => {
-    if (userId) {
-      dispatch(deleteProject(projectId))
+    setProjectIdToDelete(projectId);
+    setShowConfirmModal(true);
+  };
+
+  const confirmDelete = () => {
+    if (projectIdToDelete && userId) {
+      dispatch(deleteProject(projectIdToDelete))
         .unwrap()
         .then(() => {
+          setSuccessMessage("Projet supprimé avec succès !");
           dispatch(fetchProjectsByUser(userId));
         })
         .catch((err) => {
           console.error("❌ Erreur lors de la suppression du projet:", err);
-          alert("Erreur lors de la suppression du projet.");
+          setErrorMessage("Erreur lors de la suppression du projet.");
         });
     }
+    setShowConfirmModal(false);
+    setProjectIdToDelete(null);
+  };
+
+  const cancelDelete = () => {
+    setShowConfirmModal(false);
+    setProjectIdToDelete(null);
   };
 
   return (
     <div className="projects-container">
       <h2>Projets Réalisés</h2>
-
+      {successMessage && (
+        <p className="success-message">{successMessage}</p>
+      )}
+      {errorMessage && (
+        <p className="error-message">{errorMessage}</p>
+      )}
       {status === "loading" && <p className="loading-text">Chargement des projets...</p>}
       {status === "failed" && <p className="error-text">Erreur : {error}</p>}
 
@@ -113,6 +147,19 @@ const Projects = () => {
 
       {showAddForm && <AddProject onClose={() => setShowAddForm(false)} />}
       {selectedProject && <UpdateProject project={selectedProject} onClose={() => setSelectedProject(null)} />}
+
+      {showConfirmModal && (
+        <div className="confirm-modal-overlay">
+          <div className="confirm-modal-content">
+            <h3>Confirmer la suppression</h3>
+            <p>Voulez-vous vraiment supprimer ce projet ?</p>
+            <div className="confirm-modal-actions">
+              <button className="confirm-button" onClick={confirmDelete}>Oui</button>
+              <button className="cancel-button" onClick={cancelDelete}>Non</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

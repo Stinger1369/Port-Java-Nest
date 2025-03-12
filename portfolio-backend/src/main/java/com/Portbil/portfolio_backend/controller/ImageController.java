@@ -28,6 +28,7 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 
 @RestController
 @RequestMapping("/api/images")
@@ -39,14 +40,16 @@ public class ImageController {
     private final ObjectMapper objectMapper;
 
     @Value("${app.image.go-api-url}")
-    private String goApiUrlBase; // Injecte la propriété depuis application.yml
+    private String goApiUrlBase;
 
     @PostMapping("/upload")
     public ResponseEntity<ImageDTO> uploadImage(
             @RequestParam("userId") String userId,
             @RequestParam("name") String name,
             @RequestParam("file") MultipartFile file,
-            @RequestParam(value = "isProfilePicture", defaultValue = "false") boolean isProfilePicture) {
+            @RequestParam(value = "isProfilePicture", defaultValue = "false") boolean isProfilePicture,
+            @RequestHeader(value = "Accept-Language", defaultValue = "en") String lang) {
+        Locale locale = Locale.forLanguageTag(lang);
         try {
             System.out.println("🔹 Début de l'upload d'image pour userId: " + userId + ", name: " + name + ", isProfilePicture: " + isProfilePicture);
 
@@ -65,7 +68,7 @@ public class ImageController {
 
             HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
 
-            String goApiUrl = goApiUrlBase + "/ajouter-image"; // Construire l'URL avec la base
+            String goApiUrl = goApiUrlBase + "/ajouter-image";
             System.out.println("🔹 Envoi de la requête au serveur Go: URL = " + goApiUrl + ", Headers = " + headers);
             ResponseEntity<String> goResponse = restTemplate.postForEntity(
                     goApiUrl,
@@ -78,7 +81,8 @@ public class ImageController {
                 String imageUrl = extractImageUrl(goResponse.getBody());
                 boolean isNSFW = checkNSFWFromResponse(goResponse.getBody());
 
-                ImageDTO imageDTO = imageService.uploadImage(userId, name, file, imageUrl, isNSFW, isProfilePicture);
+                // Passage de la Locale à la méthode uploadImage
+                ImageDTO imageDTO = imageService.uploadImage(userId, name, file, imageUrl, isNSFW, isProfilePicture, locale);
                 System.out.println("✅ ImageDTO créé et sauvegardé avec succès: " + imageDTO);
 
                 tempFile.delete();
@@ -117,7 +121,7 @@ public class ImageController {
             );
 
             if (goResponse.getStatusCode().is2xxSuccessful()) {
-                List<ImageDTO> images = imageService.getAllImagesByUserId(userId); // Remplacement de getUserImages par getAllImagesByUserId
+                List<ImageDTO> images = imageService.getAllImagesByUserId(userId);
                 System.out.println("✅ Images récupérées pour userId: " + userId + " - " + images);
                 return ResponseEntity.ok(images);
             } else {
@@ -134,7 +138,11 @@ public class ImageController {
     }
 
     @DeleteMapping("/delete/{userId}/{name}")
-    public ResponseEntity<Void> deleteImage(@PathVariable String userId, @PathVariable String name) {
+    public ResponseEntity<Void> deleteImage(
+            @PathVariable String userId,
+            @PathVariable String name,
+            @RequestHeader(value = "Accept-Language", defaultValue = "en") String lang) {
+        Locale locale = Locale.forLanguageTag(lang);
         try {
             String goApiUrl = goApiUrlBase + "/delete-image/" + userId + "/" + name;
             HttpHeaders headers = new HttpHeaders();
@@ -148,7 +156,7 @@ public class ImageController {
             );
 
             if (goResponse.getStatusCode().is2xxSuccessful()) {
-                imageService.deleteImage(userId, name);
+                imageService.deleteImage(userId, name, locale); // Ajout de Locale
                 System.out.println("✅ Image supprimée pour userId: " + userId + ", name: " + name);
                 return ResponseEntity.noContent().build();
             } else {
@@ -258,10 +266,13 @@ public class ImageController {
     }
 
     @PutMapping("/set-profile-picture/{imageId}")
-    public ResponseEntity<ImageDTO> setProfilePicture(@PathVariable String imageId) {
+    public ResponseEntity<ImageDTO> setProfilePicture(
+            @PathVariable String imageId,
+            @RequestHeader(value = "Accept-Language", defaultValue = "en") String lang) {
+        Locale locale = Locale.forLanguageTag(lang);
         try {
             System.out.println("🔹 Tentative de définir l'image " + imageId + " comme photo de profil");
-            ImageDTO updatedImage = imageService.setProfilePicture(imageId);
+            ImageDTO updatedImage = imageService.setProfilePicture(imageId, locale); // Ajout de Locale
             System.out.println("✅ Image définie comme photo de profil: " + updatedImage);
             return ResponseEntity.ok(updatedImage);
         } catch (Exception e) {

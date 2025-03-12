@@ -2,10 +2,10 @@ import { Suspense, useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState, AppDispatch } from "./redux/store";
-import { fetchAllUsers } from "./redux/features/userSlice";
+import { fetchVerifiedUsers } from "./redux/features/userSlice"; // Remplacé fetchAllUsers
 import { useWebSocket } from "./hooks/useWebSocket";
 import Navbar from "./components/Navbar/Navbar";
-import Footer from "./components/Footer/Footer"; // Importez le nouveau Footer
+import Footer from "./components/Footer/Footer";
 import Home from "./pages/Home/Home";
 import Login from "./pages/Profile/Login/Login";
 import Register from "./pages/Profile/Register/Register";
@@ -47,8 +47,11 @@ const App = () => {
 
   useEffect(() => {
     if (token) {
-      console.log("🔍 Utilisateur authentifié, récupération de tous les utilisateurs...");
-      dispatch(fetchAllUsers());
+      console.log("🔍 Utilisateur authentifié, récupération des utilisateurs vérifiés...");
+      dispatch(fetchVerifiedUsers())
+        .unwrap()
+        .then((result) => console.log("✅ Utilisateurs vérifiés chargés:", result.length))
+        .catch((err) => console.error("❌ Erreur chargement utilisateurs vérifiés:", err));
     } else {
       console.log("🔍 Aucun token trouvé, l'utilisateur n'est pas authentifié.");
     }
@@ -104,7 +107,7 @@ const App = () => {
               <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
             </Routes>
           </main>
-          <Footer /> {/* Ajout du Footer ici */}
+          <Footer />
         </Suspense>
       </div>
     </Router>

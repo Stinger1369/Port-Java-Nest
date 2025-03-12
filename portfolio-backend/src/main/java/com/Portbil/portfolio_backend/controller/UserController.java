@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -27,9 +28,6 @@ public class UserController {
     private static final Logger log = LoggerFactory.getLogger(UserController.class);
     private final UserService userService;
 
-    /**
-     * ✅ Récupérer tous les utilisateurs (réservé aux admins)
-     */
     @GetMapping
     @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<List<User>> getAllUsers() {
@@ -37,9 +35,6 @@ public class UserController {
         return ResponseEntity.ok(userService.getAllUsers());
     }
 
-    /**
-     * ✅ Récupérer tous les utilisateurs pour les utilisateurs authentifiés
-     */
     @GetMapping("/all")
     public ResponseEntity<List<UserDTO>> getAllUsersForAuthenticated() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -69,11 +64,11 @@ public class UserController {
                         .showBirthdate(user.isShowBirthdate())
                         .likedUserIds(user.getLikedUserIds())
                         .likerUserIds(user.getLikerUserIds())
-                        .imageIds(user.getImageIds()) // Ajout de imageIds
+                        .imageIds(user.getImageIds())
                         .latitude(user.getLatitude() != null ? user.getLatitude().toString() : null)
                         .longitude(user.getLongitude() != null ? user.getLongitude().toString() : null)
-                        .friendIds(user.getFriendIds()) // Ajouté
-                        .friendRequestSentIds(user.getFriendRequestSentIds()) // Ajouté
+                        .friendIds(user.getFriendIds())
+                        .friendRequestSentIds(user.getFriendRequestSentIds())
                         .friendRequestReceivedIds(user.getFriendRequestReceivedIds())
                         .build())
                 .collect(Collectors.toList());
@@ -81,10 +76,53 @@ public class UserController {
         System.out.println("✅ Tous les utilisateurs récupérés pour l'utilisateur authentifié: " + userDTOs);
         return ResponseEntity.ok(userDTOs);
     }
+    @GetMapping("/verified")
+    public ResponseEntity<List<UserDTO>> getVerifiedUsers() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-    /**
-     * ✅ Récupérer un utilisateur par son ID
-     */
+        if (authentication == null || authentication.getPrincipal() == null || "anonymousUser".equals(authentication.getName())) {
+            System.out.println("❌ Tentative d'accès non authentifié à /api/users/verified");
+            return ResponseEntity.status(403).body(null);
+        }
+
+        System.out.println("🔹 Récupération des utilisateurs vérifiés pour: " + authentication.getName());
+        List<User> users = userService.getAllUsers();
+
+        // Filtrer les utilisateurs vérifiés avec profil complet
+        List<UserDTO> verifiedUserDTOs = users.stream()
+                .filter(user -> user.isVerified() &&
+                        user.getFirstName() != null && !user.getFirstName().trim().isEmpty() &&
+                        user.getLastName() != null && !user.getLastName().trim().isEmpty())
+                .map(user -> UserDTO.builder()
+                        .id(user.getId())
+                        .email(user.getEmail())
+                        .firstName(user.getFirstName())
+                        .lastName(user.getLastName())
+                        .phone(user.getPhone())
+                        .address(user.getAddress())
+                        .city(user.getCity())
+                        .country(user.getCountry())
+                        .sex(user.getSex())
+                        .slug(user.getSlug())
+                        .bio(user.getBio())
+                        .birthdate(user.getBirthdate())
+                        .age(user.getAge())
+                        .showBirthdate(user.isShowBirthdate())
+                        .likedUserIds(user.getLikedUserIds())
+                        .likerUserIds(user.getLikerUserIds())
+                        .imageIds(user.getImageIds())
+                        .latitude(user.getLatitude() != null ? user.getLatitude().toString() : null)
+                        .longitude(user.getLongitude() != null ? user.getLongitude().toString() : null)
+                        .friendIds(user.getFriendIds())
+                        .friendRequestSentIds(user.getFriendRequestSentIds())
+                        .friendRequestReceivedIds(user.getFriendRequestReceivedIds())
+                        .isVerified(user.isVerified()) // Ajouté
+                        .build())
+                .collect(Collectors.toList());
+
+        System.out.println("✅ Utilisateurs vérifiés récupérés: " + verifiedUserDTOs.size());
+        return ResponseEntity.ok(verifiedUserDTOs);
+    }
     @GetMapping("/{id}")
     @PreAuthorize("hasAuthority('ADMIN') or #id == authentication.principal.username")
     public ResponseEntity<UserDTO> getUserById(@PathVariable String id) {
@@ -95,7 +133,7 @@ public class UserController {
             return ResponseEntity.notFound().build();
         }
 
-        User user = userOpt.get(); // Extraire l'objet User après vérification
+        User user = userOpt.get();
         System.out.println("✅ Utilisateur trouvé : " + user.getEmail());
         System.out.println("Phone renvoyé au frontend : " + user.getPhone());
         System.out.println("Sex et Bio renvoyés au frontend : sex=" + user.getSex() +
@@ -106,9 +144,9 @@ public class UserController {
                 ", likedUserIds=" + user.getLikedUserIds() +
                 ", likerUserIds=" + user.getLikerUserIds() +
                 ", imageIds=" + user.getImageIds() +
-                ", friendIds=" + user.getFriendIds() + // Ajouté pour log
-                ", friendRequestSentIds=" + user.getFriendRequestSentIds() + // Ajouté pour log
-                ", friendRequestReceivedIds=" + user.getFriendRequestReceivedIds()); // Ajouté pour log
+                ", friendIds=" + user.getFriendIds() +
+                ", friendRequestSentIds=" + user.getFriendRequestSentIds() +
+                ", friendRequestReceivedIds=" + user.getFriendRequestReceivedIds());
 
         UserDTO userDTO = UserDTO.builder()
                 .id(user.getId())
@@ -127,24 +165,23 @@ public class UserController {
                 .showBirthdate(user.isShowBirthdate())
                 .likedUserIds(user.getLikedUserIds())
                 .likerUserIds(user.getLikerUserIds())
-                .imageIds(user.getImageIds()) // Ajout de imageIds
+                .imageIds(user.getImageIds())
                 .latitude(user.getLatitude() != null ? user.getLatitude().toString() : null)
                 .longitude(user.getLongitude() != null ? user.getLongitude().toString() : null)
-                .friendIds(user.getFriendIds()) // Corrigé
-                .friendRequestSentIds(user.getFriendRequestSentIds()) // Corrigé
-                .friendRequestReceivedIds(user.getFriendRequestReceivedIds()) // Corrigé
+                .friendIds(user.getFriendIds())
+                .friendRequestSentIds(user.getFriendRequestSentIds())
+                .friendRequestReceivedIds(user.getFriendRequestReceivedIds())
                 .build();
         return ResponseEntity.ok(userDTO);
     }
 
-    /**
-     * ✅ Modifier un utilisateur (gérer à la fois les mises à jour complètes et les coordonnées seules)
-     */
     @PutMapping("/{id}")
     @PreAuthorize("#id == authentication.principal.username")
     public ResponseEntity<?> updateUser(
             @PathVariable String id,
-            @RequestBody Map<String, Object> requestBody) {
+            @RequestBody Map<String, Object> requestBody,
+            @RequestHeader(value = "Accept-Language", defaultValue = "en") String lang) {
+        Locale locale = Locale.forLanguageTag(lang);
         log.debug("Requête PUT reçue pour l'utilisateur ID: {}, JSON brut reçu: {}", id, requestBody);
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -172,7 +209,7 @@ public class UserController {
                 coordinatesDTO.setLatitude(Double.valueOf(requestBody.get("latitude").toString()));
                 coordinatesDTO.setLongitude(Double.valueOf(requestBody.get("longitude").toString()));
 
-                Optional<User> updatedUserOpt = userService.updateUserCoordinates(id, coordinatesDTO);
+                Optional<User> updatedUserOpt = userService.updateUserCoordinates(id, coordinatesDTO, locale);
                 if (updatedUserOpt.isEmpty()) {
                     log.error("❌ Mise à jour des coordonnées impossible, utilisateur non trouvé : {}", id);
                     return ResponseEntity.notFound().build();
@@ -196,12 +233,12 @@ public class UserController {
                         .showBirthdate(updatedUser.isShowBirthdate())
                         .likedUserIds(updatedUser.getLikedUserIds())
                         .likerUserIds(updatedUser.getLikerUserIds())
-                        .imageIds(updatedUser.getImageIds()) // Ajout de imageIds
+                        .imageIds(updatedUser.getImageIds())
                         .latitude(updatedUser.getLatitude() != null ? updatedUser.getLatitude().toString() : null)
                         .longitude(updatedUser.getLongitude() != null ? updatedUser.getLongitude().toString() : null)
-                        .friendIds(updatedUser.getFriendIds()) // Corrigé
-                        .friendRequestSentIds(updatedUser.getFriendRequestSentIds()) // Corrigé
-                        .friendRequestReceivedIds(updatedUser.getFriendRequestReceivedIds()) // Corrigé
+                        .friendIds(updatedUser.getFriendIds())
+                        .friendRequestSentIds(updatedUser.getFriendRequestSentIds())
+                        .friendRequestReceivedIds(updatedUser.getFriendRequestReceivedIds())
                         .build();
 
                 log.info("✅ Mise à jour des coordonnées réussie pour l'utilisateur ID: {}", id);
@@ -224,7 +261,7 @@ public class UserController {
                         .longitude(requestBody.get("longitude") != null ? String.valueOf(requestBody.get("longitude")) : null)
                         .build();
 
-                Optional<User> updatedUserOpt = userService.updateUser(id, userDTO);
+                Optional<User> updatedUserOpt = userService.updateUser(id, userDTO, locale);
                 if (updatedUserOpt.isEmpty()) {
                     log.error("❌ Mise à jour impossible, utilisateur non trouvé : {}", id);
                     return ResponseEntity.notFound().build();
@@ -248,12 +285,12 @@ public class UserController {
                         .showBirthdate(updatedUser.isShowBirthdate())
                         .likedUserIds(updatedUser.getLikedUserIds())
                         .likerUserIds(updatedUser.getLikerUserIds())
-                        .imageIds(updatedUser.getImageIds()) // Ajout de imageIds
+                        .imageIds(updatedUser.getImageIds())
                         .latitude(updatedUser.getLatitude() != null ? updatedUser.getLatitude().toString() : null)
                         .longitude(updatedUser.getLongitude() != null ? updatedUser.getLongitude().toString() : null)
-                        .friendIds(updatedUser.getFriendIds()) // Corrigé
-                        .friendRequestSentIds(updatedUser.getFriendRequestSentIds()) // Corrigé
-                        .friendRequestReceivedIds(updatedUser.getFriendRequestReceivedIds()) // Corrigé
+                        .friendIds(updatedUser.getFriendIds())
+                        .friendRequestSentIds(updatedUser.getFriendRequestSentIds())
+                        .friendRequestReceivedIds(updatedUser.getFriendRequestReceivedIds())
                         .build();
 
                 log.info("✅ Mise à jour réussie pour l'utilisateur ID: {}", id);
@@ -268,12 +305,12 @@ public class UserController {
         }
     }
 
-    /**
-     * ✅ Supprimer un utilisateur
-     */
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAuthority('ADMIN') or #id == authentication.principal.username")
-    public ResponseEntity<Void> deleteUser(@PathVariable String id) {
+    public ResponseEntity<Void> deleteUser(
+            @PathVariable String id,
+            @RequestHeader(value = "Accept-Language", defaultValue = "en") String lang) {
+        Locale locale = Locale.forLanguageTag(lang);
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
         System.out.println("🔹 Tentative de suppression de l'utilisateur ID: " + id);
@@ -284,7 +321,6 @@ public class UserController {
         }
 
         String authenticatedUserId = authentication.getName();
-
         System.out.println("✅ Utilisateur connecté avec ID : " + authenticatedUserId);
 
         if (!authenticatedUserId.equals(id) && !authentication.getAuthorities().stream()
@@ -294,7 +330,7 @@ public class UserController {
         }
 
         try {
-            userService.deleteUser(id);
+            userService.deleteUser(id); // Pas besoin de Locale ici car pas d'exception traduite
             System.out.println("✅ Suppression réussie pour l'utilisateur ID: " + id);
             return ResponseEntity.noContent().build();
         } catch (IllegalArgumentException e) {
@@ -303,35 +339,37 @@ public class UserController {
         }
     }
 
-    /**
-     * ✅ Ajouter un "like" à un utilisateur
-     */
     @PostMapping("/{likerId}/like/{likedId}")
     @PreAuthorize("#likerId == authentication.principal.username")
-    public ResponseEntity<Void> likeUser(@PathVariable String likerId, @PathVariable String likedId) {
+    public ResponseEntity<Void> likeUser(
+            @PathVariable String likerId,
+            @PathVariable String likedId,
+            @RequestHeader(value = "Accept-Language", defaultValue = "en") String lang) {
+        Locale locale = Locale.forLanguageTag(lang);
         System.out.println("🔹 Tentative de like de " + likedId + " par " + likerId);
         try {
-            userService.likeUser(likerId, likedId);
+            userService.likeUser(likerId, likedId, locale);
             return ResponseEntity.ok().build();
         } catch (IllegalArgumentException | IllegalStateException e) {
             System.out.println("❌ Erreur lors du like : " + e.getMessage());
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.badRequest().body(null); // Retourne Void, pas de message
         }
     }
 
-    /**
-     * ✅ Retirer un "like" d'un utilisateur
-     */
     @DeleteMapping("/{likerId}/unlike/{likedId}")
     @PreAuthorize("#likerId == authentication.principal.username")
-    public ResponseEntity<Void> unlikeUser(@PathVariable String likerId, @PathVariable String likedId) {
+    public ResponseEntity<Void> unlikeUser(
+            @PathVariable String likerId,
+            @PathVariable String likedId,
+            @RequestHeader(value = "Accept-Language", defaultValue = "en") String lang) {
+        Locale locale = Locale.forLanguageTag(lang);
         System.out.println("🔹 Tentative de unlike de " + likedId + " par " + likerId);
         try {
-            userService.unlikeUser(likerId, likedId);
+            userService.unlikeUser(likerId, likedId, locale);
             return ResponseEntity.noContent().build();
         } catch (IllegalArgumentException | IllegalStateException e) {
             System.out.println("❌ Erreur lors du unlike : " + e.getMessage());
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.badRequest().body(null); // Retourne Void, pas de message
         }
     }
 }

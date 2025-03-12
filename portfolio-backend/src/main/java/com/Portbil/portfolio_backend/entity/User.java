@@ -57,6 +57,11 @@ public class User implements UserDetails {
     private boolean isVerified;
     private String confirmationCode;
 
+    // Nouveaux champs pour la limitation de débit
+    private LocalDateTime lastVerificationCodeRequest; // Dernière demande de code
+    @Builder.Default
+    private int verificationCodeRequestCount = 0; // Nombre de demandes dans la période
+
     // Liste des IDs des éléments du portfolio
     @Builder.Default
     private List<String> educationIds = new ArrayList<>();

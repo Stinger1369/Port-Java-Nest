@@ -32,6 +32,8 @@ const UpdateExperience = ({ experience, onClose }: Props) => {
     description: experience.description || "",
     isPublic: experience.isPublic || false,
   });
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
     if (experience) {
@@ -48,13 +50,23 @@ const UpdateExperience = ({ experience, onClose }: Props) => {
     }
   }, [experience]);
 
-  // Vérifier si tous les champs obligatoires sont remplis
+  useEffect(() => {
+    if (successMessage) {
+      const timer = setTimeout(() => setSuccessMessage(null), 3000);
+      return () => clearTimeout(timer);
+    }
+    if (errorMessage) {
+      const timer = setTimeout(() => setErrorMessage(null), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [successMessage, errorMessage]);
+
   const isFormValid = () => {
     const requiredFields = updatedExperience.companyName && updatedExperience.jobTitle && updatedExperience.startDate;
     if (updatedExperience.currentlyWorking) {
-      return requiredFields; // Pas besoin de endDate si currentlyWorking est true
+      return requiredFields;
     }
-    return requiredFields && updatedExperience.endDate; // endDate est requis si currentlyWorking est false
+    return requiredFields && updatedExperience.endDate;
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -64,7 +76,6 @@ const UpdateExperience = ({ experience, onClose }: Props) => {
         ...prev,
         [name]: type === "checkbox" ? checked : value,
       };
-      // Si currentlyWorking est true, vide le champ endDate
       if (name === "currentlyWorking" && checked) {
         updatedExp.endDate = "";
       }
@@ -86,12 +97,13 @@ const UpdateExperience = ({ experience, onClose }: Props) => {
       dispatch(updateExperience({ id: updatedExperience.id, experienceData: updatedExperience }))
         .unwrap()
         .then(() => {
+          setSuccessMessage("Expérience mise à jour avec succès !");
           dispatch(fetchExperiencesByUser(userId));
-          onClose();
+          setTimeout(() => onClose(), 3000); // Ferme après 3 secondes
         })
         .catch((err) => {
           console.error("❌ Erreur lors de la mise à jour de l'expérience:", err);
-          alert("Erreur lors de la mise à jour de l'expérience.");
+          setErrorMessage("Erreur lors de la mise à jour de l’expérience.");
         });
     }
   };
@@ -100,6 +112,12 @@ const UpdateExperience = ({ experience, onClose }: Props) => {
     <div className="modal">
       <div className="experience-form-container">
         <h3 className="experience-form-title">Modifier l'Expérience</h3>
+        {successMessage && (
+          <p className="success-message">{successMessage}</p>
+        )}
+        {errorMessage && (
+          <p className="error-message">{errorMessage}</p>
+        )}
         <form onSubmit={handleSubmit}>
           <label className="experience-label">Nom de l'entreprise *</label>
           <input
@@ -171,7 +189,7 @@ const UpdateExperience = ({ experience, onClose }: Props) => {
           <button
             type="submit"
             className="experience-button experience-button-submit"
-            disabled={!isFormValid()} // Désactiver si le formulaire n'est pas valide
+            disabled={!isFormValid()}
           >
             Mettre à jour
           </button>

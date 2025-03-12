@@ -32,4 +32,36 @@ public class EmailTemplateService {
 
         return templateEngine.process("contact-request-email", context);
     }
+
+    /**
+     * Génère le contenu HTML pour l'email de vérification de compte
+     */
+    public String generateVerificationEmail(
+            String userName,
+            String verificationCode,
+            String slug,
+            String verificationLink
+    ) {
+        Context context = new Context();
+        context.setVariable("userName", userName != null ? userName : "Utilisateur");
+        context.setVariable("verificationCode", verificationCode);
+        context.setVariable("slug", slug);
+        context.setVariable("verificationLink", verificationLink);
+
+        return templateEngine.process("verify-account-email", context);
+    }
+
+    /**
+     * Génère le contenu HTML pour l'email de réinitialisation de mot de passe
+     */
+    public String generateResetPasswordEmail(
+            String userName,
+            String resetLink
+    ) {
+        Context context = new Context();
+        context.setVariable("userName", userName != null ? userName : "Utilisateur");
+        context.setVariable("resetLink", resetLink);
+
+        return templateEngine.process("reset-password-email", context);
+    }
 }

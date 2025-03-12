@@ -90,6 +90,33 @@
   cursor: not-allowed;
 }
 
+/* Bouton de renvoi */
+.resend-btn {
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #075e54;
+  background-color: #fff;
+  border: 2px solid #075e54;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-top: 20px;
+  transition: all 0.3s ease;
+}
+
+.resend-btn:hover:not(:disabled) {
+  background-color: #e0f7ec;
+  color: #064f45;
+}
+
+.resend-btn:disabled {
+  background-color: #f0f0f0;
+  color: #999;
+  border-color: #ccc;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
 /* Messages de succès et d’erreur */
 .success-message {
   font-size: 16px;
@@ -144,6 +171,12 @@
   .verify-account-button {
     padding: 8px 16px;
     font-size: 14px;
+  }
+
+  .resend-btn {
+    padding: 6px 12px;
+    font-size: 12px;
+    margin-top: 15px;
   }
 
   .success-message,
