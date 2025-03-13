@@ -1,8 +1,8 @@
 package com.Portbil.portfolio_backend.dto;
 
 import com.fasterxml.jackson.annotation.JsonAlias;
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Builder;
 import lombok.Data;
 
@@ -25,17 +25,16 @@ public class UserDTO {
     private String country;
     private String sex;
 
-    // Champs pour les "likes"
     private List<String> likedUserIds;
     private List<String> likerUserIds;
-
-    // Champ pour les images
     private List<String> imageIds;
-
-    // Nouveaux champs pour les amis
     private List<String> friendIds;
     private List<String> friendRequestSentIds;
     private List<String> friendRequestReceivedIds;
+
+    // Nouveaux champs pour blocage et signalement
+    private List<String> blockedUserIds; // Utilisateurs bloqués
+    private List<String> reportedByUserIds; // Utilisateurs ayant signalé
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
     private LocalDate birthdate;
@@ -45,22 +44,20 @@ public class UserDTO {
     private String slug;
     private String bio;
     private String profilePictureUrl;
+
     @JsonAlias({"latitude", "lat"})
     private String latitude;
 
     @JsonAlias({"longitude", "lon"})
     private String longitude;
 
-    // Champ pour les conversations
     private List<String> chatIds;
 
-    // Nouveaux champs pour la limitation de débit (optionnels dans le DTO)
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime lastVerificationCodeRequest;
     private int verificationCodeRequestCount;
 
-    // Ajout du champ isVerified
-    private boolean isVerified; // Ajouté
+    private boolean isVerified;
 
     public Double getLatitudeAsDouble() {
         if (latitude == null) return null;

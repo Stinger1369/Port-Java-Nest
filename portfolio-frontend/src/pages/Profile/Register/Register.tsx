@@ -1,8 +1,9 @@
 import { useState, Suspense, useEffect } from "react";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { register } from "../../../redux/features/authSlice";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { RootState } from "../../../redux/store"; // Assurez-vous d'importer RootState
 import "./Register.css";
 
 const Register = () => {
@@ -12,21 +13,33 @@ const Register = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [error, setError] = useState<string | null>(null); // Stocke la clé ou le message brut
+  const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
-  // Met à jour dynamiquement les erreurs en fonction de la langue
+  // Récupérer l'état de limitation depuis Redux
+  const { resendCooldownUntil, remainingMinutes } = useSelector((state: RootState) => state.auth);
+
+  // Gestion dynamique des erreurs locales
   useEffect(() => {
     if (error) {
-      // Si l'erreur est une clé statique locale, retraduire avec la langue actuelle
       if (error === "register.error.passwordMismatch") {
         setError(t("register.error.passwordMismatch"));
       } else if (error === "register.error.generic") {
         setError(t("register.error.generic"));
       }
-      // Les erreurs backend (ex. "email.already.used") restent telles quelles
     }
   }, [i18n.language, error, t]);
+
+  // Efface le message de succès après 3 secondes et redirige
+  useEffect(() => {
+    if (successMessage) {
+      const timer = setTimeout(() => {
+        setSuccessMessage(null);
+        navigate(`/verify-account?email=${encodeURIComponent(email)}`);
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [successMessage, email, navigate]);
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,7 +47,12 @@ const Register = () => {
     setSuccessMessage(null);
 
     if (password !== confirmPassword) {
-      setError("register.error.passwordMismatch"); // Stocke la clé, pas la traduction
+      setError("register.error.passwordMismatch");
+      return;
+    }
+
+    if (resendCooldownUntil && resendCooldownUntil > Date.now()) {
+      setError(t("register.error.tooManyRequests", { minutes: remainingMinutes }));
       return;
     }
 
@@ -42,16 +60,13 @@ const Register = () => {
       const result = await dispatch(register({ email, password }) as any);
       if (register.fulfilled.match(result)) {
         setSuccessMessage(t("register.success"));
-        setTimeout(() => {
-          navigate(`/verify-account?email=${encodeURIComponent(email)}`);
-        }, 3000);
       } else {
         console.log("Erreur brute reçue du backend :", result.payload);
-        setError(result.payload as string); // Affiche directement le message traduit du backend
+        setError(result.payload as string);
       }
     } catch (err: any) {
       console.error("Erreur inattendue :", err);
-      setError(err.message || "register.error.generic"); // Stocke la clé comme fallback
+      setError(err.message || "register.error.generic");
     }
   };
 
@@ -90,7 +105,14 @@ const Register = () => {
           onChange={(e) => setConfirmPassword(e.target.value)}
           required
         />
-        <button type="submit">{t("register.submit")}</button>
+        <button
+          type="submit"
+          disabled={resendCooldownUntil && resendCooldownUntil > Date.now()}
+        >
+          {resendCooldownUntil && resendCooldownUntil > Date.now()
+            ? t("register.submitDisabled", { minutes: remainingMinutes })
+            : t("register.submit")}
+        </button>
       </form>
     </div>
   );

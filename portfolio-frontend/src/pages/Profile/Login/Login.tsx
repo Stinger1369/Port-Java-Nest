@@ -1,8 +1,9 @@
 import { useState, Suspense, useEffect } from "react";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { login, resendVerificationCode } from "../../../redux/features/authSlice";
 import { useNavigate, Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { RootState } from "../../../redux/store"; // Assurez-vous d'importer RootState
 import "./Login.css";
 
 const Login = () => {
@@ -11,23 +12,20 @@ const Login = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState<string | null>(null); // Stocke la clé ou le message brut
-  const [successMessage, setSuccessMessage] = useState<string | null>(null); // Nouveau state pour les messages de succès
+  const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [unverified, setUnverified] = useState(false);
   const [userNotFound, setUserNotFound] = useState(false);
+  const [invalidPassword, setInvalidPassword] = useState(false);
   const [resendLoading, setResendLoading] = useState(false);
 
-  // Met à jour dynamiquement les erreurs statiques locales en fonction de la langue
+  // Récupérer l'état de limitation depuis Redux
+  const { resendCooldownUntil, remainingMinutes } = useSelector((state: RootState) => state.auth);
+
+  // Gestion dynamique des erreurs locales
   useEffect(() => {
-    if (error) {
-      if (error === "login.error.unverified") {
-        setError(t("login.error.unverified"));
-      } else if (error === "login.error.userNotFound") {
-        setError(t("login.error.userNotFound"));
-      } else if (error === "login.error.generic") {
-        setError(t("login.error.generic"));
-      }
-      // Les erreurs backend (ex. "too.many.requests.code") ne sont pas retraduites ici
+    if (error && error.includes("login.error.")) {
+      setError(t(error));
     }
   }, [i18n.language, error, t]);
 
@@ -35,9 +33,25 @@ const Login = () => {
   useEffect(() => {
     if (successMessage) {
       const timer = setTimeout(() => setSuccessMessage(null), 3000);
-      return () => clearTimeout(timer); // Nettoyage du timer
+      return () => clearTimeout(timer);
     }
   }, [successMessage]);
+
+  // Met à jour le temps restant pour le bouton "Renvoyer le code"
+  useEffect(() => {
+    if (resendCooldownUntil) {
+      const interval = setInterval(() => {
+        const now = Date.now();
+        const diffMs = resendCooldownUntil - now;
+        const minutesLeft = Math.ceil(diffMs / 60000); // Conversion en minutes
+        if (minutesLeft <= 0) {
+          // Pas besoin de réinitialiser ici, Redux le gère
+          clearInterval(interval);
+        }
+      }, 1000); // Mise à jour chaque seconde
+      return () => clearInterval(interval);
+    }
+  }, [resendCooldownUntil]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,6 +59,7 @@ const Login = () => {
     setSuccessMessage(null);
     setUnverified(false);
     setUserNotFound(false);
+    setInvalidPassword(false);
 
     console.log("📤 Données envoyées :", { email, password });
 
@@ -53,15 +68,22 @@ const Login = () => {
       navigate("/");
     } catch (err) {
       console.error("❌ Échec de connexion :", err);
-      const errorMsg = String(err);
-      if (errorMsg.includes("Account not verified")) {
-        setError("login.error.unverified"); // Stocke la clé
+      const errorMsg = String(err).toLowerCase();
+
+      if (errorMsg.includes("account not verified") || errorMsg.includes("compte non vérifié")) {
+        setError(errorMsg);
         setUnverified(true);
-      } else if (errorMsg.includes("User not found")) {
-        setError("login.error.userNotFound"); // Stocke la clé
+      } else if (errorMsg.includes("user not found") || errorMsg.includes("aucun utilisateur trouvé")) {
+        setError(errorMsg);
         setUserNotFound(true);
+      } else if (errorMsg.includes("invalid password") || errorMsg.includes("mot de passe invalide")) {
+        setError(errorMsg);
+        setInvalidPassword(true);
+      } else if (errorMsg.includes("authentication failed") || errorMsg.includes("échec de l'authentification")) {
+        setError(t("login.error.generic"));
+        setInvalidPassword(true);
       } else {
-        setError(errorMsg); // Utilise directement l'erreur renvoyée par le slice
+        setError(errorMsg);
       }
     }
   };
@@ -70,13 +92,14 @@ const Login = () => {
     setResendLoading(true);
     setError(null);
     setSuccessMessage(null);
+
     try {
       const result = await dispatch(resendVerificationCode({ email })).unwrap();
       setSuccessMessage(t("login.resendSuccess"));
     } catch (err) {
       console.error("❌ Échec de l'envoi du code :", err);
-      const errorMsg = String(err);
-      setError(errorMsg); // Utilise directement l'erreur renvoyée par le backend
+      const errorMsg = String(err).toLowerCase();
+      setError(errorMsg);
     } finally {
       setResendLoading(false);
     }
@@ -91,7 +114,7 @@ const Login = () => {
       <h2>{t("login.title")}</h2>
       {error && (
         <p className="error-message">
-          {t(error.includes("login.error.") ? error : "login.error.generic", { defaultValue: error })}
+          {error.includes("login.error.") ? t(error) : error}
         </p>
       )}
       {successMessage && (
@@ -129,16 +152,21 @@ const Login = () => {
           </button>
           <button
             onClick={handleResendCode}
-            disabled={resendLoading || !email}
+            disabled={resendLoading || !email || (resendCooldownUntil && resendCooldownUntil > Date.now())}
             className="resend-btn"
           >
-            {resendLoading ? t("login.resendLoading") : t("login.resendButton")}
+            {resendLoading
+              ? t("login.resendLoading")
+              : resendCooldownUntil && resendCooldownUntil > Date.now()
+              ? t("login.resendDisabled", { minutes: remainingMinutes })
+              : t("login.resendButton")}
           </button>
         </div>
       )}
 
       {userNotFound && (
         <div className="register-option">
+          <p>{t("login.error.userNotFound")}</p>
           <button
             onClick={() => navigate("/register")}
             className="register-btn"
@@ -148,9 +176,23 @@ const Login = () => {
         </div>
       )}
 
-      <p>
-        <Link to="/forgot-password">{t("login.forgotPassword")}</Link>
-      </p>
+      {invalidPassword && (
+        <div className="password-options">
+          <p>{t("login.error.generic")}</p>
+          <button
+            onClick={() => navigate("/forgot-password")}
+            className="forgot-password-btn"
+          >
+            {t("login.forgotPassword")}
+          </button>
+        </div>
+      )}
+
+      {!unverified && !userNotFound && !invalidPassword && (
+        <p>
+          <Link to="/forgot-password">{t("login.forgotPassword")}</Link>
+        </p>
+      )}
     </div>
   );
 };

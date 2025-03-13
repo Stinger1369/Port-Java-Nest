@@ -1,8 +1,8 @@
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
-import axios from "../../axiosConfig"; // Import avec intercepteur
+import axios from "../../axiosConfig";
 import { BASE_URL } from "../../config/hostname";
 import { fetchUser } from "./userSlice";
-import i18n from "../../i18n"; // Pour traduire les fallbacks
+import i18n from "../../i18n";
 
 // Définition du type pour l'état de l'authentification
 interface AuthState {
@@ -11,18 +11,22 @@ interface AuthState {
   loading: boolean;
   error: string | null;
   message: string | null;
+  resendCooldownUntil: number | null; // Timestamp (ms) jusqu'à quand le renvoi est bloqué
+  remainingMinutes: number | null; // Minutes restantes avant de pouvoir renvoyer
 }
 
-// ✅ État initial
+// État initial
 const initialState: AuthState = {
   userId: localStorage.getItem("userId"),
   token: localStorage.getItem("token"),
   loading: false,
   error: null,
   message: null,
+  resendCooldownUntil: null,
+  remainingMinutes: null,
 };
 
-// ✅ Connexion utilisateur
+// Connexion utilisateur
 export const login = createAsyncThunk(
   "auth/login",
   async ({ email, password }: { email: string; password: string }, { rejectWithValue, dispatch }) => {
@@ -44,19 +48,20 @@ export const login = createAsyncThunk(
       return { token, userId, message: response.data.message };
     } catch (error: any) {
       console.error("❌ Login failed:", error.response?.data?.error || error.message);
-      // Utilise le message traduit du backend s'il existe, sinon traduit via i18n
       return rejectWithValue(error.response?.data?.error || i18n.t("login.error.generic"));
     }
   }
 );
 
-// ✅ Inscription utilisateur
+// Inscription utilisateur
 export const register = createAsyncThunk(
   "auth/register",
   async ({ email, password }: { email: string; password: string }, { rejectWithValue }) => {
     try {
       const response = await axios.post(`${BASE_URL}/api/auth/register`, { email, password });
-      return response.data;
+      // Après une inscription réussie, désactiver le renvoi pendant 15 minutes
+      const cooldownUntil = Date.now() + 15 * 60 * 1000; // 15 minutes en millisecondes
+      return { ...response.data, resendCooldownUntil: cooldownUntil };
     } catch (error: any) {
       console.error("Erreur backend :", error.response?.data?.error);
       return rejectWithValue(error.response?.data?.error || i18n.t("register.error.generic"));
@@ -64,7 +69,7 @@ export const register = createAsyncThunk(
   }
 );
 
-// ✅ Vérification du code reçu par email
+// Vérification du code reçu par email
 export const verifyEmail = createAsyncThunk(
   "auth/verifyEmail",
   async ({ email, code }: { email: string; code: string }, { rejectWithValue }) => {
@@ -79,14 +84,16 @@ export const verifyEmail = createAsyncThunk(
   }
 );
 
-// ✅ Renvoyer un nouveau code de vérification
+// Renvoyer un nouveau code de vérification
 export const resendVerificationCode = createAsyncThunk(
   "auth/resendVerificationCode",
   async ({ email }: { email: string }, { rejectWithValue }) => {
     try {
       const response = await axios.post(`${BASE_URL}/api/auth/resend-verification`, { email });
       console.log("✅ Nouveau code envoyé :", response.data);
-      return response.data;
+      // Désactiver le renvoi pendant 15 minutes après un succès
+      const cooldownUntil = Date.now() + 15 * 60 * 1000; // 15 minutes en millisecondes
+      return { ...response.data, resendCooldownUntil: cooldownUntil };
     } catch (error: any) {
       console.error("❌ Échec de l'envoi du code :", error.response?.data?.error || error.message);
       return rejectWithValue(error.response?.data?.error || i18n.t("verifyAccount.resendError"));
@@ -94,7 +101,7 @@ export const resendVerificationCode = createAsyncThunk(
   }
 );
 
-// ✅ Demande de réinitialisation du mot de passe
+// Demande de réinitialisation du mot de passe
 export const forgotPassword = createAsyncThunk(
   "auth/forgotPassword",
   async ({ email }: { email: string }, { rejectWithValue }) => {
@@ -107,7 +114,7 @@ export const forgotPassword = createAsyncThunk(
   }
 );
 
-// ✅ Réinitialisation du mot de passe
+// Réinitialisation du mot de passe
 export const resetPassword = createAsyncThunk(
   "auth/resetPassword",
   async ({ token, newPassword }: { token: string; newPassword: string }, { rejectWithValue }) => {
@@ -121,15 +128,15 @@ export const resetPassword = createAsyncThunk(
   }
 );
 
-// ✅ Déconnexion utilisateur
+// Déconnexion utilisateur
 export const logout = createAsyncThunk("auth/logout", async (_, { dispatch }) => {
   localStorage.removeItem("token");
   localStorage.removeItem("userId");
   dispatch(clearAuthState());
-  return { message: i18n.t("navbar.logout") }; // Traduit dynamiquement
+  return { message: i18n.t("navbar.logout") };
 });
 
-// ✅ Création du slice Redux
+// Création du slice Redux
 const authSlice = createSlice({
   name: "auth",
   initialState,
@@ -140,6 +147,8 @@ const authSlice = createSlice({
       state.loading = false;
       state.error = null;
       state.message = null;
+      state.resendCooldownUntil = null; // Réinitialiser le cooldown lors de la déconnexion
+      state.remainingMinutes = null;
       localStorage.removeItem("token");
       localStorage.removeItem("userId");
     },
@@ -169,6 +178,8 @@ const authSlice = createSlice({
       .addCase(register.fulfilled, (state, action) => {
         state.loading = false;
         state.message = action.payload.message || i18n.t("register.success");
+        state.resendCooldownUntil = action.payload.resendCooldownUntil; // Synchroniser le cooldown
+        state.remainingMinutes = 15; // Initialisé à 15 minutes après inscription
       })
       .addCase(register.rejected, (state, action) => {
         state.loading = false;
@@ -195,10 +206,18 @@ const authSlice = createSlice({
       .addCase(resendVerificationCode.fulfilled, (state, action) => {
         state.loading = false;
         state.message = action.payload.message || i18n.t("verifyAccount.resendSuccess");
+        state.resendCooldownUntil = action.payload.resendCooldownUntil; // Mettre à jour le cooldown
+        state.remainingMinutes = 15; // Initialisé à 15 minutes après renvoi
       })
       .addCase(resendVerificationCode.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
+        if (state.error.toLowerCase().includes("too many requests") || state.error.toLowerCase().includes("trop de demandes")) {
+          const match = state.error.match(/(\d+)/);
+          const minutes = match ? parseInt(match[0], 10) : 15;
+          state.resendCooldownUntil = Date.now() + minutes * 60 * 1000;
+          state.remainingMinutes = minutes;
+        }
       })
       .addCase(forgotPassword.pending, (state) => {
         state.loading = true;
@@ -230,11 +249,11 @@ const authSlice = createSlice({
         state.loading = false;
         state.token = null;
         state.userId = null;
-        state.message = i18n.t("navbar.logout"); // Traduit dynamiquement
+        state.message = i18n.t("navbar.logout");
       });
   },
 });
 
-// ✅ Exports
+// Exports
 export const { clearAuthState } = authSlice.actions;
 export default authSlice.reducer;

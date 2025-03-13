@@ -7,6 +7,7 @@ import com.Portbil.portfolio_backend.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.MessageSource; // Déjà présent
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -27,6 +28,7 @@ public class UserController {
 
     private static final Logger log = LoggerFactory.getLogger(UserController.class);
     private final UserService userService;
+    private final MessageSource messageSource;
 
     @GetMapping
     @PreAuthorize("hasAuthority('ADMIN')")
@@ -336,6 +338,72 @@ public class UserController {
         } catch (IllegalArgumentException e) {
             System.out.println("❌ Erreur lors de la suppression : " + e.getMessage());
             return ResponseEntity.notFound().build();
+        }
+    }
+
+    @PostMapping("/{blockerId}/block/{blockedId}")
+    @PreAuthorize("#blockerId == authentication.principal.username")
+    public ResponseEntity<Map<String, String>> blockUser(
+            @PathVariable String blockerId,
+            @PathVariable String blockedId,
+            @RequestHeader(value = "Accept-Language", defaultValue = "en") String lang) {
+        Locale locale = Locale.forLanguageTag(lang);
+        System.out.println("🔹 Tentative de blocage de " + blockedId + " par " + blockerId);
+        try {
+            userService.blockUser(blockerId, blockedId, locale);
+            return ResponseEntity.ok(Map.of(
+                    "message", messageSource.getMessage("user.blocked.success", new Object[]{blockedId}, locale)
+            ));
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            System.out.println("❌ Erreur lors du blocage : " + e.getMessage());
+            return ResponseEntity.badRequest().body(Map.of(
+                    "error", e.getMessage()
+            ));
+        }
+    }
+
+    @DeleteMapping("/{blockerId}/unblock/{blockedId}")
+    @PreAuthorize("#blockerId == authentication.principal.username")
+    public ResponseEntity<Map<String, String>> unblockUser(
+            @PathVariable String blockerId,
+            @PathVariable String blockedId,
+            @RequestHeader(value = "Accept-Language", defaultValue = "en") String lang) {
+        Locale locale = Locale.forLanguageTag(lang);
+        System.out.println("🔹 Tentative de déblocage de " + blockedId + " par " + blockerId);
+        try {
+            userService.unblockUser(blockerId, blockedId, locale);
+            return ResponseEntity.ok(Map.of(
+                    "message", messageSource.getMessage("user.unblocked.success", new Object[]{blockedId}, locale)
+            ));
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            System.out.println("❌ Erreur lors du déblocage : " + e.getMessage());
+            return ResponseEntity.badRequest().body(Map.of(
+                    "error", e.getMessage()
+            ));
+        }
+    }
+
+    @PostMapping("/{reporterId}/report/{reportedId}")
+    @PreAuthorize("#reporterId == authentication.principal.username")
+    public ResponseEntity<Map<String, String>> reportUser(
+            @PathVariable String reporterId,
+            @PathVariable String reportedId,
+            @RequestBody Map<String, String> requestBody,
+            @RequestHeader(value = "Accept-Language", defaultValue = "en") String lang) {
+        Locale locale = Locale.forLanguageTag(lang);
+        String reason = requestBody.getOrDefault("reason", "Non spécifié");
+        String messageId = requestBody.get("messageId"); // Récupérer messageId du body (optionnel)
+        System.out.println("🔹 Tentative de signalement de " + reportedId + " par " + reporterId + " pour : " + reason + (messageId != null ? " (Message ID: " + messageId + ")" : ""));
+        try {
+            userService.reportUser(reporterId, reportedId, reason, messageId, locale);
+            return ResponseEntity.ok(Map.of(
+                    "message", messageSource.getMessage("user.reported.success", new Object[]{reportedId, reporterId}, locale)
+            ));
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            System.out.println("❌ Erreur lors du signalement : " + e.getMessage());
+            return ResponseEntity.badRequest().body(Map.of(
+                    "error", e.getMessage()
+            ));
         }
     }
 

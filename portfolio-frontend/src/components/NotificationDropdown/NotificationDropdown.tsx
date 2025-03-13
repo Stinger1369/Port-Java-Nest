@@ -1,10 +1,9 @@
-import React, { useEffect, useState, useRef, memo, forwardRef, useCallback } from "react";
-import { useDispatch } from "react-redux";
+import React, { useEffect, forwardRef, useCallback, useState, useRef, memo } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { AppDispatch, RootState } from "../../redux/store";
 import { useNotificationActions } from "../../hooks/useNotificationActions";
 import { useTranslation } from "react-i18next";
-import { useSelector } from "react-redux";
 import { useFriendActions } from "../../hooks/useFriendActions";
 import { fetchUserById } from "../../redux/features/userSlice";
 import { getAllImagesByUserId, Image } from "../../redux/features/imageSlice";
@@ -57,7 +56,7 @@ const NotificationItem = memo(
   }: NotificationItemProps) => {
     useEffect(() => {
       console.log(`🔄 NotificationItem re-rendu pour ID: ${notification.id}`);
-    });
+    }, [notification.id]);
 
     return (
       <div className={`notification-wrapper ${isRemoving ? "removing" : ""}`}>
@@ -165,55 +164,28 @@ const NotificationDropdown = forwardRef<HTMLDivElement, NotificationDropdownProp
     const { t } = useTranslation();
     const dispatch = useDispatch<AppDispatch>();
     const navigate = useNavigate();
-    const { status, error, loadNotifications, handleMarkAsRead: markAsReadAsync, handleRemoveNotification: removeNotificationAsync, handleClearNotifications } = useNotificationActions(t);
+    const { notifications, status, error } = useSelector((state: RootState) => state.notification);
+    const { handleMarkAsRead: markAsReadAsync, handleRemoveNotification: removeNotificationAsync, handleClearNotifications } = useNotificationActions(t);
     const { friends, receivedRequests, handleAcceptFriendRequest, handleRejectFriendRequest, handleRemoveFriend } = useFriendActions();
     const { user: currentUser } = useSelector((state: RootState) => state.user);
     const userId = localStorage.getItem("userId") || "";
 
-    const [localNotifications, setLocalNotifications] = useState<any[]>([]);
     const [removingIds, setRemovingIds] = useState<string[]>([]);
-    const [noNotifications, setNoNotifications] = useState(false);
     const [selectedMember, setSelectedMember] = useState<any | null>(null);
     const [selectedMemberImages, setSelectedMemberImages] = useState<Image[]>([]);
-    const [successMessage, setSuccessMessage] = useState<string | null>(null); // Nouveau state pour les messages de succès
-    const [errorMessage, setErrorMessage] = useState<string | null>(null); // Nouveau state pour les messages d'erreur
+    const [successMessage, setSuccessMessage] = useState<string | null>(null);
+    const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const isInitialMount = useRef(true);
 
     useEffect(() => {
       console.log("🔄 NotificationDropdown re-rendu");
-    });
-
-    useEffect(() => {
-      if (isInitialMount.current) {
+      if (isInitialMount.current && isOpen) {
         console.log("🔍 Chargement initial des notifications pour userId:", userId);
-        loadNotifications(userId).then((data) => {
-          const sortedData = [...data].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-          setLocalNotifications(sortedData);
-          setNoNotifications(sortedData.length === 0);
-        });
+        dispatch(fetchNotifications(userId));
         isInitialMount.current = false;
       }
-    }, [loadNotifications, userId]);
+    }, [isOpen, dispatch, userId]);
 
-    useEffect(() => {
-      if (isOpen && localNotifications.length === 0 && status !== "loading") {
-        console.log("🔍 Chargement à l'ouverture du dropdown pour userId:", userId);
-        loadNotifications(userId).then((data) => {
-          const sortedData = [...data].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-          setLocalNotifications(sortedData);
-          setNoNotifications(sortedData.length === 0);
-        });
-      }
-    }, [isOpen, status, loadNotifications, userId, localNotifications.length]);
-
-    useEffect(() => {
-      if (status === "failed" && error?.includes("Failed to fetch")) {
-        dispatch(resetStatus());
-        console.warn("⚠️ Erreur réseau détectée, statut réinitialisé:", error);
-      }
-    }, [status, error, dispatch]);
-
-    // Efface les messages après 3 secondes
     useEffect(() => {
       if (successMessage) {
         const timer = setTimeout(() => setSuccessMessage(null), 3000);
@@ -225,7 +197,7 @@ const NotificationDropdown = forwardRef<HTMLDivElement, NotificationDropdownProp
       }
     }, [successMessage, errorMessage]);
 
-    const unreadCount = localNotifications.filter((notif) => !notif.isRead).length;
+    const unreadCount = notifications.filter((notif) => !notif.isRead).length;
 
     const handleViewProfile = useCallback(async (notification: any) => {
       const memberId = notification.data?.fromUserId || notification.data?.friendId || notification.data?.likerId;
@@ -250,7 +222,8 @@ const NotificationDropdown = forwardRef<HTMLDivElement, NotificationDropdownProp
 
     const handleNotificationClick = useCallback(async (notification: any) => {
       switch (notification.type) {
-        case "new_chat": case "new_private_message":
+        case "new_chat":
+        case "new_private_message":
           navigate(`/chat/private/${notification.data?.chatId || "default"}`);
           break;
         case "new_group_message":
@@ -297,35 +270,25 @@ const NotificationDropdown = forwardRef<HTMLDivElement, NotificationDropdownProp
     }, [handleRemoveFriend, t]);
 
     const handleMarkAsRead = useCallback((notificationId: string) => {
-      console.log("📌 Marquage comme lu local:", notificationId);
-      setLocalNotifications((prev) =>
-        prev.map((notif) => (notif.id === notificationId ? { ...notif, isRead: true } : notif))
-      );
+      console.log("📌 Marquage comme lu:", notificationId);
       markAsReadAsync(notificationId).catch((err) =>
         console.error("❌ Échec du marquage comme lu:", err)
       );
     }, [markAsReadAsync]);
 
     const handleRemoveNotification = useCallback((notificationId: string) => {
-      console.log("🗑️ Suppression locale de la notification:", notificationId);
+      console.log("🗑️ Suppression de la notification:", notificationId);
       setRemovingIds((prev) => [...prev, notificationId]);
-      setLocalNotifications((prev) => prev.filter((notif) => notif.id !== notificationId));
-      setTimeout(() => {
-        removeNotificationAsync(notificationId)
-          .then(() => {
-            console.log("✅ Suppression serveur confirmée:", notificationId);
-            setSuccessMessage(t("notification.remove"));
-          })
-          .catch((err) => {
-            console.error("❌ Échec de la suppression côté serveur:", err);
-            setErrorMessage("Erreur lors de la suppression de la notification");
-            setLocalNotifications((prev) => [
-              ...prev,
-              { id: notificationId, message: "Erreur de suppression", timestamp: new Date().toISOString(), isRead: false },
-            ].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()));
-          })
-          .finally(() => setRemovingIds((prev) => prev.filter((id) => id !== notificationId)));
-      }, 300);
+      removeNotificationAsync(notificationId)
+        .then(() => {
+          console.log("✅ Suppression serveur confirmée:", notificationId);
+          setSuccessMessage(t("notification.remove"));
+        })
+        .catch((err) => {
+          console.error("❌ Échec de la suppression côté serveur:", err);
+          setErrorMessage("Erreur lors de la suppression de la notification");
+        })
+        .finally(() => setRemovingIds((prev) => prev.filter((id) => id !== notificationId)));
     }, [removeNotificationAsync, t]);
 
     const isFriendRequestPending = useCallback((friendId: string) =>
@@ -376,7 +339,7 @@ const NotificationDropdown = forwardRef<HTMLDivElement, NotificationDropdownProp
       return (
         <div className="notification-error">
           {t("notification.error")} {error}
-          <button onClick={() => loadNotifications(userId)}>
+          <button onClick={() => dispatch(fetchNotifications(userId))}>
             Réessayer
           </button>
         </div>
@@ -394,17 +357,16 @@ const NotificationDropdown = forwardRef<HTMLDivElement, NotificationDropdownProp
           {unreadCount > 0 && <span className="notification-count">{unreadCount}</span>}
         </button>
         <div className={`dropdown-menu ${isOpen ? "active" : ""}`}>
-          {successMessage && (
-            <p className="success-message">{successMessage}</p>
-          )}
-          {errorMessage && (
-            <p className="error-message">{errorMessage}</p>
-          )}
-          <button className="dropdown-item view-all-button" onClick={() => { navigate("/notifications"); onClose(); }}>
+          {successMessage && <p className="success-message">{successMessage}</p>}
+          {errorMessage && <p className="error-message">{errorMessage}</p>}
+          <button
+            className="dropdown-item view-all-button"
+            onClick={() => { navigate("/notifications"); onClose(); }}
+          >
             <i className="fas fa-list"></i> {t("notification.viewAll")}
           </button>
           <div className="notification-divider"></div>
-          {noNotifications || unreadCount === 0 ? (
+          {notifications.length === 0 ? (
             <div className="dropdown-item no-notifications">
               <div className="icon-group">
                 <i className="fas fa-bell-slash"></i>
@@ -413,7 +375,7 @@ const NotificationDropdown = forwardRef<HTMLDivElement, NotificationDropdownProp
             </div>
           ) : (
             <>
-              {localNotifications.map((notification, index) => {
+              {notifications.map((notification, index) => {
                 const friendId = notification.data?.fromUserId || notification.data?.friendId || notification.data?.likerId;
                 const isPending = notification.type === "friend_request_received" && friendId && isFriendRequestPending(friendId);
                 const isAccepted = friendId && isFriendRequestAccepted(friendId);
@@ -444,13 +406,15 @@ const NotificationDropdown = forwardRef<HTMLDivElement, NotificationDropdownProp
                 );
               })}
               <div className="notification-divider"></div>
-              <button className="dropdown-item clear-button" onClick={() => handleClearNotifications()}>
+              <button
+                className="dropdown-item clear-button"
+                onClick={() => handleClearNotifications()}
+              >
                 <i className="fas fa-trash"></i> {t("navbar.clearNotifications")}
               </button>
             </>
           )}
         </div>
-
         {selectedMember && (
           <div className="modal-overlay">
             <div className="modal-content">

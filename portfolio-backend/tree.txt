@@ -113,6 +113,13 @@
 │   │   │               │   ├── JwtUtil.java
 │   │   │               │   └── SecurityConfig.java
 │   │   │               ├── service/
+│   │   │               │   ├── user/
+│   │   │               │   │   ├── UserAuthService.java
+│   │   │               │   │   ├── UserCoreService.java
+│   │   │               │   │   ├── UserInteractionService.java
+│   │   │               │   │   ├── UserMetadataService.java
+│   │   │               │   │   ├── UserProfileService.java
+│   │   │               │   │   └── UserRelationService.java
 │   │   │               │   ├── CertificationService.java
 │   │   │               │   ├── ContactService.java
 │   │   │               │   ├── EducationService.java
@@ -291,6 +298,13 @@
 │   │   │           │   ├── JwtUtil.class
 │   │   │           │   └── SecurityConfig.class
 │   │   │           ├── service/
+│   │   │           │   ├── user/
+│   │   │           │   │   ├── UserAuthService.class
+│   │   │           │   │   ├── UserCoreService.class
+│   │   │           │   │   ├── UserInteractionService.class
+│   │   │           │   │   ├── UserMetadataService.class
+│   │   │           │   │   ├── UserProfileService.class
+│   │   │           │   │   └── UserRelationService.class
 │   │   │           │   ├── CertificationService.class
 │   │   │           │   ├── ContactService.class
 │   │   │           │   ├── EducationService.class

@@ -70,6 +70,7 @@
     "resendError": "Erreur lors de l'envoi du code.",
     "resendLoading": "Envoi en cours...",
     "resendButton": "Renvoyer le code",
+    "resendDisabled": "Attendre {{minutes}} min",
     "registerButton": "Créer un compte",
     "forgotPassword": "Mot de passe oublié ?",
     "loadingTranslations": "Chargement des traductions...",
@@ -81,11 +82,14 @@
     "passwordPlaceholder": "Mot de passe",
     "confirmPasswordPlaceholder": "Confirmer le mot de passe",
     "submit": "S'inscrire",
+    "submitDisabled": "Attendre {{minutes}} min",
     "success": "Inscription réussie ! Un code de vérification a été envoyé à votre email. Il est valide pendant 15 minutes.",
     "error": {
       "passwordMismatch": "Les mots de passe ne correspondent pas.",
-      "generic": "Échec de l'inscription, veuillez réessayer."
-    }
+      "generic": "Échec de l'inscription, veuillez réessayer.",
+      "tooManyRequests": "Trop de demandes de code. Veuillez attendre {{minutes}} minutes."
+    },
+    "loadingTranslations": "Chargement des traductions..."
   },
   "resetPassword": {
     "title": "Réinitialisez votre mot de passe",
