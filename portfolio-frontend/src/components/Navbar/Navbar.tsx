@@ -1,4 +1,3 @@
-// src/components/Navbar.tsx
 import { useState, useEffect, useRef, memo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
@@ -6,6 +5,7 @@ import { RootState, AppDispatch } from "../../redux/store";
 import { logout } from "../../redux/features/authSlice";
 import { fetchUser } from "../../redux/features/userSlice";
 import { fetchWeather } from "../../redux/features/weatherSlice";
+import { fetchNotifications } from "../../redux/features/notificationSlice"; // Import ajouté
 import { useTranslation } from "react-i18next";
 import LanguageSelector from "../LanguageSelector/LanguageSelector";
 import WeatherComponent from "../WeatherComponent/WeatherComponent";
@@ -22,6 +22,7 @@ const Navbar = () => {
   const navigate = useNavigate();
   const token = useSelector((state: RootState) => state.auth.token);
   const user = useSelector((state: RootState) => state.user.user);
+  const userId = localStorage.getItem("userId") || "";
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isWeatherOpen, setIsWeatherOpen] = useState(false);
@@ -49,6 +50,14 @@ const Navbar = () => {
       dispatch(fetchWeather(user.id));
     }
   }, [dispatch, token, user]);
+
+  // Charger les notifications au montage si l'utilisateur est connecté
+  useEffect(() => {
+    if (token && userId) {
+      console.log("🔍 Chargement initial des notifications au montage pour userId:", userId);
+      dispatch(fetchNotifications(userId));
+    }
+  }, [dispatch, token, userId]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {

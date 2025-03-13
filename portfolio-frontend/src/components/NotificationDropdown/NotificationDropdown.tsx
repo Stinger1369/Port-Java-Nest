@@ -165,7 +165,7 @@ const NotificationDropdown = forwardRef<HTMLDivElement, NotificationDropdownProp
     const dispatch = useDispatch<AppDispatch>();
     const navigate = useNavigate();
     const { notifications, status, error } = useSelector((state: RootState) => state.notification);
-    const { handleMarkAsRead: markAsReadAsync, handleRemoveNotification: removeNotificationAsync, handleClearNotifications } = useNotificationActions(t);
+    const { loadNotifications, handleMarkAsRead: markAsReadAsync, handleRemoveNotification: removeNotificationAsync, handleClearNotifications } = useNotificationActions(t);
     const { friends, receivedRequests, handleAcceptFriendRequest, handleRejectFriendRequest, handleRemoveFriend } = useFriendActions();
     const { user: currentUser } = useSelector((state: RootState) => state.user);
     const userId = localStorage.getItem("userId") || "";
@@ -181,10 +181,10 @@ const NotificationDropdown = forwardRef<HTMLDivElement, NotificationDropdownProp
       console.log("🔄 NotificationDropdown re-rendu");
       if (isInitialMount.current && isOpen) {
         console.log("🔍 Chargement initial des notifications pour userId:", userId);
-        dispatch(fetchNotifications(userId));
+        loadNotifications(userId); // Appel correct de loadNotifications depuis useNotificationActions
         isInitialMount.current = false;
       }
-    }, [isOpen, dispatch, userId]);
+    }, [isOpen, loadNotifications, userId]);
 
     useEffect(() => {
       if (successMessage) {
@@ -339,7 +339,7 @@ const NotificationDropdown = forwardRef<HTMLDivElement, NotificationDropdownProp
       return (
         <div className="notification-error">
           {t("notification.error")} {error}
-          <button onClick={() => dispatch(fetchNotifications(userId))}>
+          <button onClick={() => loadNotifications(userId)}>
             Réessayer
           </button>
         </div>

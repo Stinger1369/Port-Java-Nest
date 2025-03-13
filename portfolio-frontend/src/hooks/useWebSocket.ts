@@ -60,15 +60,19 @@ export const useWebSocket = (token: string | null) => {
       };
 
       if (normalizedMessage.type === "notification" || normalizedMessage.notificationType) {
-        dispatch(addNotification({
-          id: normalizedMessage.id,
-          userId: normalizedMessage.userId,
-          type: normalizedMessage.notificationType,
-          message: message.message || "Nouvelle notification",
-          timestamp: normalizedTimestamp,
-          isRead: message.isRead || false,
-          data: normalizedMessage.data,
-        }));
+        // Ne pas ajouter une notification générique si le message est spécifique
+        if (message.message && message.notificationType !== "connected") {
+          dispatch(addNotification({
+            id: normalizedMessage.id,
+            userId: normalizedMessage.userId,
+            type: normalizedMessage.notificationType,
+            message: message.message, // Utiliser uniquement le message spécifique fourni par le backend
+            timestamp: normalizedTimestamp,
+            isRead: message.isRead || false,
+            data: normalizedMessage.data,
+          }));
+          console.log("✅ Notification spécifique ajoutée:", normalizedMessage.notificationType);
+        }
 
         const fromUserId = message.fromUserId || message.data?.fromUserId || "";
         const toUserId = message.toUserId || message.data?.toUserId || "";
@@ -80,9 +84,9 @@ export const useWebSocket = (token: string | null) => {
           case "friend_request_rejected":
           case "friend_request_accepted":
             if (userId === fromUserId) {
-              friendId = toUserId || explicitFriendId; // Sender: friendId est le receiver
+              friendId = toUserId || explicitFriendId;
             } else {
-              friendId = fromUserId; // Receiver: friendId est le sender
+              friendId = fromUserId;
             }
             if (!friendId && !toUserId && !explicitFriendId) {
               console.warn("⚠️ toUserId et friendId manquants, déduction impossible:", message);
@@ -173,19 +177,8 @@ export const useWebSocket = (token: string | null) => {
               ? `Nouveau message de ${message.fromUserId}`
               : `Nouveau message dans le groupe ${message.groupId}`;
 
-            const isNewChat = message.type === "private" && !messages.some((msg) => msg.chatId === normalizedMessage.chatId && msg.fromUserId !== userId);
-            if (isNewChat) {
-              dispatch(addNotification({
-                id: `new-chat-${normalizedMessage.id}`,
-                userId: userId || "",
-                type: "new_chat",
-                message: `Nouveau chat avec ${message.fromUserId}`,
-                timestamp: normalizedTimestamp,
-                isRead: false,
-                data: { chatId: normalizedMessage.chatId, fromUserId: message.fromUserId },
-              }));
-            }
-
+            // Supprimer la notification "new_chat" pour éviter le doublon
+            // Ajouter uniquement la notification spécifique au message
             dispatch(addNotification({
               id: `msg-${normalizedMessage.id}`,
               userId: userId || "",

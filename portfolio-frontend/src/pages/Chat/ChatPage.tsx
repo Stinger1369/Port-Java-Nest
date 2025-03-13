@@ -118,7 +118,6 @@ const ChatPage: React.FC = () => {
     }
   }, [type, id, dispatch, userId]);
 
-  // Récupérer les images de profil pour tous les utilisateurs dans la sidebar
   useEffect(() => {
     const userIds = new Set<string>();
     messages.forEach((msg) => {
@@ -181,6 +180,9 @@ const ChatPage: React.FC = () => {
       console.log("📤 Envoi du message au WebSocket:", message);
       wsInstance.send(JSON.stringify(message));
       setMessageInput("");
+
+      // Log pour vérifier si le message est envoyé
+      console.log("✅ Message envoyé via WebSocket, en attente de réponse du serveur...");
 
       if (!isGroup) {
         dispatch(fetchPrivateMessages(toUserId)).then((result) => {
@@ -273,10 +275,8 @@ const ChatPage: React.FC = () => {
         contactId = id;
       }
     }
-    // Rechercher l'image dans state.image.images
     const userImages = images.filter((img) => img.userId === contactId);
     if (userImages.length > 0) {
-      // Prendre la première image disponible (ou celle marquée comme profile-picture si vous voulez)
       const profileImg = userImages.find((img) => img.name === "profile-picture.jpg" && !img.isNSFW) || userImages[0];
       return profileImg.path;
     }
