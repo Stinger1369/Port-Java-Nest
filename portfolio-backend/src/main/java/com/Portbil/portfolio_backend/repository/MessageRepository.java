@@ -3,25 +3,27 @@ package com.Portbil.portfolio_backend.repository;
 import com.Portbil.portfolio_backend.entity.Message;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Query;
+import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
+@Repository
 public interface MessageRepository extends MongoRepository<Message, String> {
 
-    // Récupérer l'historique des messages privés entre deux utilisateurs
-    List<Message> findByTypeAndFromUserIdAndToUserId(String type, String fromUserId, String toUserId);
+    // Trouver les messages par une liste de chatIds
+    List<Message> findByChatIdIn(List<String> chatIds);
 
-    // Récupérer l'historique des messages d'un groupe
-    List<Message> findByTypeAndGroupId(String type, String groupId);
+    // Trouver les messages non supprimés par une liste de chatIds
+    @Query("{ 'chatId': { $in: ?0 }, 'isDeleted': false }")
+    List<Message> findByChatIdInAndIsDeletedFalse(List<String> chatIds);
 
-    // Récupérer toutes les conversations d’un utilisateur (privées envoyées/reçues + groupe)
-    @Query("{'$or': [{'type': 'private', 'fromUserId': ?0}, {'type': 'private', 'toUserId': ?0}, {'type': 'group_message', 'groupId': {$in: ?1}}]}")
-    List<Message> findAllConversationsByUserId(String userId, List<String> groupIds);
-
-    // Nouvelles méthodes pour chatId
-    @Query("{ 'chatId': ?0 }")
+    // Trouver les messages par chatId
     List<Message> findByChatId(String chatId);
 
-    @Query("{ 'chatId': { $in: ?0 } }")
-    List<Message> findByChatIdIn(List<String> chatIds);
+    // Trouver les messages non supprimés par chatId
+    @Query("{ 'chatId': ?0, 'isDeleted': false }")
+    List<Message> findByChatIdAndIsDeletedFalse(String chatId);
+
+    // Trouver les messages privés entre deux utilisateurs
+    List<Message> findByTypeAndFromUserIdAndToUserId(String type, String fromUserId, String toUserId);
 }

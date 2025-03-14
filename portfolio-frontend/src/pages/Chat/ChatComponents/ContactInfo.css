@@ -1,0 +1,130 @@
+/* portfolio-frontend/src/pages/Chat/ChatComponents/ContactInfo.css */
+
+/* Modal principal */
+.ci-modal {
+  position: relative;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 90%;
+  max-width: 450px; /* Largeur adaptée à MemberCard */
+  background-color: #ffffff;
+  border-radius: 12px; /* Bordures arrondies modernes */
+  box-shadow: 0 6px 25px rgba(0, 0, 0, 0.2); /* Ombre prononcée */
+  padding: 24px; /* Espacement interne généreux */
+  outline: none;
+  font-family: "Roboto", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Overlay du modal */
+.ci-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.6); /* Overlay sombre pour contraste */
+  z-index: 1000;
+}
+
+/* Conteneur principal */
+.ci-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px; /* Espacement généreux entre les sections */
+}
+
+/* Titre */
+.ci-title {
+  font-size: 22px;
+  font-weight: 600;
+  color: #2d3748; /* Couleur sombre pour contraste */
+  text-align: center;
+  margin: 0 0 16px 0;
+}
+
+/* Message d'erreur */
+.ci-error {
+  font-size: 15px;
+  color: #c53030; /* Rouge pour indiquer une erreur */
+  text-align: center;
+  padding: 8px 12px;
+  background-color: #fef2f2; /* Fond clair pour l'erreur */
+  border-radius: 6px;
+  border: 1px solid #fed7d7;
+}
+
+/* Bouton de fermeture */
+.ci-button {
+  padding: 12px 24px;
+  background-color: #2b6cb0; /* Bleu moderne */
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.ci-button:hover {
+  background-color: #2c5282; /* Bleu plus foncé au survol */
+  transform: translateY(-1px); /* Effet de soulèvement */
+}
+
+.ci-button:active {
+  transform: translateY(0); /* Retour à la position initiale au clic */
+}
+
+/* Ajustements pour MemberCard dans le modal */
+.ci-container .member-card {
+  width: 100%; /* S'assurer que MemberCard prend toute la largeur du modal */
+  margin: 0;
+  padding: 16px; /* Ajuster le padding pour le modal */
+  border: 1px solid #e2e8f0; /* Bordure subtile */
+  border-radius: 8px;
+  box-shadow: none; /* Retirer l'ombre par défaut pour éviter un double effet */
+}
+
+/* Cacher les boutons d'interaction dans le modal */
+.ci-container .member-card .like-container {
+  display: flex; /* Assurer que les icônes s'affichent */
+}
+
+/* Ajustements pour les messages de succès/erreur dans MemberCard */
+.ci-container .member-card .success-message,
+.ci-container .member-card .error-message {
+  font-size: 14px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  margin-top: 10px;
+  text-align: center;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .ci-modal {
+    width: 95%;
+    max-width: 350px;
+    padding: 16px;
+  }
+
+  .ci-title {
+    font-size: 18px;
+  }
+
+  .ci-error {
+    font-size: 14px;
+    padding: 6px 10px;
+  }
+
+  .ci-button {
+    padding: 10px 20px;
+    font-size: 13px;
+  }
+
+  .ci-container .member-card {
+    padding: 12px;
+  }
+}

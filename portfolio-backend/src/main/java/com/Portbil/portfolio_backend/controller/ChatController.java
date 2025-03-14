@@ -7,17 +7,18 @@ import com.Portbil.portfolio_backend.entity.User;
 import com.Portbil.portfolio_backend.repository.MessageRepository;
 import com.Portbil.portfolio_backend.repository.ReportRepository;
 import com.Portbil.portfolio_backend.repository.UserRepository;
+import com.Portbil.portfolio_backend.service.ChatHistoryService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
-import java.io.IOException; // Import ajouté
+import java.io.IOException;
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.HashMap; // Import ajouté
+import java.util.HashMap;
 import java.util.List;
-import java.util.Map; // Import ajouté
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -36,6 +37,10 @@ public class ChatController {
 
     @Autowired
     private ChatWebSocketHandler chatWebSocketHandler;
+
+    @Autowired
+    private ChatHistoryService chatHistoryService;
+
     private final String DEVELOPER_ID = "developer-id-here";
 
     // Récupérer toutes les conversations d’un utilisateur (privées + groupe)
@@ -44,7 +49,8 @@ public class ChatController {
         String currentUserId = authentication.getName();
         User user = userRepository.findById(currentUserId).orElseThrow(() -> new IllegalArgumentException("Utilisateur introuvable"));
         List<String> chatIds = user.getChatIds();
-        List<Message> messages = messageRepository.findByChatIdIn(chatIds);
+        // Filtrer les messages non supprimés
+        List<Message> messages = messageRepository.findByChatIdInAndIsDeletedFalse(chatIds);
         System.out.println("📥 Messages fetched for user " + currentUserId + ": " + messages);
         return ResponseEntity.ok(messages);
     }
@@ -78,7 +84,8 @@ public class ChatController {
             chatId = commonChatIds.get(0); // Utiliser le premier chatId commun
         }
 
-        List<Message> messages = messageRepository.findByChatId(chatId);
+        // Filtrer les messages non supprimés
+        List<Message> messages = messageRepository.findByChatIdAndIsDeletedFalse(chatId);
         System.out.println("📥 Private messages fetched between " + currentUserId + " and " + otherUserId + ": " + messages);
         return ResponseEntity.ok(messages);
     }
@@ -91,7 +98,8 @@ public class ChatController {
         if (!user.getChatIds().contains(groupId)) {
             return ResponseEntity.status(403).body(null); // Forbidden
         }
-        List<Message> messages = messageRepository.findByChatId(groupId);
+        // Filtrer les messages non supprimés
+        List<Message> messages = messageRepository.findByChatIdAndIsDeletedFalse(groupId);
         System.out.println("📥 Group messages fetched for group " + groupId + ": " + messages);
         return ResponseEntity.ok(messages);
     }
@@ -114,10 +122,12 @@ public class ChatController {
         existingMessage.setContent(updatedMessage.getContent());
         existingMessage.setTimestamp(Instant.now());
         Message savedMessage = messageRepository.save(existingMessage);
+        // Enregistrer dans l'historique
+        chatHistoryService.recordMessageAction(savedMessage, "UPDATED");
         return ResponseEntity.ok(savedMessage);
     }
 
-    // Supprimer un message
+    // Supprimer un message (suppression logique)
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteMessage(@PathVariable String id, Authentication authentication) {
         String currentUserId = authentication.getName();
@@ -132,9 +142,15 @@ public class ChatController {
             return ResponseEntity.status(403).build(); // Forbidden
         }
 
-        messageRepository.deleteById(id);
+        // Marquer le message comme supprimé (suppression logique)
+        message.setIsDeleted(true);
+        messageRepository.save(message);
+        // Enregistrer dans l'historique
+        chatHistoryService.recordMessageAction(message, "DELETED");
+        System.out.println("✅ Message " + id + " marqué comme supprimé et historisé");
         return ResponseEntity.noContent().build();
     }
+
     // Récupérer tous les signalements (pour l'admin uniquement)
     @GetMapping("/reports")
     public ResponseEntity<List<Report>> getAllReports(Authentication authentication) {

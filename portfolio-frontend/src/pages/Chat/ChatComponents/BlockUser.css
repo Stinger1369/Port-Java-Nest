@@ -1,0 +1,128 @@
+/* portfolio-frontend/src/pages/Chat/ChatComponents/BlockUser.css */
+
+/* Modal principal */
+.bu-modal {
+  position: relative;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 90%;
+  max-width: 400px;
+  background-color: #ffffff;
+  border-radius: 12px; /* Bordures arrondies modernes */
+  box-shadow: 0 6px 25px rgba(0, 0, 0, 0.2); /* Ombre prononcée, comme dans ChatPage */
+  padding: 24px; /* Espacement interne généreux */
+  outline: none;
+  font-family: "Roboto", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Overlay du modal */
+.bu-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.6); /* Overlay sombre pour contraste, comme SearchMessages */
+  z-index: 1000;
+}
+
+/* Conteneur principal */
+.bu-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px; /* Espacement uniforme entre les éléments */
+}
+
+/* Titre */
+.bu-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: #2d3748; /* Couleur sombre pour contraste, comme dans ChatPage */
+  margin-bottom: 12px;
+  letter-spacing: 0.2px;
+  text-align: center;
+}
+
+/* Texte de confirmation */
+.bu-text {
+  font-size: 14px;
+  color: #4a5568; /* Couleur de texte douce, comme dans ChatPage */
+  margin-bottom: 20px;
+  text-align: center;
+  line-height: 1.5; /* Meilleure lisibilité */
+}
+
+/* Conteneur des boutons */
+.bu-buttons {
+  display: flex;
+  gap: 12px; /* Espacement entre les boutons */
+}
+
+/* Boutons (base) */
+.bu-button {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px; /* Bordures arrondies modernes */
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+/* Bouton "Bloquer" */
+.bu-button.bu-block {
+  background-color: #c53030; /* Rouge moderne pour indiquer une action de suppression */
+  color: #ffffff;
+}
+
+.bu-button.bu-block:hover {
+  background-color: #9b2c2c; /* Rouge plus foncé au survol */
+  transform: translateY(-1px); /* Effet de soulèvement, comme dans ChatPage */
+}
+
+.bu-button.bu-block:active {
+  transform: translateY(0); /* Retour à la position initiale au clic */
+}
+
+/* Bouton "Annuler" */
+.bu-button.bu-cancel {
+  background-color: #e2e8f0; /* Gris clair, cohérent avec ChatPage */
+  color: #4a5568; /* Couleur de texte douce */
+}
+
+.bu-button.bu-cancel:hover {
+  background-color: #cbd5e0; /* Gris légèrement plus foncé au survol */
+  transform: translateY(-1px); /* Effet de soulèvement */
+}
+
+.bu-button.bu-cancel:active {
+  transform: translateY(0); /* Retour à la position initiale au clic */
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .bu-modal {
+    width: 95%;
+    max-width: 350px;
+    padding: 16px;
+  }
+
+  .bu-title {
+    font-size: 18px;
+  }
+
+  .bu-text {
+    font-size: 13px;
+  }
+
+  .bu-buttons {
+    gap: 8px; /* Réduction de l'espacement pour mobile */
+  }
+
+  .bu-button {
+    padding: 8px 16px;
+    font-size: 13px;
+  }
+}

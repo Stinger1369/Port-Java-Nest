@@ -1,0 +1,90 @@
+/* portfolio-frontend/src/pages/Chat/ChatComponents/ReportUser.css */
+.report-user-modal {
+  position: relative;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 90%;
+  max-width: 400px;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  padding: 20px;
+  outline: none;
+}
+
+.report-user-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+}
+
+.report-user-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.report-user-title {
+  font-size: 18px;
+  font-weight: 500;
+  color: #111b21;
+  margin-bottom: 15px;
+}
+
+.report-user-text {
+  font-size: 14px;
+  color: #111b21;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.report-user-input {
+  width: 100%;
+  padding: 8px;
+  margin-bottom: 20px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  font-size: 14px;
+  outline: none;
+}
+
+.report-user-input:focus {
+  border-color: #075e54;
+}
+
+.report-user-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.report-user-button {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.2s;
+}
+
+.report-user-button.report {
+  background-color: #ff9800; /* Orange pour signaler */
+  color: white;
+}
+
+.report-user-button.report:hover {
+  background-color: #e68a00;
+}
+
+.report-user-button.cancel {
+  background-color: #e0e0e0;
+  color: #111b21;
+}
+
+.report-user-button.cancel:hover {
+  background-color: #d0d0d0;
+}

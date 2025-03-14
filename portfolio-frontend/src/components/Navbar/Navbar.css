@@ -1,14 +1,16 @@
 /* Navbar.css */
-.navbar {
+.navBar {
   display: flex;
-  justify-content: space-between;
+  justify-content: space-between; /* Logo à gauche, boutons à droite */
   align-items: center;
-  padding: 1rem 2rem;
+  padding: 0.1rem 1rem;
   background-color: #1e2a44;
   color: white;
   position: sticky;
   top: 0;
   z-index: 1000;
+  border-radius: 50px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
 }
 
 /* Ajustements pour la langue arabe (RTL) */
@@ -17,24 +19,24 @@
 }
 
 /* Alignement par défaut (LTR) */
-.navbar-logo {
+.navBar-logo {
   font-size: 1.5rem;
   font-weight: 700;
   color: #61dafb;
   text-decoration: none;
 }
 
-.navbar-logo i {
+.navBar-logo i {
   margin-right: 0.5rem; /* Marge à droite pour LTR */
 }
 
 /* Ajustements pour l'arabe (RTL) */
-.arabic .navbar-logo i {
+.arabic .navBar-logo i {
   margin-right: 0; /* Supprime la marge droite */
   margin-left: 0.5rem; /* Ajoute une marge gauche pour RTL */
 }
 
-.navbar-toggle {
+.navBar-toggle-icon {
   display: none;
   background: none;
   border: none;
@@ -43,47 +45,90 @@
   cursor: pointer;
 }
 
-.navbar-links {
+/* Conteneur des liens alignés à droite */
+.navBar-right-links {
   display: flex;
   align-items: center;
-  gap: 2rem;
+  gap: 0.5rem;
 }
 
-.nav-item {
+/* Styles pour les boutons interactifs (style de base commun) */
+.navBar-item {
   color: white;
   text-decoration: none;
-  font-size: 1.1rem;
+  font-size: 1rem;
   display: flex;
   align-items: center;
-  padding: 0.5rem 1rem;
   border-radius: 5px;
   transition: background 0.3s ease;
+  padding: 0.5rem;
+  width: 2rem;
+  height: 2rem;
+  background-color: transparent;
+  justify-content: center;
 }
 
-.nav-item:hover {
+.navBar-item:hover {
   background-color: rgba(255, 255, 255, 0.1);
 }
 
-.nav-item i {
-  margin-right: 0.5rem; /* Marge à droite pour LTR */
+.navBar-item i {
+  margin: 0; /* Supprimé car plus de texte */
 }
 
-/* Ajustements pour l'arabe (RTL) */
-.arabic .nav-item {
-  flex-direction: row-reverse; /* Inverse l'ordre : icône à droite, texte à gauche */
-}
-
-.arabic .nav-item i {
-  margin-right: 0; /* Supprime la marge droite */
-  margin-left: 0.5rem; /* Ajoute une marge gauche pour RTL */
-}
-
-/* ✅ Styles pour la section météo */
-.navbar-weather {
+/* Styles pour les info-bulles (tooltips) */
+.navBar-item[title] {
   position: relative;
 }
 
-.weather-toggle {
+.navBar-item[title]:hover::after {
+  content: attr(title);
+  position: absolute;
+  bottom: -2.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #1e2a44;
+  color: white;
+  padding: 0.3rem 0.6rem;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  white-space: nowrap;
+  z-index: 1000;
+}
+
+/* Styles spécifiques pour chaque bouton */
+.navBar-item-portfolio {
+  color: #61dafb; /* Couleur spécifique pour l'icône Portfolio */
+}
+
+.navBar-item-logout {
+  color: #ff4d4f; /* Couleur rouge pour l'icône Déconnexion */
+}
+
+.navBar-item-login {
+  color: #52c41a; /* Couleur verte pour l'icône Connexion */
+}
+
+.navBar-item-register {
+  color: #faad14; /* Couleur jaune pour l'icône Inscription */
+}
+
+/* Ajustements pour l'arabe (RTL) */
+.arabic .navBar-item {
+  flex-direction: row-reverse; /* Inverse l'ordre : icône à droite */
+}
+
+.arabic .navBar-item i {
+  margin-right: 0; /* Supprime la marge droite */
+  margin-left: 0; /* Supprime la marge gauche */
+}
+
+/* ✅ Styles pour la section météo */
+.navBar-weather {
+  position: relative;
+}
+
+.navBar-weather-toggle {
   background: none;
   border: none;
   color: white;
@@ -91,24 +136,46 @@
   cursor: pointer;
   display: flex;
   align-items: center;
-  padding: 0.5rem 1rem;
+  padding: 0.5rem;
+  width: 2rem;
+  height: 2rem;
+  justify-content: center;
 }
 
-.weather-toggle i {
-  margin-right: 0.5rem; /* Marge à droite pour LTR */
+.navBar-weather-toggle i {
+  margin: 0; /* Supprimé car plus de texte */
+}
+
+.navBar-weather-toggle:hover {
+  background-color: rgba(255, 255, 255, 0.1);
 }
 
 /* Ajustements pour l'arabe (RTL) */
-.arabic .weather-toggle {
+.arabic .navBar-weather-toggle {
   flex-direction: row-reverse; /* Inverse l'ordre */
 }
 
-.arabic .weather-toggle i {
+.arabic .navBar-weather-toggle i {
   margin-right: 0; /* Supprime la marge droite */
-  margin-left: 0.5rem; /* Ajoute une marge gauche pour RTL */
+  margin-left: 0; /* Supprime la marge gauche */
 }
 
-.weather-dropdown {
+.navBar-weather-toggle[title]:hover::after {
+  content: attr(title);
+  position: absolute;
+  bottom: -2.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #1e2a44;
+  color: white;
+  padding: 0.3rem 0.6rem;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  white-space: nowrap;
+  z-index: 1000;
+}
+
+.navBar-weather-dropdown {
   display: none;
   position: absolute;
   top: 100%;
@@ -122,22 +189,22 @@
 }
 
 /* Ajustements pour l'arabe (RTL) */
-.arabic .weather-dropdown {
+.arabic .navBar-weather-dropdown {
   right: auto; /* Supprime l'alignement à droite */
   left: 0; /* Aligne à gauche pour RTL */
 }
 
-.weather-dropdown.active {
+.navBar-weather-dropdown.active {
   display: block;
 }
 
-.weather-dropdown h3 {
+.navBar-weather-dropdown h3 {
   font-size: 1.2rem;
   color: #1e2a44;
   margin-bottom: 0.5rem;
 }
 
-.weather-dropdown .update-location-btn {
+.navBar-weather-dropdown .update-location-btn {
   display: flex;
   align-items: center;
   padding: 0.5rem 1rem;
@@ -151,46 +218,46 @@
   margin-bottom: 0.5rem;
 }
 
-.weather-dropdown .update-location-btn i {
+.navBar-weather-dropdown .update-location-btn i {
   margin-right: 0.5rem;
 }
 
-.weather-dropdown .update-location-btn:hover {
+.navBar-weather-dropdown .update-location-btn:hover {
   background: linear-gradient(135deg, #218838 0%, #28a745 100%);
 }
 
-.weather-dropdown .update-location-btn:disabled {
+.navBar-weather-dropdown .update-location-btn:disabled {
   background: #ccc;
   cursor: not-allowed;
 }
 
-.weather-dropdown .weather-details {
+.navBar-weather-dropdown .weather-details {
   list-style: none;
   padding: 0;
 }
 
-.weather-dropdown .weather-details li {
+.navBar-weather-dropdown .weather-details li {
   font-size: 0.9rem;
   color: #333;
   margin-bottom: 0.3rem;
 }
 
-.weather-dropdown .weather-details .label {
+.navBar-weather-dropdown .weather-details .label {
   font-weight: 600;
   color: #1e2a44;
   margin-right: 0.5rem;
 }
 
-.weather-dropdown p {
+.navBar-weather-dropdown p {
   font-size: 0.9rem;
   color: #666;
 }
 
-.navbar-language {
+.navBar-language {
   position: relative;
 }
 
-.language-toggle {
+.navBar-language-toggle {
   background: none;
   border: none;
   color: white;
@@ -198,24 +265,46 @@
   cursor: pointer;
   display: flex;
   align-items: center;
-  padding: 0.5rem 1rem;
+  padding: 0.5rem;
+  width: 2rem;
+  height: 2rem;
+  justify-content: center;
 }
 
-.language-toggle i {
-  margin-right: 0.5rem; /* Marge à droite pour LTR */
+.navBar-language-toggle i {
+  margin: 0; /* Supprimé car plus de texte */
+}
+
+.navBar-language-toggle:hover {
+  background-color: rgba(255, 255, 255, 0.1);
 }
 
 /* Ajustements pour l'arabe (RTL) */
-.arabic .language-toggle {
+.arabic .navBar-language-toggle {
   flex-direction: row-reverse; /* Inverse l'ordre */
 }
 
-.arabic .language-toggle i {
+.arabic .navBar-language-toggle i {
   margin-right: 0; /* Supprime la marge droite */
-  margin-left: 0.5rem; /* Ajoute une marge gauche pour RTL */
+  margin-left: 0; /* Supprime la marge gauche */
 }
 
-.language-dropdown {
+.navBar-language-toggle[title]:hover::after {
+  content: attr(title);
+  position: absolute;
+  bottom: -2.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #1e2a44;
+  color: white;
+  padding: 0.3rem 0.6rem;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  white-space: nowrap;
+  z-index: 1000;
+}
+
+.navBar-language-dropdown {
   display: none;
   position: absolute;
   top: 100%;
@@ -227,16 +316,16 @@
 }
 
 /* Ajustements pour l'arabe (RTL) */
-.arabic .language-dropdown {
+.arabic .navBar-language-dropdown {
   right: auto; /* Supprime l'alignement à droite */
   left: 0; /* Aligne à gauche pour RTL */
 }
 
-.language-dropdown.active {
+.navBar-language-dropdown.active {
   display: block;
 }
 
-.language-dropdown button {
+.navBar-language-dropdown button {
   display: block;
   width: 100%;
   padding: 0.5rem 1rem;
@@ -247,17 +336,17 @@
   cursor: pointer;
 }
 
-.language-dropdown button:hover {
+.navBar-language-dropdown button:hover {
   background-color: #f0f0f0;
 }
 
 /* Responsivité */
 @media (max-width: 768px) {
-  .navbar-toggle {
+  .navBar-toggle-icon {
     display: block;
   }
 
-  .navbar-links {
+  .navBar-right-links {
     display: none;
     flex-direction: column;
     position: absolute;
@@ -268,47 +357,76 @@
     padding: 1rem;
   }
 
-  .navbar-links.active {
+  .navBar-right-links.active {
     display: flex;
   }
 
-  .nav-item {
+  .navBar-item {
     width: 100%;
     justify-content: flex-start;
+    width: 1.8rem;
+    height: 1.8rem;
   }
 
-  .navbar-weather {
+  .navBar-weather {
     width: 100%;
   }
 
-  .weather-dropdown {
+  .navBar-weather-toggle {
+    width: 1.8rem;
+    height: 1.8rem;
+  }
+
+  .navBar-weather-dropdown {
     position: static;
     width: 100%;
     box-shadow: none;
   }
 
-  .navbar-language {
+  .navBar-language {
     width: 100%;
   }
 
-  .language-dropdown {
+  .navBar-language-toggle {
+    width: 1.8rem;
+    height: 1.8rem;
+  }
+
+  .navBar-language-dropdown {
     width: 100%;
     position: static;
     box-shadow: none;
   }
 
   /* Ajustements pour l'arabe sur mobile */
-  .arabic .navbar-links {
+  .arabic .navBar-right-links {
     flex-direction: column-reverse; /* Inverse l'ordre des éléments pour RTL */
   }
 
-  .arabic .nav-item {
+  .arabic .navBar-item {
     justify-content: flex-end; /* Aligne les items à droite pour RTL */
   }
 
-  .arabic .weather-toggle,
-  .arabic .language-toggle {
+  .arabic .navBar-weather-toggle,
+  .arabic .navBar-language-toggle {
     width: 100%;
     justify-content: flex-end; /* Aligne à droite pour RTL */
+  }
+}
+
+@media (max-width: 480px) {
+  .navBar-item {
+    width: 1.5rem;
+    height: 1.5rem;
+  }
+
+  .navBar-weather-toggle {
+    width: 1.5rem;
+    height: 1.5rem;
+  }
+
+  .navBar-language-toggle {
+    width: 1.5rem;
+    height: 1.5rem;
   }
 }

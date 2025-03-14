@@ -8,6 +8,7 @@ import com.Portbil.portfolio_backend.repository.MessageRepository;
 import com.Portbil.portfolio_backend.repository.NotificationRepository;
 import com.Portbil.portfolio_backend.repository.UserRepository;
 import com.Portbil.portfolio_backend.security.JwtUtil;
+import com.Portbil.portfolio_backend.service.ChatHistoryService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.CloseStatus;
@@ -20,8 +21,8 @@ import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Component
@@ -38,6 +39,9 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
 
     @Autowired
     private NotificationRepository notificationRepository;
+
+    @Autowired
+    private ChatHistoryService chatHistoryService;
 
     private final Map<String, WebSocketSession> sessions = new ConcurrentHashMap<>();
     private final Map<String, String> groupInvitations = new ConcurrentHashMap<>();
@@ -105,7 +109,6 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
         }
     }
 
-    // Dans sendPrivateMessage
     private void sendPrivateMessage(String fromUserId, String toUserId, String content, String receivedChatId, WebSocketSession fromSession) throws IOException {
         Optional<User> toUserOpt = userRepository.findById(toUserId);
         if (!toUserOpt.isPresent()) {
@@ -123,17 +126,20 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
                 .chatId(chatId)
                 .content(content)
                 .timestamp(Instant.now())
+                .isDeleted(false)
                 .build();
-        messageRepository.save(msg);
+        Message savedMessage = messageRepository.save(msg);
+        // Enregistrer dans l'historique
+        chatHistoryService.recordMessageAction(savedMessage, "CREATED");
 
         Map<String, String> messageMap = new HashMap<>();
-        messageMap.put("id", msg.getId());
+        messageMap.put("id", savedMessage.getId());
         messageMap.put("type", "private");
         messageMap.put("fromUserId", fromUserId);
         messageMap.put("toUserId", toUserId);
         messageMap.put("chatId", chatId);
         messageMap.put("content", content);
-        messageMap.put("timestamp", msg.getTimestamp().toString());
+        messageMap.put("timestamp", savedMessage.getTimestamp().toString());
         String messageJson = objectMapper.writeValueAsString(messageMap);
 
         WebSocketSession toSession = sessions.get(toUserId);
@@ -147,15 +153,14 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
         } else {
             Map<String, String> sentMessageMap = new HashMap<>();
             sentMessageMap.put("type", "message_sent");
-            sentMessageMap.put("id", msg.getId());
+            sentMessageMap.put("id", savedMessage.getId());
             sentMessageMap.put("toUserId", toUserId);
             sentMessageMap.put("chatId", chatId);
             sentMessageMap.put("content", content);
-            sentMessageMap.put("timestamp", msg.getTimestamp().toString());
+            sentMessageMap.put("timestamp", savedMessage.getTimestamp().toString());
             fromSession.sendMessage(new TextMessage(objectMapper.writeValueAsString(sentMessageMap)));
             System.out.println("📤 Message envoyé à " + toUserId + " (hors ligne), sauvegardé dans MongoDB avec chatId: " + chatId);
 
-            // Forcer l'envoi de la notification via WebSocket même si hors ligne (sera ignoré si pas connecté)
             Map<String, String> notificationData = new HashMap<>();
             notificationData.put("chatId", chatId);
             notificationData.put("fromUserId", fromUserId);
@@ -164,7 +169,6 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
         }
     }
 
-    // Dans sendGroupMessage (ajuster de manière similaire)
     private void sendGroupMessage(String fromUserId, String groupId, String content) throws IOException {
         addChatIdToUser(fromUserId, groupId);
         for (Map.Entry<String, String> entry : groupMembers.entrySet()) {
@@ -180,17 +184,20 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
                 .chatId(groupId)
                 .content(content)
                 .timestamp(Instant.now())
+                .isDeleted(false)
                 .build();
-        messageRepository.save(msg);
+        Message savedMessage = messageRepository.save(msg);
+        // Enregistrer dans l'historique
+        chatHistoryService.recordMessageAction(savedMessage, "CREATED");
 
         Map<String, String> messageMap = new HashMap<>();
-        messageMap.put("id", msg.getId());
+        messageMap.put("id", savedMessage.getId());
         messageMap.put("type", "group_message");
         messageMap.put("fromUserId", fromUserId);
         messageMap.put("groupId", groupId);
         messageMap.put("chatId", groupId);
         messageMap.put("content", content);
-        messageMap.put("timestamp", msg.getTimestamp().toString());
+        messageMap.put("timestamp", savedMessage.getTimestamp().toString());
         String messageJson = objectMapper.writeValueAsString(messageMap);
 
         for (Map.Entry<String, String> entry : groupMembers.entrySet()) {

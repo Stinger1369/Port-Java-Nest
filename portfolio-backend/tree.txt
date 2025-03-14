@@ -81,6 +81,7 @@
 │   │   │               │   ├── PortfolioCard.java
 │   │   │               │   ├── Project.java
 │   │   │               │   ├── Recommendation.java
+│   │   │               │   ├── Report.java
 │   │   │               │   ├── Role.java
 │   │   │               │   ├── Skill.java
 │   │   │               │   ├── SocialLink.java
@@ -104,6 +105,7 @@
 │   │   │               │   ├── PortfolioRepository.java
 │   │   │               │   ├── ProjectRepository.java
 │   │   │               │   ├── RecommendationRepository.java
+│   │   │               │   ├── ReportRepository.java
 │   │   │               │   ├── SkillRepository.java
 │   │   │               │   ├── SocialLinkRepository.java
 │   │   │               │   └── UserRepository.java
@@ -263,6 +265,8 @@
 │   │   │           │   ├── Project$ProjectBuilder.class
 │   │   │           │   ├── Recommendation.class
 │   │   │           │   ├── Recommendation$RecommendationBuilder.class
+│   │   │           │   ├── Report.class
+│   │   │           │   ├── Report$ReportBuilder.class
 │   │   │           │   ├── Role.class
 │   │   │           │   ├── Skill.class
 │   │   │           │   ├── Skill$SkillBuilder.class
@@ -289,6 +293,7 @@
 │   │   │           │   ├── PortfolioRepository.class
 │   │   │           │   ├── ProjectRepository.class
 │   │   │           │   ├── RecommendationRepository.class
+│   │   │           │   ├── ReportRepository.class
 │   │   │           │   ├── SkillRepository.class
 │   │   │           │   ├── SocialLinkRepository.class
 │   │   │           │   └── UserRepository.class

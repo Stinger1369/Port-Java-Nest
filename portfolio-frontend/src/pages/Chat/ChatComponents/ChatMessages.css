@@ -1,0 +1,145 @@
+/* portfolio-frontend/src/pages/Chat/ChatComponents/ChatMessages.css */
+
+/* Conteneur principal des messages */
+.cm-container {
+  flex-grow: 1;
+  padding: 24px; /* Espacement plus généreux pour une meilleure lisibilité */
+  overflow-y: auto; /* Scroll uniquement ici */
+  background: linear-gradient(135deg, #f0f4f8 0%, #e5ddd5 100%); /* Fond dégradé subtil */
+  display: flex;
+  flex-direction: column;
+  gap: 12px; /* Espacement entre les messages */
+  min-height: 0; /* Permet au conteneur de respecter les contraintes de hauteur */
+}
+
+/* Message de chargement */
+.cm-loading {
+  font-size: 16px;
+  color: #4a5568; /* Couleur douce */
+  text-align: center;
+  padding: 10px;
+  background-color: #edf2f7; /* Fond clair */
+  border-radius: 6px;
+}
+
+/* Message individuel */
+.cm-message {
+  position: relative;
+  display: inline-block;
+  max-width: 70%;
+  padding: 10px 14px; /* Espacement interne accru */
+  border-radius: 10px; /* Bordures arrondies */
+  font-size: 15px; /* Taille de police augmentée */
+  line-height: 1.6; /* Meilleure lisibilité */
+  word-wrap: break-word;
+  transition: transform 0.2s ease; /* Animation au survol */
+  z-index: 1; /* En dessous des icônes d'action */
+}
+
+/* Effet au survol des messages */
+.cm-message:hover {
+  transform: scale(1.02); /* Zoom subtil au survol */
+}
+
+/* Message envoyé */
+.cm-message.cm-sent {
+  background-color: #c6f6d5; /* Vert clair */
+  color: #2d3748; /* Texte sombre */
+  align-self: flex-end;
+  margin-left: auto;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Ombre légère */
+}
+
+/* Message reçu */
+.cm-message.cm-received {
+  background-color: #ffffff; /* Fond blanc */
+  color: #2d3748; /* Texte sombre */
+  align-self: flex-start;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Ombre légère */
+}
+
+/* Contenu du message */
+.cm-content {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Texte du message */
+.cm-text {
+  margin-bottom: 6px; /* Espacement accru */
+  display: flex;
+  flex-direction: column;
+}
+
+/* Nom de l'expéditeur */
+.cm-text strong {
+  font-size: 13px; /* Légère augmentation */
+  color: #4a5568; /* Couleur douce */
+  margin-bottom: 4px; /* Espacement accru */
+}
+
+/* Métadonnées (horodatage et icônes d'action) */
+.cm-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px; /* Espacement entre les éléments */
+  justify-content: flex-end;
+}
+
+/* Horodatage */
+.cm-timestamp {
+  font-size: 12px; /* Légère augmentation */
+  color: #718096; /* Couleur grise */
+}
+
+/* Icônes d'action */
+.cm-action-icon {
+  cursor: pointer;
+  font-size: 14px; /* Taille cohérente */
+  color: #d4af37; /* Doré luxueux */
+  opacity: 0.8;
+  transition: opacity 0.3s ease, transform 0.2s ease;
+  margin-left: 4px; /* Espacement entre les icônes */
+}
+
+/* Effet au survol des icônes */
+.cm-action-icon:hover {
+  opacity: 1;
+  transform: scale(1.2); /* Zoom plus marqué */
+}
+
+/* Conteneur des composants modaux (ContactInfo, ReportUser, etc.) */
+.cm-actions {
+  position: absolute;
+  top: 0;
+  right: 100%; /* Positionne à droite du message */
+  z-index: 20; /* Au-dessus des messages */
+  display: flex;
+  flex-direction: column;
+  background: none; /* Pas de fond pour les composants */
+  padding: 8px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .cm-container {
+    padding: 16px; /* Réduction pour mobile */
+  }
+
+  .cm-message {
+    max-width: 85%;
+    padding: 8px 12px;
+    font-size: 14px;
+  }
+
+  .cm-action-icon {
+    font-size: 12px;
+    margin-left: 2px;
+  }
+
+  .cm-actions {
+    right: 0; /* Ajustement pour mobile */
+    top: 100%;
+  }
+}

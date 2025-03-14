@@ -1,3 +1,4 @@
+// src/components/Navbar/Navbar.tsx
 import { useState, useEffect, useRef, memo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
@@ -5,7 +6,7 @@ import { RootState, AppDispatch } from "../../redux/store";
 import { logout } from "../../redux/features/authSlice";
 import { fetchUser } from "../../redux/features/userSlice";
 import { fetchWeather } from "../../redux/features/weatherSlice";
-import { fetchNotifications } from "../../redux/features/notificationSlice"; // Import ajouté
+import { fetchNotifications } from "../../redux/features/notificationSlice";
 import { useTranslation } from "react-i18next";
 import LanguageSelector from "../LanguageSelector/LanguageSelector";
 import WeatherComponent from "../WeatherComponent/WeatherComponent";
@@ -115,18 +116,19 @@ const Navbar = () => {
   };
 
   return (
-    <nav className={`navbar ${isArabic ? "arabic" : ""}`}>
-      <Link to="/" className="navbar-logo">
+    <nav className={`navBar ${isArabic ? "arabic" : ""}`}>
+      <Link to="/" className="navBar-logo">
         <i className="fas fa-folder-open"></i> Portfolio
       </Link>
-      <button className="navbar-toggle" onClick={toggleMenu}>
-        <i className={`fas ${isMenuOpen ? "fa-times" : "fa-bars"}`}></i>
-      </button>
-      <div className={`navbar-links ${isMenuOpen ? "active" : ""}`}>
+      <div className={`navBar-right-links ${isMenuOpen ? "active" : ""}`}>
         {token ? (
           <>
-            <button onClick={handlePortfolioClick} className="nav-item">
-              <i className="fas fa-briefcase"></i> {t("navbar.portfolio")}
+            <button
+              onClick={handlePortfolioClick}
+              className="navBar-item navBar-item-portfolio"
+              title={t("navbar.portfolio")}
+            >
+              <i className="fas fa-briefcase"></i>
             </button>
             <WeatherComponent
               ref={weatherRef}
@@ -140,33 +142,50 @@ const Navbar = () => {
               onToggle={() => setIsNotificationsOpen(!isNotificationsOpen)}
               onClose={() => setIsNotificationsOpen(false)}
             />
-            <button onClick={handleLogout} className="nav-item">
-              <i className="fas fa-sign-out-alt"></i> {t("navbar.logout")}
-            </button>
             <UserDropdown
               ref={dropdownRef}
               isOpen={isDropdownOpen}
               onToggle={() => setIsDropdownOpen(!isDropdownOpen)}
               onClose={() => setIsDropdownOpen(false)}
             />
+            <button
+              onClick={handleLogout}
+              className="navBar-item navBar-item-logout"
+              title={t("navbar.logout")}
+            >
+              <i className="fas fa-sign-out-alt"></i>
+            </button>
+            <LanguageSelector
+              ref={languageRef}
+              isOpen={isLanguageOpen}
+              onToggle={() => setIsLanguageOpen(!isLanguageOpen)}
+              onClose={() => setIsLanguageOpen(false)}
+            />
           </>
         ) : (
           <>
-            <Link to="/login" onClick={() => setIsMenuOpen(false)} className="nav-item">
-              <i className="fas fa-sign-in-alt"></i> {t("navbar.login")}
+            <Link
+              to="/login"
+              onClick={() => setIsMenuOpen(false)}
+              className="navBar-item navBar-item-login"
+              title={t("navbar.login")}
+            >
+              <i className="fas fa-sign-in-alt"></i>
             </Link>
-            <Link to="/register" onClick={() => setIsMenuOpen(false)} className="nav-item">
-              <i className="fas fa-user-plus"></i> {t("navbar.register")}
+            <Link
+              to="/register"
+              onClick={() => setIsMenuOpen(false)}
+              className="navBar-item navBar-item-register"
+              title={t("navbar.register")}
+            >
+              <i className="fas fa-user-plus"></i>
             </Link>
           </>
         )}
-        <LanguageSelector
-          ref={languageRef}
-          isOpen={isLanguageOpen}
-          onToggle={() => setIsLanguageOpen(!isLanguageOpen)}
-          onClose={() => setIsLanguageOpen(false)}
-        />
       </div>
+      <button className="navBar-toggle navBar-toggle-icon" onClick={toggleMenu}>
+        <i className={`fas ${isMenuOpen ? "fa-times" : "fa-bars"}`}></i>
+      </button>
     </nav>
   );
 };

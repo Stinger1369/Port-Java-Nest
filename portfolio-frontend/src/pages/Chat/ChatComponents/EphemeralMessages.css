@@ -1,0 +1,76 @@
+/* portfolio-frontend/src/pages/Chat/ChatComponents/EphemeralMessages.css */
+.ephemeral-messages-modal {
+  position: relative;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 90%;
+  max-width: 400px;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  padding: 20px;
+  outline: none;
+}
+
+.ephemeral-messages-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+}
+
+.ephemeral-messages-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.ephemeral-messages-title {
+  font-size: 18px;
+  font-weight: 500;
+  color: #111b21;
+  margin-bottom: 15px;
+}
+
+.ephemeral-messages-text {
+  font-size: 14px;
+  color: #111b21;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.ephemeral-messages-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.ephemeral-messages-button {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.2s;
+}
+
+.ephemeral-messages-button.activate {
+  background-color: #075e54;
+  color: white;
+}
+
+.ephemeral-messages-button.activate:hover {
+  background-color: #064f45;
+}
+
+.ephemeral-messages-button.cancel {
+  background-color: #e0e0e0;
+  color: #111b21;
+}
+
+.ephemeral-messages-button.cancel:hover {
+  background-color: #d0d0d0;
+}

@@ -1,3 +1,4 @@
+// portfolio-frontend/src/pages/Chat/ChatPage.tsx
 import React, { useEffect, useState, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useParams, useNavigate } from "react-router-dom";
@@ -6,20 +7,25 @@ import {
   fetchAllConversations,
   fetchPrivateMessages,
   fetchGroupMessages,
-  updateMessage,
-  deleteMessage,
   addMessage,
-  addGroup,
-  resetMessages,
+  updateMessage,
 } from "../../redux/features/chatSlice";
 import { fetchUser, fetchUserById } from "../../redux/features/userSlice";
 import { getAllImagesByUserId } from "../../redux/features/imageSlice";
-import { useWebSocket } from "../../hooks/useWebSocket";
+import ChatMessages from "./ChatComponents/ChatMessages";
+import MessageInput from "./ChatComponents/MessageInput";
+import ContactInfo from "./ChatComponents/ContactInfo";
+import ReportUser from "./ChatComponents/ReportUser";
+import BlockUser from "./ChatComponents/BlockUser";
+import SearchMessages from "./ChatComponents/SearchMessages";
+import EphemeralMessages from "./ChatComponents/EphemeralMessages";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faUser, faFlag, faBan, faSearch, faClock } from "@fortawesome/free-solid-svg-icons";
 import "./ChatPage.css";
 
 interface Message {
   id: string;
-  type: "private" | "group_message";
+  type: string;
   fromUserId: string;
   toUserId?: string;
   groupId?: string;
@@ -28,7 +34,11 @@ interface Message {
   timestamp: string;
 }
 
-const ChatPage: React.FC = () => {
+interface ChatPageProps {
+  wsInstance: WebSocket | null;
+}
+
+const ChatPage: React.FC<ChatPageProps> = ({ wsInstance }) => {
   const { type, id } = useParams<{ type?: "private" | "group"; id?: string }>();
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
@@ -36,12 +46,16 @@ const ChatPage: React.FC = () => {
   const { token, userId } = useSelector((state: RootState) => state.auth);
   const { members, user } = useSelector((state: RootState) => state.user);
   const { images } = useSelector((state: RootState) => state.image);
-  const [messageInput, setMessageInput] = useState("");
   const [selectedChatId, setSelectedChatId] = useState<string | null>(id || null);
+  const [showContactInfo, setShowContactInfo] = useState(false);
+  const [showReport, setShowReport] = useState(false);
+  const [showBlock, setShowBlock] = useState(false);
+  const [showSearch, setShowSearch] = useState(false);
+  const [showEphemeral, setShowEphemeral] = useState(false);
   const [showActions, setShowActions] = useState<string | null>(null);
-  const { wsInstance, connectWebSocket } = useWebSocket(token);
   const messageOptionsRef = useRef<Map<string, HTMLDivElement>>(new Map());
   const messageIconRef = useRef<Map<string, HTMLElement>>(new Map());
+  const connectWebSocket = () => {}; // Placeholder
 
   const refreshData = () => {
     if (!token) return;
@@ -65,7 +79,6 @@ const ChatPage: React.FC = () => {
 
   useEffect(() => {
     if (!token) return;
-
     refreshData();
 
     const handleClickOutside = (event: MouseEvent) => {
@@ -125,129 +138,84 @@ const ChatPage: React.FC = () => {
       if (msg.toUserId) userIds.add(msg.toUserId);
     });
     userIds.delete(userId || "");
-    userIds.forEach((uid) => {
-      dispatch(getAllImagesByUserId(uid));
-    });
+    userIds.forEach((uid) => dispatch(getAllImagesByUserId(uid)));
   }, [messages, userId, dispatch]);
 
-  const isRecipientDeleted = () => {
-    if (!selectedChatId || groups.includes(selectedChatId)) return false;
-    const otherUserId = messages.find(msg => msg.chatId === selectedChatId)?.toUserId === userId
-      ? messages.find(msg => msg.chatId === selectedChatId)?.fromUserId
-      : messages.find(msg => msg.chatId === selectedChatId)?.toUserId;
-    if (!otherUserId) return false;
-    return !members.find((m) => m.id === otherUserId);
-  };
+  useEffect(() => {
+    if (!wsInstance) {
+      console.log("🔴 WebSocket non disponible, tentative de connexion...");
+      return;
+    }
+
+    const handleMessage = (event: MessageEvent) => {
+      try {
+        const receivedMessage = JSON.parse(event.data);
+        console.log("📥 Message reçu via WebSocket:", receivedMessage);
+
+        if (receivedMessage.chatId && receivedMessage.id) {
+          const tempMessage = messages.find(
+            (msg) => msg.chatId === receivedMessage.chatId && msg.fromUserId === userId && msg.content === receivedMessage.content
+          );
+          if (tempMessage && tempMessage.id.startsWith("temp-")) {
+            console.log("🔄 Remplacement du message temporaire:", tempMessage.id, "par:", receivedMessage.id);
+            dispatch(updateMessage({ tempId: tempMessage.id, updatedMessage: receivedMessage }));
+            // Mettre à jour selectedChatId si nécessaire
+            if (selectedChatId && selectedChatId.startsWith("temp-")) {
+              setSelectedChatId(receivedMessage.chatId);
+            }
+          } else {
+            console.log("📩 Ajout d'un nouveau message reçu:", receivedMessage);
+            dispatch(addMessage(receivedMessage));
+          }
+        } else {
+          console.log("Notification ignorée:", receivedMessage);
+        }
+      } catch (error) {
+        console.error("Erreur lors de la réception du message WebSocket:", error);
+      }
+    };
+
+    wsInstance.addEventListener("message", handleMessage);
+
+    return () => {
+      wsInstance.removeEventListener("message", handleMessage);
+    };
+  }, [wsInstance, dispatch, selectedChatId, id, messages, userId]);
+
+  useEffect(() => {
+    if (!wsInstance) {
+      console.log("🔴 WebSocket non disponible, tentative de connexion...");
+      return;
+    }
+
+    const handleClose = () => {
+      console.log("🔴 WebSocket fermé, tentative de reconnexion...");
+      connectWebSocket();
+    };
+
+    const handleError = (error: Event) => {
+      console.error("❌ Erreur WebSocket:", error);
+    };
+
+    wsInstance.addEventListener("close", handleClose);
+    wsInstance.addEventListener("error", handleError);
+
+    return () => {
+      wsInstance.removeEventListener("close", handleClose);
+      wsInstance.removeEventListener("error", handleError);
+    };
+  }, [wsInstance, connectWebSocket]);
 
   const getOtherUserIdFromChat = () => {
     if (!selectedChatId || groups.includes(selectedChatId)) return null;
-    const chat = messages.find(msg => msg.chatId === selectedChatId);
+    const chat = messages.find((msg) => msg.chatId === selectedChatId);
     return chat ? (chat.toUserId === userId ? chat.fromUserId : chat.toUserId) : (type === "private" && id ? id : null);
-  };
-
-  const getExistingChatId = (toUserId: string) => {
-    const existingMessage = messages.find(
-      msg => (msg.fromUserId === userId && msg.toUserId === toUserId) || (msg.fromUserId === toUserId && msg.toUserId === userId)
-    );
-    return existingMessage ? existingMessage.chatId : `temp-${toUserId}`;
-  };
-
-  const sendMessage = () => {
-    if (isRecipientDeleted()) {
-      console.log("❌ Envoi impossible: le destinataire a supprimé son compte");
-      return;
-    }
-
-    let toUserId = getOtherUserIdFromChat();
-    if (!toUserId && type === "private" && id) {
-      toUserId = id;
-    }
-
-    if (!toUserId) {
-      console.log("❌ Aucun destinataire valide trouvé pour cette conversation");
-      return;
-    }
-
-    if (wsInstance && wsInstance.readyState === WebSocket.OPEN && messageInput) {
-      const isGroup = groups.includes(selectedChatId || "");
-      const chatId = isGroup ? selectedChatId : getExistingChatId(toUserId);
-      const message = {
-        type: isGroup ? "group_message" : "private",
-        [isGroup ? "groupId" : "toUserId"]: toUserId,
-        content: messageInput,
-        chatId: chatId,
-      };
-      console.log("📤 Envoi du message au WebSocket:", message);
-      wsInstance.send(JSON.stringify(message));
-      setMessageInput("");
-
-      // Log pour vérifier si le message est envoyé
-      console.log("✅ Message envoyé via WebSocket, en attente de réponse du serveur...");
-
-      if (!isGroup) {
-        dispatch(fetchPrivateMessages(toUserId)).then((result) => {
-          if (result.payload && result.payload.length > 0) {
-            setSelectedChatId(result.payload[0].chatId);
-            console.log("🔍 ChatId mis à jour après envoi:", result.payload[0].chatId);
-            const otherUserId = result.payload[0].fromUserId === userId ? result.payload[0].toUserId : result.payload[0].fromUserId;
-            if (otherUserId) dispatch(fetchUserById(otherUserId));
-          }
-        });
-      }
-    } else {
-      console.error("❌ Impossible d’envoyer le message: WebSocket non connecté ou chat non sélectionné");
-      if (!wsInstance || wsInstance.readyState !== WebSocket.OPEN) {
-        console.log("🔄 WebSocket non connecté, tentative de reconnexion...");
-        connectWebSocket();
-      }
-    }
-  };
-
-  const handleUpdateMessage = (messageId: string, currentContent: string) => {
-    const newContent = prompt("Modifier le message :", currentContent);
-    if (newContent) {
-      dispatch(updateMessage({ id: messageId, content: newContent }));
-      setShowActions(null);
-    }
-  };
-
-  const handleDeleteMessage = (messageId: string) => {
-    if (window.confirm("Supprimer ce message ?")) {
-      dispatch(deleteMessage(messageId));
-      setShowActions(null);
-    }
-  };
-
-  const handleChatSelect = (chatId: string, isGroup: boolean) => {
-    setSelectedChatId(chatId);
-    if (isGroup) {
-      dispatch(fetchGroupMessages(chatId));
-      navigate(`/chat/group/${chatId}`);
-    } else {
-      const otherUserId = messages.find(msg => msg.chatId === chatId)?.toUserId === userId
-        ? messages.find(msg => msg.chatId === chatId)?.fromUserId
-        : messages.find(msg => msg.chatId === chatId)?.toUserId;
-      const targetUserId = otherUserId || chatId;
-      dispatch(fetchPrivateMessages(targetUserId)).then((result) => {
-        if (result.payload && result.payload.length > 0) {
-          setSelectedChatId(result.payload[0].chatId);
-          console.log("🔍 ChatId mis à jour après sélection:", result.payload[0].chatId);
-          const fetchedOtherUserId = result.payload[0].fromUserId === userId ? result.payload[0].toUserId : result.payload[0].fromUserId;
-          if (fetchedOtherUserId) dispatch(fetchUserById(fetchedOtherUserId));
-        } else {
-          setSelectedChatId(chatId);
-          console.log("🔍 Aucun message trouvé, conservation du chatId:", chatId);
-          if (!otherUserId) dispatch(fetchUserById(targetUserId));
-        }
-      });
-      navigate(`/chat/private/${targetUserId}`);
-    }
   };
 
   const getContactName = (contactId: string) => {
     if (!contactId) return "Utilisateur inconnu";
     if (contactId.match(/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/)) {
-      const chatMessage = messages.find(msg => msg.chatId === contactId);
+      const chatMessage = messages.find((msg) => msg.chatId === contactId);
       if (chatMessage) {
         const otherUserId = chatMessage.fromUserId === userId ? chatMessage.toUserId : chatMessage.fromUserId;
         if (otherUserId) contactId = otherUserId;
@@ -267,7 +235,7 @@ const ChatPage: React.FC = () => {
   const getProfileImage = (contactId: string) => {
     if (!contactId) return null;
     if (contactId.match(/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/)) {
-      const chatMessage = messages.find(msg => msg.chatId === contactId);
+      const chatMessage = messages.find((msg) => msg.chatId === contactId);
       if (chatMessage) {
         const otherUserId = chatMessage.fromUserId === userId ? chatMessage.toUserId : chatMessage.fromUserId;
         if (otherUserId) contactId = otherUserId;
@@ -284,18 +252,58 @@ const ChatPage: React.FC = () => {
   };
 
   const getUniqueChats = () => {
-    const chatMap = new Map<string, { chatId: string; isGroup: boolean; otherUserId?: string }>();
-    messages.forEach(msg => {
+    const chatMap = new Map<string, { chatId: string; isGroup: boolean; otherUserId?: string; latestTimestamp: string }>();
+    messages.forEach((msg) => {
       if (msg.chatId) {
-        if (msg.type === "private") {
+        if (msg.type === "private" || msg.type === "group_message") {
           const otherUserId = msg.fromUserId === userId ? msg.toUserId : msg.fromUserId;
-          chatMap.set(msg.chatId, { chatId: msg.chatId, isGroup: false, otherUserId });
-        } else if (msg.type === "group_message") {
-          chatMap.set(msg.chatId, { chatId: msg.chatId, isGroup: true });
+          if (otherUserId) {
+            const existingChat = chatMap.get(otherUserId);
+            const currentTimestamp = new Date(msg.timestamp).getTime();
+            if (!existingChat || new Date(existingChat.latestTimestamp).getTime() < currentTimestamp) {
+              chatMap.set(otherUserId, {
+                chatId: msg.chatId,
+                isGroup: msg.type === "group_message",
+                otherUserId,
+                latestTimestamp: msg.timestamp,
+              });
+            }
+          }
         }
       }
     });
-    return Array.from(chatMap.values());
+    // Trier par timestamp décroissant (les plus récents en premier)
+    const sortedChats = Array.from(chatMap.values()).sort((a, b) => {
+      return new Date(b.latestTimestamp).getTime() - new Date(a.latestTimestamp).getTime();
+    });
+    console.log("🔍 Chats uniques générés et triés par date:", sortedChats); // Log pour débogage
+    return sortedChats;
+  };
+
+  const handleChatSelect = (chatId: string, isGroup: boolean) => {
+    setSelectedChatId(chatId);
+    if (isGroup) {
+      dispatch(fetchGroupMessages(chatId));
+      navigate(`/chat/group/${chatId}`);
+    } else {
+      const otherUserId = messages.find((msg) => msg.chatId === chatId)?.toUserId === userId
+        ? messages.find((msg) => msg.chatId === chatId)?.fromUserId
+        : messages.find((msg) => msg.chatId === chatId)?.toUserId;
+      const targetUserId = otherUserId || chatId;
+      dispatch(fetchPrivateMessages(targetUserId)).then((result) => {
+        if (result.payload && result.payload.length > 0) {
+          setSelectedChatId(result.payload[0].chatId);
+          console.log("🔍 ChatId mis à jour après sélection:", result.payload[0].chatId);
+          const fetchedOtherUserId = result.payload[0].fromUserId === userId ? result.payload[0].toUserId : result.payload[0].fromUserId;
+          if (fetchedOtherUserId) dispatch(fetchUserById(fetchedOtherUserId));
+        } else {
+          setSelectedChatId(chatId);
+          console.log("🔍 Aucun message trouvé, conservation du chatId:", chatId);
+          if (!otherUserId) dispatch(fetchUserById(targetUserId));
+        }
+      });
+      navigate(`/chat/private/${targetUserId}`);
+    }
   };
 
   const toggleActions = (messageId: string, event: React.MouseEvent) => {
@@ -303,40 +311,42 @@ const ChatPage: React.FC = () => {
     setShowActions(showActions === messageId ? null : messageId);
   };
 
+  const otherUserId = getOtherUserIdFromChat() || "";
+
   return (
-    <div className="chat-page">
-      <div className="chat-container">
-        <div className="chat-sidebar">
-          <h3>Conversations</h3>
-          <button onClick={refreshData}>Rafraîchir</button>
-          <ul>
-            {getUniqueChats().map(chat => (
+    <div className="chat-page-container">
+      <div className="chat-page-chat-container">
+        <div className="chat-page-sidebar">
+          <h3 className="chat-page-sidebar-title">Conversations</h3>
+          <button className="chat-page-sidebar-refresh" onClick={refreshData}>Rafraîchir</button>
+          <ul className="chat-page-sidebar-list">
+            {getUniqueChats().map((chat) => (
               <li
                 key={chat.chatId}
-                className={chat.chatId === selectedChatId ? "active" : ""}
+                className={`chat-page-sidebar-item ${chat.chatId === selectedChatId ? "active" : ""}`}
                 onClick={() => handleChatSelect(chat.chatId, chat.isGroup)}
               >
-                <div className="chat-item">
+                <div className="chat-page-chat-item">
                   {chat.isGroup ? (
-                    <div className="chat-avatar-placeholder">
+                    <div className="chat-page-avatar-placeholder">
                       <i className="fas fa-users"></i>
                     </div>
                   ) : (
-                    <div className="chat-avatar">
+                    <div className="chat-page-avatar">
                       {getProfileImage(chat.otherUserId || chat.chatId) ? (
                         <img
                           src={`http://localhost:7000/${getProfileImage(chat.otherUserId || chat.chatId)}`}
                           alt="Profile"
-                          className="chat-avatar-img"
+                          className="chat-page-avatar-img"
                         />
                       ) : (
-                        <div className="chat-avatar-placeholder">
+                        <div className="chat-page-avatar-placeholder">
                           <i className="fas fa-user-circle"></i>
                         </div>
                       )}
                     </div>
                   )}
-                  <span className="chat-name">
+                  <span className="chat-page-chat-name">
                     {chat.isGroup ? `Groupe ${chat.chatId}` : getContactName(chat.otherUserId || chat.chatId)}
                   </span>
                 </div>
@@ -345,76 +355,77 @@ const ChatPage: React.FC = () => {
           </ul>
         </div>
 
-        <div className="chat-main">
-          <div className="chat-header">
-            <h3>
+        <div className="chat-page-main">
+          <div className="chat-page-header">
+            <h3 className="chat-page-header-title">
               {selectedChatId
-                ? (groups.includes(selectedChatId) ? `Groupe ${selectedChatId}` : getContactName(getOtherUserIdFromChat() || selectedChatId))
+                ? groups.includes(selectedChatId)
+                  ? `Groupe ${selectedChatId}`
+                  : getContactName(getOtherUserIdFromChat() || selectedChatId)
                 : "Sélectionnez une conversation"}
             </h3>
+            {selectedChatId && !groups.includes(selectedChatId) && (
+              <div className="chat-page-header-actions">
+                <FontAwesomeIcon
+                  icon={faUser}
+                  className="chat-page-header-icon"
+                  onClick={() => setShowContactInfo(true)}
+                  title="Afficher le contact"
+                />
+                <FontAwesomeIcon
+                  icon={faSearch}
+                  className="chat-page-header-icon"
+                  onClick={() => setShowSearch(true)}
+                  title="Rechercher dans les messages"
+                />
+                <FontAwesomeIcon
+                  icon={faClock}
+                  className="chat-page-header-icon"
+                  onClick={() => setShowEphemeral(true)}
+                  title="Messages éphémères"
+                />
+                <FontAwesomeIcon
+                  icon={faFlag}
+                  className="chat-page-header-icon"
+                  onClick={() => setShowReport(true)}
+                  title="Signaler"
+                />
+                <FontAwesomeIcon
+                  icon={faBan}
+                  className="chat-page-header-icon"
+                  onClick={() => setShowBlock(true)}
+                  title="Bloquer"
+                />
+              </div>
+            )}
           </div>
-          <div className="chat-messages">
-            {status === "loading" && <p>Loading...</p>}
-            {messages
-              .filter((msg) => msg.chatId === selectedChatId)
-              .map((msg) => (
-                <div key={msg.id} className={`message ${msg.fromUserId === userId ? "sent" : "received"}`}>
-                  <div className="message-content">
-                    <p>
-                      <strong>{getContactName(msg.fromUserId)}</strong> {msg.content}
-                    </p>
-                    <div className="message-meta">
-                      <span>{new Date(msg.timestamp).toLocaleString()}</span>
-                      {msg.fromUserId === userId && (
-                        <i
-                          className="fas fa-caret-down message-options"
-                          onClick={(event) => toggleActions(msg.id, event)}
-                          ref={(el) => {
-                            if (el) messageOptionsRef.current.set(msg.id, el);
-                            else messageOptionsRef.current.delete(msg.id);
-                          }}
-                        ></i>
-                      )}
-                    </div>
-                    {msg.fromUserId === userId && showActions === msg.id && (
-                      <div
-                        className="message-actions"
-                        ref={(el) => {
-                          if (el) messageOptionsRef.current.set(msg.id, el);
-                          else messageOptionsRef.current.delete(msg.id);
-                        }}
-                      >
-                        <button onClick={() => handleUpdateMessage(msg.id, msg.content)}>
-                          <i className="fas fa-edit"></i> Modifier
-                        </button>
-                        <button onClick={() => handleDeleteMessage(msg.id)}>
-                          <i className="fas fa-trash"></i> Supprimer
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ))}
-          </div>
-          <div className="chat-input">
-            <input
-              type="text"
-              value={messageInput}
-              onChange={(e) => setMessageInput(e.target.value)}
-              placeholder={
-                !selectedChatId
-                  ? "Sélectionnez une conversation pour écrire"
-                  : isRecipientDeleted()
-                  ? "Ce compte a été supprimé"
-                  : "Tapez votre message ici..."
-              }
-              onKeyPress={(e) => e.key === "Enter" && sendMessage()}
-              disabled={!selectedChatId || isRecipientDeleted()}
-            />
-            <button onClick={sendMessage} disabled={!selectedChatId || isRecipientDeleted()}>
-              Envoyer
-            </button>
-          </div>
+          <ChatMessages
+            selectedChatId={selectedChatId}
+            userId={userId}
+            showActions={showActions}
+            setShowActions={setShowActions}
+            messageOptionsRef={messageOptionsRef}
+            messageIconRef={messageIconRef}
+          />
+          <MessageInput
+            selectedChatId={selectedChatId}
+            setSelectedChatId={setSelectedChatId}
+            wsInstance={wsInstance}
+            userId={userId}
+            type={type}
+            id={id}
+            groups={groups}
+          />
+          <ContactInfo
+            userId={otherUserId}
+            isOpen={showContactInfo}
+            onClose={() => setShowContactInfo(false)}
+            selectedChatId={selectedChatId}
+          />
+          <ReportUser userId={otherUserId} messageId="" isOpen={showReport} onClose={() => setShowReport(false)} />
+          <BlockUser userId={otherUserId} isOpen={showBlock} onClose={() => setShowBlock(false)} />
+          <SearchMessages chatId={selectedChatId || ""} isOpen={showSearch} onClose={() => setShowSearch(false)} />
+          <EphemeralMessages chatId={selectedChatId || ""} isOpen={showEphemeral} onClose={() => setShowEphemeral(false)} />
         </div>
       </div>
     </div>

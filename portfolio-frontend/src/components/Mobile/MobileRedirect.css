@@ -98,6 +98,54 @@
     width: auto !important;
     box-shadow: 0 0 15px rgba(0, 230, 255, 0.5) !important;
   }
+
+  .mobile-redirect-container {
+    padding: 10px; /* Réduire les marges sur mobile */
+  }
+
+  .futuristic-overlay {
+    padding: 10px;
+  }
+
+  .neon-title {
+    font-size: 1.5rem; /* Réduire la taille du titre */
+    margin-top: 1rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .futuristic-text {
+    font-size: 1rem; /* Réduire la taille du texte */
+    max-width: 90%;
+    margin-bottom: 1rem;
+  }
+
+  .feature-icons {
+    gap: 10px; /* Réduire l'espacement entre les icônes */
+    margin-bottom: 1rem;
+  }
+
+  .feature-icon {
+    font-size: 1.5rem; /* Réduire la taille des icônes */
+  }
+
+  .store-links {
+    gap: 15px;
+  }
+
+  .button-column {
+    gap: 10px; /* Réduire l'espacement entre les boutons */
+  }
+
+  .store-button, .info-button {
+    padding: 10px 20px; /* Réduire le padding */
+    font-size: 1rem; /* Réduire la taille de la police */
+    width: 200px; /* Réduire la largeur des boutons */
+    margin: 0 auto; /* Centrer les boutons */
+  }
+
+  .store-button i, .info-button i {
+    font-size: 1.1rem; /* Réduire la taille des icônes dans les boutons */
+  }
 }
 
 .neon-title {

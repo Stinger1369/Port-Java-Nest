@@ -1,3 +1,4 @@
+// src/components/LanguageSelector/LanguageSelector.tsx
 import { forwardRef } from "react";
 import { useTranslation } from "react-i18next";
 import Flag from "react-flagkit";
@@ -31,16 +32,21 @@ const LanguageSelector = forwardRef<HTMLDivElement, LanguageSelectorProps>((prop
   ];
 
   return (
-    <div ref={ref} className={`navbar-language ${props.className || ""} ${isArabic ? "arabic" : ""}`}>
-      <button className="language-toggle" onClick={props.onToggle}>
-        <span className="toggle-content">
+    <div ref={ref} className={`languageSelector-container ${props.className || ""} ${isArabic ? "arabic" : ""}`}>
+      <button className="languageSelector-toggle" onClick={props.onToggle} title={displayLanguage}>
+        <span className="languageSelector-toggle-content">
           <i className="fas fa-globe"></i> {displayLanguage}
         </span>
       </button>
-      <div className={`language-dropdown ${props.isOpen ? "active" : ""}`}>
+      <div className={`languageSelector-menu ${props.isOpen ? "active" : ""}`}>
         {languages.map((lang) => (
-          <button key={lang.code} onClick={() => changeLanguage(lang.code)} className={isArabic ? "arabic" : ""}>
-            <span className="dropdown-item-content">
+          <button
+            key={lang.code}
+            onClick={() => changeLanguage(lang.code)}
+            className={`languageSelector-item languageSelector-item-${lang.code.toLowerCase()} ${isArabic ? "arabic" : ""}`}
+            title={lang.label}
+          >
+            <span className="languageSelector-item-content">
               <Flag country={lang.countryCode} size={20} /> {lang.label}
             </span>
           </button>

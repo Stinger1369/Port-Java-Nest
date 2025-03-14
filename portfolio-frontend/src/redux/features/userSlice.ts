@@ -22,7 +22,8 @@ interface User {
   likedUserIds?: string[];
   likerUserIds?: string[];
   imageIds?: string[];
-  isVerified?: boolean; // Ajouté pour refléter le champ du backend
+  isVerified?: boolean;
+  blockedUserIds?: string[]; // Ajouté pour refléter les utilisateurs bloqués
 }
 
 interface UserState {
@@ -82,7 +83,8 @@ export const fetchUser = createAsyncThunk(
         likedUserIds: data.likedUserIds || [],
         likerUserIds: data.likerUserIds || [],
         imageIds: data.imageIds || [],
-        isVerified: data.isVerified || false, // Ajouté
+        blockedUserIds: data.blockedUserIds || [], // Ajouté
+        isVerified: data.isVerified || false,
       };
 
       console.log("✅ Utilisateur récupéré:", normalizedData);
@@ -119,7 +121,8 @@ export const fetchAllUsers = createAsyncThunk(
           likedUserIds: user.likedUserIds || [],
           likerUserIds: user.likerUserIds || [],
           imageIds: user.imageIds || [],
-          isVerified: user.isVerified || false, // Ajouté
+          blockedUserIds: user.blockedUserIds || [], // Ajouté
+          isVerified: user.isVerified || false,
         };
         console.log(`🔍 Utilisateur ${normalizedUser.id} - imageIds:`, normalizedUser.imageIds);
         return normalizedUser;
@@ -158,7 +161,8 @@ export const fetchVerifiedUsers = createAsyncThunk(
           likedUserIds: user.likedUserIds || [],
           likerUserIds: user.likerUserIds || [],
           imageIds: user.imageIds || [],
-          isVerified: user.isVerified || false, // Ajouté
+          blockedUserIds: user.blockedUserIds || [], // Ajouté
+          isVerified: user.isVerified || false,
         };
         console.log(`🔍 Utilisateur vérifié ${normalizedUser.id} - imageIds:`, normalizedUser.imageIds);
         return normalizedUser;
@@ -197,7 +201,8 @@ export const fetchUserById = createAsyncThunk(
         likedUserIds: data.likedUserIds || [],
         likerUserIds: data.likerUserIds || [],
         imageIds: data.imageIds || [],
-        isVerified: data.isVerified || false, // Ajouté
+        blockedUserIds: data.blockedUserIds || [], // Ajouté
+        isVerified: data.isVerified || false,
       };
 
       console.log("✅ Utilisateur récupéré:", normalizedData);
@@ -229,7 +234,8 @@ export const updateUser = createAsyncThunk(
         likedUserIds: userData.likedUserIds,
         likerUserIds: userData.likerUserIds,
         imageIds: userData.imageIds,
-        isVerified: userData.isVerified, // Ajouté
+        blockedUserIds: userData.blockedUserIds, // Ajouté
+        isVerified: userData.isVerified,
       };
 
       Object.keys(payload).forEach((key) => {
@@ -250,7 +256,8 @@ export const updateUser = createAsyncThunk(
         likedUserIds: data.likedUserIds || [],
         likerUserIds: data.likerUserIds || [],
         imageIds: data.imageIds || [],
-        isVerified: data.isVerified || false, // Ajouté
+        blockedUserIds: data.blockedUserIds || [], // Ajouté
+        isVerified: data.isVerified || false,
       };
 
       console.log("✅ Mise à jour réussie:", normalizedData);
@@ -333,6 +340,56 @@ export const unlikeUser = createAsyncThunk(
     } catch (error: any) {
       console.error("❌ Échec de unlikeUser:", error.response?.data || error.message);
       return rejectWithValue(error.response?.data?.error || "Failed to unlike user");
+    }
+  }
+);
+
+// Bloquer un utilisateur
+export const blockUser = createAsyncThunk(
+  "user/blockUser",
+  async ({ blockerId, blockedId }: { blockerId: string; blockedId: string }, { rejectWithValue }) => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        console.warn("❌ Aucun token trouvé dans localStorage");
+        return rejectWithValue("No token found");
+      }
+
+      console.log(`🔹 Blocking user ${blockedId} by ${blockerId}`);
+      const response = await axios.post(`${BASE_URL}/api/users/${blockerId}/block/${blockedId}`, null, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      console.log(`✅ User ${blockedId} blocked by ${blockerId}:`, response.data.message);
+      return { blockerId, blockedId };
+    } catch (error: any) {
+      console.error("❌ Échec de blockUser:", error.response?.data || error.message);
+      return rejectWithValue(error.response?.data?.error || "Failed to block user");
+    }
+  }
+);
+
+// Débloquer un utilisateur
+export const unblockUser = createAsyncThunk(
+  "user/unblockUser",
+  async ({ blockerId, blockedId }: { blockerId: string; blockedId: string }, { rejectWithValue }) => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        console.warn("❌ Aucun token trouvé dans localStorage");
+        return rejectWithValue("No token found");
+      }
+
+      console.log(`🔹 Unblocking user ${blockedId} by ${blockerId}`);
+      const response = await axios.delete(`${BASE_URL}/api/users/${blockerId}/unblock/${blockedId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      console.log(`✅ User ${blockedId} unblocked by ${blockerId}:`, response.data.message);
+      return { blockerId, blockedId };
+    } catch (error: any) {
+      console.error("❌ Échec de unblockUser:", error.response?.data || error.message);
+      return rejectWithValue(error.response?.data?.error || "Failed to unblock user");
     }
   }
 );
@@ -508,6 +565,83 @@ const userSlice = createSlice({
         state.error = null;
       })
       .addCase(unlikeUser.rejected, (state, action) => {
+        state.status = "failed";
+        state.error = action.payload as string;
+      })
+      // Gestion de blockUser
+      .addCase(blockUser.pending, (state) => {
+        state.status = "loading";
+        state.error = null;
+      })
+      .addCase(blockUser.fulfilled, (state, action: PayloadAction<{ blockerId: string; blockedId: string }>) => {
+        state.status = "succeeded";
+        const { blockerId, blockedId } = action.payload;
+
+        if (state.user && state.user.id === blockerId) {
+          state.user.blockedUserIds = state.user.blockedUserIds || [];
+          if (!state.user.blockedUserIds.includes(blockedId)) {
+            state.user.blockedUserIds.push(blockedId);
+          }
+          // Supprimer les relations d'amitié si elles existent
+          state.user.friendIds = state.user.friendIds?.filter((id) => id !== blockedId) || [];
+          state.user.friendRequestSentIds = state.user.friendRequestSentIds?.filter((id) => id !== blockedId) || [];
+          state.user.friendRequestReceivedIds = state.user.friendRequestReceivedIds?.filter((id) => id !== blockedId) || [];
+          state.user.likedUserIds = state.user.likedUserIds?.filter((id) => id !== blockedId) || [];
+          state.user.likerUserIds = state.user.likerUserIds?.filter((id) => id !== blockedId) || [];
+        }
+
+        const blockerIndex = state.members.findIndex((m) => m.id === blockerId);
+        if (blockerIndex !== -1) {
+          state.members[blockerIndex].blockedUserIds = state.members[blockerIndex].blockedUserIds || [];
+          if (!state.members[blockerIndex].blockedUserIds!.includes(blockedId)) {
+            state.members[blockerIndex].blockedUserIds!.push(blockedId);
+          }
+          // Supprimer les relations d'amitié
+          state.members[blockerIndex].friendIds = state.members[blockerIndex].friendIds?.filter((id) => id !== blockedId) || [];
+          state.members[blockerIndex].friendRequestSentIds = state.members[blockerIndex].friendRequestSentIds?.filter((id) => id !== blockedId) || [];
+          state.members[blockerIndex].friendRequestReceivedIds = state.members[blockerIndex].friendRequestReceivedIds?.filter((id) => id !== blockedId) || [];
+          state.members[blockerIndex].likedUserIds = state.members[blockerIndex].likedUserIds?.filter((id) => id !== blockedId) || [];
+          state.members[blockerIndex].likerUserIds = state.members[blockerIndex].likerUserIds?.filter((id) => id !== blockedId) || [];
+        }
+
+        const blockedIndex = state.members.findIndex((m) => m.id === blockedId);
+        if (blockedIndex !== -1) {
+          state.members[blockedIndex].friendIds = state.members[blockedIndex].friendIds?.filter((id) => id !== blockerId) || [];
+          state.members[blockedIndex].friendRequestSentIds = state.members[blockedIndex].friendRequestSentIds?.filter((id) => id !== blockerId) || [];
+          state.members[blockedIndex].friendRequestReceivedIds = state.members[blockedIndex].friendRequestReceivedIds?.filter((id) => id !== blockerId) || [];
+          state.members[blockedIndex].likedUserIds = state.members[blockedIndex].likedUserIds?.filter((id) => id !== blockerId) || [];
+          state.members[blockedIndex].likerUserIds = state.members[blockedIndex].likerUserIds?.filter((id) => id !== blockerId) || [];
+        }
+
+        state.message = "Utilisateur bloqué avec succès !";
+        state.error = null;
+      })
+      .addCase(blockUser.rejected, (state, action) => {
+        state.status = "failed";
+        state.error = action.payload as string;
+      })
+      // Gestion de unblockUser
+      .addCase(unblockUser.pending, (state) => {
+        state.status = "loading";
+        state.error = null;
+      })
+      .addCase(unblockUser.fulfilled, (state, action: PayloadAction<{ blockerId: string; blockedId: string }>) => {
+        state.status = "succeeded";
+        const { blockerId, blockedId } = action.payload;
+
+        if (state.user && state.user.id === blockerId) {
+          state.user.blockedUserIds = state.user.blockedUserIds?.filter((id) => id !== blockedId) || [];
+        }
+
+        const blockerIndex = state.members.findIndex((m) => m.id === blockerId);
+        if (blockerIndex !== -1) {
+          state.members[blockerIndex].blockedUserIds = state.members[blockerIndex].blockedUserIds?.filter((id) => id !== blockedId) || [];
+        }
+
+        state.message = "Utilisateur débloqué avec succès !";
+        state.error = null;
+      })
+      .addCase(unblockUser.rejected, (state, action) => {
         state.status = "failed";
         state.error = action.payload as string;
       });

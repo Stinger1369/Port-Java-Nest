@@ -1,114 +1,193 @@
 /* src/components/UserDropdown/UserDropdown.css */
 
 /* Conteneur principal */
-.navbar-dropdown {
+.userDropDown-container {
   position: relative;
   display: inline-block;
 }
 
-.navbar-dropdown .dropdown-toggle {
+.userDropDown-toggle {
   background: none;
   border: none;
   cursor: pointer;
+  padding: 0.5rem;
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.userDropDown-toggle i {
+  margin: 0;
+  font-size: 1rem;
+  color: white;
+}
+
+.userDropDown-toggle:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Info-bulle pour le bouton principal */
+.userDropDown-toggle[title]:hover::after {
+  content: attr(title);
+  position: absolute;
+  bottom: -2.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #1e2a44;
+  color: white;
+  padding: 0.3rem 0.6rem;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  white-space: nowrap;
+  z-index: 1000;
 }
 
 /* Alignement par défaut (gauche pour toutes les langues sauf arabe) */
-.navbar-dropdown .dropdown-menu {
+.userDropDown-menu {
   display: none;
   position: absolute;
   top: 100%;
   right: 0;
   background-color: #1e2a44;
-  min-width: 200px;
+  min-width: 150px; /* Réduit de 200px à 150px pour un menu plus compact */
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
   border-radius: 5px;
   z-index: 1001;
 }
 
-.navbar-dropdown .dropdown-menu.active {
+.userDropDown-menu.active {
   display: block;
 }
 
-/* Style par défaut pour les items (icône à gauche, texte à droite) */
-.navbar-dropdown .dropdown-item {
+/* Style par défaut pour les items (icône + texte) */
+.userDropDown-item {
   color: white;
-  padding: 0.8rem 1rem;
+  padding: 0.6rem 0.8rem; /* Réduit de 0.8rem 1rem à 0.6rem 0.8rem pour moins de largeur */
   text-decoration: none;
   display: flex;
   align-items: center;
   font-size: 1rem;
   transition: background 0.3s ease;
+  white-space: nowrap; /* Évite les retours à la ligne */
 }
 
-.navbar-dropdown .dropdown-item i {
-  margin-right: 0.5rem; /* Espacement entre l'icône et le texte par défaut */
+/* Espacement entre l'icône et le texte */
+.userDropDown-item i {
+  margin-right: 0.5rem; /* Espacement entre l'icône et le texte */
+}
+
+/* Info-bulle pour les éléments du menu */
+.userDropDown-item[title]:hover::after {
+  content: attr(title);
+  position: absolute;
+  bottom: -2.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #1e2a44;
+  color: white;
+  padding: 0.3rem 0.6rem;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  white-space: nowrap;
+  z-index: 1000;
 }
 
 /* Style pour l'élément de notification (NotificationBell) */
-.navbar-dropdown .notification-item {
-  padding: 0.8rem 1rem;
+.userDropDown-notification-item {
+  padding: 0.6rem 0.8rem;
   display: flex;
   align-items: center;
   font-size: 1rem;
   transition: background 0.3s ease;
 }
 
+/* Styles spécifiques pour chaque élément du menu */
+.userDropDown-item-member i {
+  color: #52c41a; /* Vert pour "Membre" */
+}
+
+.userDropDown-item-settings i {
+  color: #faad14; /* Jaune pour "Paramètres" */
+}
+
+.userDropDown-item-profile i {
+  color: #61dafb; /* Bleu clair pour "Profil" */
+}
+
+.userDropDown-item-rencontre i {
+  color: #ff4d4f; /* Rouge pour "Rencontre" */
+}
+
+.userDropDown-item-offers i {
+  color: #eb2f96; /* Rose pour "Offres reçues" */
+}
+
+.userDropDown-item-history i {
+  color: #13c2c2; /* Cyan pour "Historique" */
+}
+
+.userDropDown-item-chat i {
+  color: #fadb14; /* Jaune clair pour "Chat" */
+}
+
 /* Style pour l'arabe (icône à droite, texte à gauche) */
-.navbar-dropdown.arabic .dropdown-item {
+.userDropDown-container.arabic .userDropDown-item {
   flex-direction: row-reverse; /* Inverse l'ordre : texte à gauche, icône à droite */
 }
 
-.navbar-dropdown.arabic .dropdown-item i {
+.userDropDown-container.arabic .userDropDown-item i {
   margin-right: 0; /* Supprime la marge droite */
   margin-left: 0.5rem; /* Ajoute une marge gauche pour l'icône en arabe */
 }
 
-.navbar-dropdown.arabic .notification-item {
+.userDropDown-container.arabic .userDropDown-notification-item {
   flex-direction: row-reverse; /* Inverse l'ordre pour l'élément de notification en arabe */
 }
 
 /* Style spécifique pour le conteneur en arabe */
-.navbar-dropdown.arabic .dropdown-menu {
+.userDropDown-container.arabic .userDropDown-menu {
   right: auto; /* Supprime l'alignement à droite */
   left: 0; /* Aligne le menu à gauche pour l'arabe */
 }
 
-.navbar-dropdown .dropdown-item:hover {
+.userDropDown-item:hover {
   background-color: rgba(255, 255, 255, 0.1);
 }
 
 /* Ajuster le menu déroulant pour mobile */
 @media (max-width: 768px) {
-  .navbar-dropdown {
+  .userDropDown-container {
     width: 100%;
   }
 
-  .navbar-dropdown .dropdown-menu {
+  .userDropDown-menu {
     position: static;
     width: 100%;
     box-shadow: none;
     background-color: #1e2a44;
   }
 
-  .navbar-dropdown .dropdown-item {
-    padding: 0.6rem 1rem;
+  .userDropDown-item {
+    padding: 0.6rem 0.8rem;
   }
 
-  .navbar-dropdown .notification-item {
-    padding: 0.6rem 1rem;
+  .userDropDown-notification-item {
+    padding: 0.6rem 0.8rem;
   }
 
   /* Ajustements pour l'arabe sur mobile */
-  .navbar-dropdown.arabic .dropdown-item {
+  .userDropDown-container.arabic .userDropDown-item {
     flex-direction: row-reverse;
   }
 
-  .navbar-dropdown.arabic .dropdown-item i {
+  .userDropDown-container.arabic .userDropDown-item i {
     margin-left: 0.5rem;
     margin-right: 0;
   }
 
-  .navbar-dropdown.arabic .notification-item {
+  .userDropDown-container.arabic .userDropDown-notification-item {
     flex-direction: row-reverse;
   }
 }

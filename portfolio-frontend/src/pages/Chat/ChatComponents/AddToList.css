@@ -1,0 +1,41 @@
+/* portfolio-frontend/src/pages/Chat/ChatComponents/AddToList.css */
+.add-to-list-container {
+  padding: 10px;
+  background-color: #fff;
+  border-radius: 5px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.add-to-list-text {
+  margin-bottom: 10px;
+  font-size: 14px;
+  color: #111b21;
+}
+
+.add-to-list-button {
+  padding: 8px 12px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 14px;
+  margin-right: 10px;
+  transition: background-color 0.2s;
+}
+
+.add-to-list-button.add {
+  background-color: #075e54;
+  color: white;
+}
+
+.add-to-list-button.add:hover {
+  background-color: #064f45;
+}
+
+.add-to-list-button.cancel {
+  background-color: #e0e0e0;
+  color: #111b21;
+}
+
+.add-to-list-button.cancel:hover {
+  background-color: #d0d0d0;
+}

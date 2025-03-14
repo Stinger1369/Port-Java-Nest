@@ -1,9 +1,9 @@
 // src/components/UserDropdown/UserDropdown.tsx
 import { forwardRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { useTranslation } from "react-i18next";
 import { useSelector } from "react-redux";
 import { RootState } from "../../redux/store";
+import { useTranslation } from "react-i18next";
 import Modal from "./Modal";
 import "./UserDropdown.css";
 
@@ -34,59 +34,77 @@ const UserDropdown = forwardRef<HTMLDivElement, UserDropdownProps>((props, ref) 
 
   return (
     <>
-      <div className={`navbar-dropdown ${isArabic ? "arabic" : ""}`} ref={ref}>
-        <button className="nav-item dropdown-toggle" onClick={props.onToggle}>
-          <i className="fas fa-user-circle"></i> {t("navbar.menu")}
+      <div className={`userDropDown-container ${isArabic ? "arabic" : ""}`} ref={ref}>
+        <button
+          className="userDropDown-toggle"
+          onClick={props.onToggle}
+          title={user?.slug && user.slug.trim() !== "" ? user.slug : t("navbar.menu")}
+        >
+          <i className="fas fa-user-circle"></i>
         </button>
-        <div className={`dropdown-menu ${props.isOpen ? "active" : ""}`}>
+        <div className={`userDropDown-menu ${props.isOpen ? "active" : ""}`}>
           <Link
             to="/member"
             onClick={handleMemberClick}
-            className={`dropdown-item ${isArabic ? "arabic" : ""}`}
+            className={`userDropDown-item userDropDown-item-member ${isArabic ? "arabic" : ""}`}
+            title={t("navbar.member")}
           >
-            <i className="fas fa-users"></i> {t("navbar.member")}
+            <i className="fas fa-users"></i>
+            <span>{t("navbar.member")}</span>
           </Link>
           <Link
             to="/settings"
             onClick={handleItemClick}
-            className={`dropdown-item ${isArabic ? "arabic" : ""}`}
+            className={`userDropDown-item userDropDown-item-settings ${isArabic ? "arabic" : ""}`}
+            title={t("navbar.settings")}
           >
-            <i className="fas fa-cog"></i> {t("navbar.settings")}
+            <i className="fas fa-cog"></i>
+            <span>{t("navbar.settings")}</span>
           </Link>
           <Link
             to="/profile"
             onClick={handleItemClick}
-            className={`dropdown-item ${isArabic ? "arabic" : ""}`}
+            className={`userDropDown-item userDropDown-item-profile ${isArabic ? "arabic" : ""}`}
+            title={t("navbar.profile")}
           >
-            <i className="fas fa-user"></i> {t("navbar.profile")}
+            <i className="fas fa-user"></i>
+            <span>{t("navbar.profile")}</span>
           </Link>
           <Link
             to="/rencontre"
             onClick={handleItemClick}
-            className={`dropdown-item ${isArabic ? "arabic" : ""}`}
+            className={`userDropDown-item userDropDown-item-rencontre ${isArabic ? "arabic" : ""}`}
+            title={t("navbar.rencontre")}
           >
-            <i className="fas fa-handshake"></i> {t("navbar.rencontre")}
+            <i className="fas fa-handshake"></i>
+            <span>{t("navbar.rencontre")}</span>
           </Link>
           <Link
             to="/offers"
             onClick={handleItemClick}
-            className={`dropdown-item ${isArabic ? "arabic" : ""}`}
+            className={`userDropDown-item userDropDown-item-offers ${isArabic ? "arabic" : ""}`}
+            title={t("navbar.offersReceived")}
           >
-            <i className="fas fa-gift"></i> {t("navbar.offersReceived")}
+            <i className="fas fa-gift"></i>
+            <span>{t("navbar.offersReceived")}</span>
           </Link>
           <Link
             to="/history"
             onClick={handleItemClick}
-            className={`dropdown-item ${isArabic ? "arabic" : ""}`}
+            className={`userDropDown-item userDropDown-item-history ${isArabic ? "arabic" : ""}`}
+            title={t("navbar.contactHistory")}
           >
-            <i className="fas fa-history"></i> {t("navbar.contactHistory")}
+            <i className="fas fa-history"></i>
+            <span>{t("navbar.contactHistory")}</span>
           </Link>
           <Link
             to="/chat"
             onClick={handleItemClick}
-            className={`dropdown-item ${isArabic ? "arabic" : ""}`}
+            className={`userDropDown-item userDropDown-item-chat ${isArabic ? "arabic" : ""}`}
+            title={t("navbar.messagesReceived")}
           >
-            <i className="fas fa-envelope"></i> {t("navbar.messagesReceived")}
+            <i className="fas fa-envelope"></i>
+            <span>{t("navbar.messagesReceived")}</span>
           </Link>
           {/* Suppression de la route notifications, car intégrée dans Navbar */}
         </div>

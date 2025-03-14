@@ -1,9 +1,9 @@
-/* MemberCard.css */
+/* portfolio-frontend/src/components/MemberCard/MemberCard.css */
 
 /* Carte membre */
 .member-card {
   background-color: #ffffff;
-  border: 1px solid #e5e7eb; /* Bordure légère comme dans l'image */
+  border: 1px solid #e5e7eb; /* Bordure légère */
   border-radius: 10px;
   overflow: hidden;
   cursor: pointer;
@@ -22,11 +22,11 @@
 .member-header {
   padding: 15px;
   text-align: center;
-  background-color: transparent; /* Suppression du fond gris */
+  background-color: transparent;
 }
 
 .member-avatar {
-  width: 80px; /* Taille légèrement plus grande pour correspondre à l'image */
+  width: 80px; /* Taille légèrement plus grande */
   height: 80px;
   border-radius: 50%;
   overflow: hidden;
@@ -49,14 +49,14 @@
   align-items: center;
   justify-content: center;
   color: #ffffff;
-  font-size: 40px; /* Ajustement de la taille de l'icône */
+  font-size: 40px;
   margin: 0 auto 12px;
 }
 
 .member-header h3 {
   font-size: 1.2rem;
   font-weight: 600;
-  color: #1e3a8a; /* Bleu foncé comme dans l'image */
+  color: #1e3a8a; /* Bleu foncé */
   margin: 0 0 6px;
 }
 
@@ -71,19 +71,19 @@
   padding: 12px 15px;
   font-size: 0.9rem;
   color: #374151;
-  text-align: center; /* Centrage du texte */
+  text-align: center;
 }
 
 .member-details p {
   margin: 6px 0;
   display: flex;
   align-items: center;
-  justify-content: center; /* Centrage des éléments */
+  justify-content: center;
   gap: 6px;
 }
 
 .member-details i {
-  color: #10b981; /* Vert comme dans l'image */
+  color: #10b981; /* Vert */
   font-size: 0.9rem;
 }
 
@@ -100,13 +100,13 @@
 /* Conteneur des boutons */
 .like-container {
   display: flex;
-  justify-content: center; /* Centrage des boutons */
-  gap: 10px; /* Espacement uniforme */
+  justify-content: center;
+  gap: 10px;
   padding: 10px;
   border-top: 1px solid #e5e7eb;
 }
 
-/* Boutons génériques */
+/* Boutons génériques (icônes uniquement) */
 .like-button,
 .chat-button,
 .friend-request-button,
@@ -119,7 +119,7 @@
   border: none;
   font-size: 1rem;
   cursor: pointer;
-  padding: 8px;
+  padding: 0;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -141,7 +141,7 @@
 }
 
 .like-button {
-  background-color: #f43f5e; /* Rouge comme dans l'image */
+  background-color: #f43f5e; /* Rouge */
   color: #ffffff;
 }
 
@@ -151,7 +151,7 @@
 }
 
 .chat-button {
-  background-color: #3b82f6; /* Bleu comme dans l'image */
+  background-color: #3b82f6; /* Bleu */
   color: #ffffff;
 }
 
@@ -191,7 +191,7 @@
 }
 
 .friend-received-button {
-  background-color: #000000; /* Noir comme dans l'image */
+  background-color: #000000; /* Noir */
   color: #ffffff;
 }
 
@@ -201,7 +201,7 @@
 }
 
 .accept-button {
-  background-color: #10b981; /* Vert comme dans l'image */
+  background-color: #10b981; /* Vert */
   color: #ffffff;
 }
 
@@ -211,19 +211,13 @@
 }
 
 .reject-button {
-  background-color: #ef4444; /* Rouge comme dans l'image */
+  background-color: #ef4444; /* Rouge */
   color: #ffffff;
 }
 
 .reject-button:hover {
   background-color: #dc2626;
   transform: scale(1.1);
-}
-
-/* Suppression des styles inutiles pour friend-cancel-button et friend-action-container */
-.friend-cancel-button,
-.friend-action-container {
-  display: none; /* Ces éléments ne sont plus utilisés */
 }
 
 /* Modal pour profil incomplet */
@@ -265,7 +259,7 @@
 
 .modal-actions {
   display: flex;
-  justify-content: center; /* Centrage horizontal */
+  justify-content: center;
   gap: 10px;
 }
 
@@ -354,48 +348,6 @@
   }
 }
 
-/* Détails du membre */
-.member-details {
-  padding: 12px 15px;
-  font-size: 0.9rem;
-  color: #374151;
-  text-align: center;
-}
-
-/* Messages de succès */
-.success-message {
-  font-size: 0.9rem;
-  color: #28a745;
-  background: #e6ffe6;
-  padding: 8px;
-  border-radius: 5px;
-  margin: 10px 15px;
-  text-align: center;
-  animation: slideIn 0.3s ease-in-out;
-}
-
-/* Messages d'erreur */
-.error-message {
-  font-size: 0.9rem;
-  color: #e63946;
-  background: #ffe6e6;
-  padding: 8px;
-  border-radius: 5px;
-  margin: 10px 15px;
-  text-align: center;
-  animation: slideIn 0.3s ease-in-out;
-}
-
-@keyframes slideIn {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
 @media (max-width: 480px) {
   .member-card {
     max-width: 100%;
@@ -446,5 +398,40 @@
     width: 30px;
     height: 30px;
     font-size: 0.8rem;
+  }
+}
+
+/* Messages de succès */
+.success-message {
+  font-size: 0.9rem;
+  color: #28a745;
+  background: #e6ffe6;
+  padding: 8px;
+  border-radius: 5px;
+  margin: 10px 15px;
+  text-align: center;
+  animation: slideIn 0.3s ease-in-out;
+}
+
+/* Messages d'erreur */
+.error-message {
+  font-size: 0.9rem;
+  color: #e63946;
+  background: #ffe6e6;
+  padding: 8px;
+  border-radius: 5px;
+  margin: 10px 15px;
+  text-align: center;
+  animation: slideIn 0.3s ease-in-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }

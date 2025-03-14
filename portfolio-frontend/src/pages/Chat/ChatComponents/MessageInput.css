@@ -1,0 +1,122 @@
+/* portfolio-frontend/src/pages/Chat/ChatComponents/MessageInput.css */
+.message-input-container {
+  display: flex;
+  padding: 10px 15px;
+  background-color: #e5ddd5; /* Fond beige comme WhatsApp */
+  border-top: 1px solid #dcdcdc; /* Bordure légère */
+  gap: 10px;
+  align-items: center;
+  position: relative;
+  width: 100%;
+  box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.05); /* Ombre subtile */
+}
+
+.message-input-icon {
+  font-size: 24px;
+  color: #54656f;
+  cursor: pointer;
+  padding: 5px;
+  transition: color 0.2s;
+}
+
+.message-input-icon:hover {
+  color: #075e54;
+}
+
+.message-input-field-wrapper {
+  flex-grow: 1;
+  display: flex;
+  align-items: center;
+  background-color: #fff; /* Fond blanc pour l'input */
+  border-radius: 25px; /* Bordures arrondies */
+  padding: 10px 15px;
+  position: relative;
+  min-height: 50px; /* Hauteur initiale plus grande */
+  width: 100%;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1); /* Ombre intérieure pour modernité */
+}
+
+.message-input-field {
+  flex-grow: 1;
+  padding: 10px 15px;
+  border: none;
+  border-radius: 25px;
+  font-size: 16px;
+  outline: none;
+  background-color: transparent;
+  width: 100%;
+  height: auto; /* Permet une expansion verticale */
+  resize: vertical; /* Redimensionnement vertical */
+  min-height: 40px; /* Hauteur minimale */
+  max-height: 150px; /* Hauteur maximale pour éviter un débordement excessif */
+  line-height: 1.6; /* Meilleure lisibilité */
+}
+
+.message-input-field:disabled {
+  background-color: transparent;
+  color: #888;
+  cursor: not-allowed;
+}
+
+.message-input-send-icon {
+  font-size: 20px;
+  color: #fff;
+  background-color: #075e54; /* Vert WhatsApp */
+  border-radius: 50%;
+  padding: 10px; /* Plus d'espace pour un look WhatsApp */
+  margin-left: 10px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  display: flex; /* Assure un alignement correct */
+  align-items: center;
+  justify-content: center;
+}
+
+.message-input-send-icon:hover {
+  background-color: #064f45;
+}
+
+.message-input-emoji-selector {
+  position: absolute;
+  top: -350px; /* Affiché au-dessus de l'input */
+  left: 0;
+  right: 0;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  z-index: 1000; /* Assure que le sélecteur est au-dessus */
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.message-input-gif-selector {
+  position: absolute;
+  top: -250px; /* Affiché au-dessus de l'input */
+  left: 0;
+  right: 0;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  z-index: 1000; /* Assure que le sélecteur est au-dessus */
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.message-input-gif-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 5px;
+  padding: 10px;
+}
+
+.message-input-gif-item {
+  width: 100%;
+  height: 100px;
+  object-fit: cover;
+  cursor: pointer;
+  border-radius: 5px;
+}
+
+.message-input-gif-item:hover {
+  opacity: 0.8;
+}

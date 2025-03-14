@@ -1,8 +1,9 @@
+// portfolio-frontend/src/App.tsx
 import { Suspense, useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState, AppDispatch } from "./redux/store";
-import { fetchVerifiedUsers } from "./redux/features/userSlice"; // Remplacé fetchAllUsers
+import { fetchVerifiedUsers } from "./redux/features/userSlice";
 import { useWebSocket } from "./hooks/useWebSocket";
 import Navbar from "./components/Navbar/Navbar";
 import Footer from "./components/Footer/Footer";
@@ -101,8 +102,14 @@ const App = () => {
               <Route path="/offers" element={<ProtectedRoute><OffersReceived /></ProtectedRoute>} />
               <Route path="/history" element={<ProtectedRoute><ContactHistory /></ProtectedRoute>} />
               <Route path="/member" element={<ProtectedRoute><MembersList /></ProtectedRoute>} />
-              <Route path="/chat" element={<ErrorBoundary><ChatPage /></ErrorBoundary>} />
-              <Route path="/chat/:type/:id" element={<ErrorBoundary><ChatPage /></ErrorBoundary>} />
+              <Route
+                path="/chat"
+                element={<ErrorBoundary><ChatPage wsInstance={wsInstance} /></ErrorBoundary>}
+              />
+              <Route
+                path="/chat/:type/:id"
+                element={<ErrorBoundary><ChatPage wsInstance={wsInstance} /></ErrorBoundary>}
+              />
               <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
               <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
             </Routes>

@@ -20,7 +20,14 @@ public class Message {
     private String fromUserId;
     private String toUserId; // Null pour les messages de groupe
     private String groupId; // Null pour les messages privés
-    private String chatId; // Nouveau champ pour lier à une conversation
+    private String chatId; // Champ pour lier à une conversation
     private String content;
     private Instant timestamp;
+    @Builder.Default
+    private boolean isDeleted = false; // Champ pour la suppression logique, par défaut false
+
+    // Setter explicite pour isDeleted (facultatif, pour tester)
+    public void setIsDeleted(boolean isDeleted) {
+        this.isDeleted = isDeleted;
+    }
 }
