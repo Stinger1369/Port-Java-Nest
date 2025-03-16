@@ -14,16 +14,14 @@ import UserDropdown from "../UserDropdown/UserDropdown";
 import NotificationDropdown from "../NotificationDropdown/NotificationDropdown";
 import "./Navbar.css";
 
-// Mémoriser NotificationDropdown pour éviter les re-renders inutiles
 const MemoizedNotificationDropdown = memo(NotificationDropdown);
 
 const Navbar = () => {
   const { t, i18n } = useTranslation();
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
-  const token = useSelector((state: RootState) => state.auth.token);
+  const { token, userId } = useSelector((state: RootState) => state.auth); // Récupérer token et userId depuis Redux
   const user = useSelector((state: RootState) => state.user.user);
-  const userId = localStorage.getItem("userId") || "";
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isWeatherOpen, setIsWeatherOpen] = useState(false);
@@ -38,8 +36,7 @@ const Navbar = () => {
   const notificationsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const storedToken = localStorage.getItem("token");
-    if (storedToken && token && !user) {
+    if (token && !user) {
       console.log("🔍 Récupération des données utilisateur au montage...");
       dispatch(fetchUser());
     }
@@ -52,7 +49,6 @@ const Navbar = () => {
     }
   }, [dispatch, token, user]);
 
-  // Charger les notifications au montage si l'utilisateur est connecté
   useEffect(() => {
     if (token && userId) {
       console.log("🔍 Chargement initial des notifications au montage pour userId:", userId);

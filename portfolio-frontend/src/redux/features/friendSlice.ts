@@ -1,6 +1,8 @@
+// src/redux/features/friendSlice.ts
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import axios from "axios";
 import { BASE_URL } from "../../config/hostname";
+import { RootState } from "../store";
 
 interface Friend {
   id: string;
@@ -28,16 +30,15 @@ const initialState: FriendState = {
   message: null,
 };
 
-const getAuthToken = () => localStorage.getItem("token");
-
 export const sendFriendRequest = createAsyncThunk(
   "friend/sendFriendRequest",
   async (
     { senderId, receiverId }: { senderId: string; receiverId: string },
-    { rejectWithValue }
+    { getState, rejectWithValue }
   ) => {
     try {
-      const token = getAuthToken();
+      const state = getState() as RootState;
+      const token = state.auth.token;
       if (!token) {
         return rejectWithValue("Token non trouvé, veuillez vous reconnecter.");
       }
@@ -61,10 +62,11 @@ export const acceptFriendRequest = createAsyncThunk(
   "friend/acceptFriendRequest",
   async (
     { userId, friendId }: { userId: string; friendId: string },
-    { rejectWithValue }
+    { getState, rejectWithValue }
   ) => {
     try {
-      const token = getAuthToken();
+      const state = getState() as RootState;
+      const token = state.auth.token;
       if (!token) {
         return rejectWithValue("Token non trouvé, veuillez vous reconnecter.");
       }
@@ -88,10 +90,11 @@ export const rejectFriendRequest = createAsyncThunk(
   "friend/rejectFriendRequest",
   async (
     { userId, friendId }: { userId: string; friendId: string },
-    { rejectWithValue }
+    { getState, rejectWithValue }
   ) => {
     try {
-      const token = getAuthToken();
+      const state = getState() as RootState;
+      const token = state.auth.token;
       if (!token) {
         return rejectWithValue("Token non trouvé, veuillez vous reconnecter.");
       }
@@ -115,10 +118,11 @@ export const removeFriend = createAsyncThunk(
   "friend/removeFriend",
   async (
     { userId, friendId }: { userId: string; friendId: string },
-    { rejectWithValue }
+    { getState, rejectWithValue }
   ) => {
     try {
-      const token = getAuthToken();
+      const state = getState() as RootState;
+      const token = state.auth.token;
       if (!token) {
         return rejectWithValue("Token non trouvé, veuillez vous reconnecter.");
       }
@@ -141,19 +145,19 @@ export const cancelFriendRequest = createAsyncThunk(
   "friend/cancelFriendRequest",
   async (
     { senderId, receiverId }: { senderId: string; receiverId: string },
-    { dispatch, getState, rejectWithValue }
+    { getState, rejectWithValue }
   ) => {
     try {
-      const token = getAuthToken();
+      const state = getState() as RootState;
+      const token = state.auth.token;
       if (!token) {
         return rejectWithValue("Token non trouvé, veuillez vous reconnecter.");
       }
 
-      const state = getState() as RootState;
       const hasSentRequest = state.friend.sentRequests.some((req) => req.id === receiverId);
       if (!hasSentRequest) {
         console.warn("⚠️ Aucune demande en attente trouvée pour annulation:", receiverId);
-        return rejectWithValue("Aucune demande en attente trouvée pour annulation.");
+        return { senderId, receiverId }; // Retourner quand même pour mise à jour locale
       }
 
       const response = await axios.delete<string>(
@@ -162,11 +166,7 @@ export const cancelFriendRequest = createAsyncThunk(
       );
 
       console.log("✅ Demande d'ami annulée:", response.data);
-
-      // Synchronisation explicite pour le receiver
-      dispatch(fetchReceivedFriendRequests(receiverId));
-
-      return { receiverId };
+      return { senderId, receiverId };
     } catch (error: any) {
       console.error("❌ Échec de cancelFriendRequest:", error.response?.data || error.message);
       return rejectWithValue(error.response?.data?.error || "Échec de l'annulation de la demande d'ami.");
@@ -176,9 +176,10 @@ export const cancelFriendRequest = createAsyncThunk(
 
 export const fetchFriends = createAsyncThunk(
   "friend/fetchFriends",
-  async (userId: string, { rejectWithValue }) => {
+  async (userId: string, { getState, rejectWithValue }) => {
     try {
-      const token = getAuthToken();
+      const state = getState() as RootState;
+      const token = state.auth.token;
       if (!token) {
         return rejectWithValue("Token non trouvé, veuillez vous reconnecter.");
       }
@@ -199,9 +200,10 @@ export const fetchFriends = createAsyncThunk(
 
 export const fetchSentFriendRequests = createAsyncThunk(
   "friend/fetchSentFriendRequests",
-  async (userId: string, { rejectWithValue }) => {
+  async (userId: string, { getState, rejectWithValue }) => {
     try {
-      const token = getAuthToken();
+      const state = getState() as RootState;
+      const token = state.auth.token;
       if (!token) {
         return rejectWithValue("Token non trouvé, veuillez vous reconnecter.");
       }
@@ -222,9 +224,10 @@ export const fetchSentFriendRequests = createAsyncThunk(
 
 export const fetchReceivedFriendRequests = createAsyncThunk(
   "friend/fetchReceivedFriendRequests",
-  async (userId: string, { rejectWithValue }) => {
+  async (userId: string, { getState, rejectWithValue }) => {
     try {
-      const token = getAuthToken();
+      const state = getState() as RootState;
+      const token = state.auth.token;
       if (!token) {
         return rejectWithValue("Token non trouvé, veuillez vous reconnecter.");
       }
@@ -245,9 +248,10 @@ export const fetchReceivedFriendRequests = createAsyncThunk(
 
 export const fetchUserById = createAsyncThunk(
   "friend/fetchUserById",
-  async (userId: string, { rejectWithValue }) => {
+  async (userId: string, { getState, rejectWithValue }) => {
     try {
-      const token = getAuthToken();
+      const state = getState() as RootState;
+      const token = state.auth.token;
       if (!token) {
         return rejectWithValue("Token non trouvé, veuillez vous reconnecter.");
       }
@@ -286,34 +290,34 @@ const friendSlice = createSlice({
       const existingRequest = state.sentRequests.find((req) => req.id === action.payload.id);
       if (!existingRequest) {
         state.sentRequests.push(action.payload);
-        console.log("✅ Demande d'ami envoyée ajoutée à sentRequests:", action.payload.id, "Nouvel état:", state.sentRequests);
+        console.log("✅ Demande d'ami envoyée ajoutée à sentRequests:", action.payload.id);
       }
     },
     addReceivedRequest: (state, action: PayloadAction<Friend>) => {
       const existingRequest = state.receivedRequests.find((req) => req.id === action.payload.id);
       if (!existingRequest) {
         state.receivedRequests.push(action.payload);
-        console.log("✅ Demande d'ami reçue ajoutée à receivedRequests:", action.payload.id, "Nouvel état:", state.receivedRequests);
+        console.log("✅ Demande d'ami reçue ajoutée à receivedRequests:", action.payload.id);
       }
     },
     removeSentRequest: (state, action: PayloadAction<string>) => {
       state.sentRequests = state.sentRequests.filter((req) => req.id !== action.payload);
-      console.log("✅ Demande d'ami envoyée supprimée de sentRequests:", action.payload, "Nouvel état:", state.sentRequests);
+      console.log("✅ Demande d'ami envoyée supprimée de sentRequests:", action.payload);
     },
     removeReceivedRequest: (state, action: PayloadAction<string>) => {
       state.receivedRequests = state.receivedRequests.filter((req) => req.id !== action.payload);
-      console.log("✅ Demande d'ami reçue supprimée de receivedRequests:", action.payload, "Nouvel état:", state.receivedRequests);
+      console.log("✅ Demande d'ami reçue supprimée de receivedRequests:", action.payload);
     },
     addFriend: (state, action: PayloadAction<Friend>) => {
       const existingFriend = state.friends.find((friend) => friend.id === action.payload.id);
       if (!existingFriend) {
         state.friends.push(action.payload);
-        console.log("✅ Ami ajouté à friends:", action.payload.id, "Nouvel état:", state.friends);
+        console.log("✅ Ami ajouté à friends:", action.payload.id);
       }
     },
     removeFriendFromList: (state, action: PayloadAction<string>) => {
       state.friends = state.friends.filter((friend) => friend.id !== action.payload);
-      console.log("✅ Ami supprimé de friends:", action.payload, "Nouvel état:", state.friends);
+      console.log("✅ Ami supprimé de friends:", action.payload);
     },
   },
   extraReducers: (builder) => {
@@ -378,7 +382,7 @@ const friendSlice = createSlice({
         state.error = null;
         state.message = null;
       })
-      .addCase(cancelFriendRequest.fulfilled, (state, action: PayloadAction<{ receiverId: string }>) => {
+      .addCase(cancelFriendRequest.fulfilled, (state, action: PayloadAction<{ senderId: string; receiverId: string }>) => {
         state.status = "succeeded";
         state.message = "Demande d'ami annulée avec succès !";
         state.sentRequests = state.sentRequests.filter((req) => req.id !== action.payload.receiverId);
@@ -387,6 +391,11 @@ const friendSlice = createSlice({
       .addCase(cancelFriendRequest.rejected, (state, action) => {
         state.status = "failed";
         state.error = action.payload as string;
+        // Mise à jour locale même en cas d'échec si la demande n'existe pas déjà
+        if (action.payload === "Aucune demande en attente trouvée pour annulation.") {
+          state.sentRequests = state.sentRequests.filter((req) => req.id !== action.meta.arg.receiverId);
+          state.message = "Demande d'ami annulée localement.";
+        }
       })
       .addCase(fetchFriends.pending, (state) => {
         state.status = "loading";

@@ -1,13 +1,15 @@
+// src/redux/features/interestSlice.ts
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import axios from "axios";
 import { BASE_URL } from "../../config/hostname";
+import { RootState } from "../store"; // Importer RootState
 
 interface Interest {
   id?: string;
   userId: string;
   name: string;
   description?: string;
-  isPublic?: boolean; // Aligné avec le backend
+  isPublic?: boolean;
 }
 
 interface InterestState {
@@ -22,13 +24,12 @@ const initialState: InterestState = {
   error: null,
 };
 
-const getAuthToken = () => localStorage.getItem("token");
-
 export const fetchInterestsByUser = createAsyncThunk(
   "interest/fetchByUser",
-  async (userId: string, { rejectWithValue }) => {
+  async (userId: string, { getState, rejectWithValue }) => {
     try {
-      const token = getAuthToken();
+      const state = getState() as RootState;
+      const token = state.auth.token;
       if (!token) return rejectWithValue("Token non trouvé, veuillez vous reconnecter.");
 
       const response = await axios.get<Interest[]>(
@@ -45,10 +46,11 @@ export const fetchInterestsByUser = createAsyncThunk(
 
 export const addInterest = createAsyncThunk(
   "interest/add",
-  async (interestData: Omit<Interest, "id" | "userId">, { rejectWithValue }) => {
+  async (interestData: Omit<Interest, "id" | "userId">, { getState, rejectWithValue }) => {
     try {
-      const token = getAuthToken();
-      const userId = localStorage.getItem("userId");
+      const state = getState() as RootState;
+      const token = state.auth.token;
+      const userId = state.auth.userId;
 
       if (!token) return rejectWithValue("Token non trouvé, veuillez vous reconnecter.");
       if (!userId) return rejectWithValue("ID utilisateur manquant, veuillez vous reconnecter.");
@@ -68,9 +70,10 @@ export const addInterest = createAsyncThunk(
 
 export const updateInterest = createAsyncThunk(
   "interest/update",
-  async ({ id, interestData }: { id: string; interestData: Partial<Interest> }, { rejectWithValue }) => {
+  async ({ id, interestData }: { id: string; interestData: Partial<Interest> }, { getState, rejectWithValue }) => {
     try {
-      const token = getAuthToken();
+      const state = getState() as RootState;
+      const token = state.auth.token;
       if (!token) return rejectWithValue("Token non trouvé, veuillez vous reconnecter.");
 
       const response = await axios.put<Interest>(
@@ -88,9 +91,10 @@ export const updateInterest = createAsyncThunk(
 
 export const deleteInterest = createAsyncThunk(
   "interest/delete",
-  async (id: string, { rejectWithValue }) => {
+  async (id: string, { getState, rejectWithValue }) => {
     try {
-      const token = getAuthToken();
+      const state = getState() as RootState;
+      const token = state.auth.token;
       if (!token) return rejectWithValue("Token non trouvé, veuillez vous reconnecter.");
 
       await axios.delete(

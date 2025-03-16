@@ -1,3 +1,4 @@
+// portfolio-backend/src/main/java/com/Portbil/portfolio_backend/controller/ChatController.java
 package com.Portbil.portfolio_backend.controller;
 
 import com.Portbil.portfolio_backend.config.ChatWebSocketHandler;
@@ -15,12 +16,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 @RestController
 @RequestMapping("/api/chat")
@@ -43,33 +39,28 @@ public class ChatController {
 
     private final String DEVELOPER_ID = "developer-id-here";
 
-    // Récupérer toutes les conversations d’un utilisateur (privées + groupe)
     @GetMapping("/all")
     public ResponseEntity<List<Message>> getAllConversations(Authentication authentication) {
         String currentUserId = authentication.getName();
         User user = userRepository.findById(currentUserId).orElseThrow(() -> new IllegalArgumentException("Utilisateur introuvable"));
         List<String> chatIds = user.getChatIds();
-        // Filtrer les messages non supprimés
         List<Message> messages = messageRepository.findByChatIdInAndIsDeletedFalse(chatIds);
         System.out.println("📥 Messages fetched for user " + currentUserId + ": " + messages);
         return ResponseEntity.ok(messages);
     }
 
-    // Récupérer les messages privés avec un autre utilisateur ou initialiser une conversation
     @GetMapping("/private/{otherUserId}")
     public ResponseEntity<List<Message>> getPrivateMessages(@PathVariable String otherUserId, Authentication authentication) {
         String currentUserId = authentication.getName();
         User currentUser = userRepository.findById(currentUserId).orElseThrow(() -> new IllegalArgumentException("Utilisateur introuvable"));
         User otherUser = userRepository.findById(otherUserId).orElseThrow(() -> new IllegalArgumentException("Utilisateur introuvable"));
 
-        // Trouver le chatId commun ou en créer un nouveau
         List<String> commonChatIds = currentUser.getChatIds().stream()
                 .filter(chatId -> otherUser.getChatIds().contains(chatId))
                 .toList();
 
         String chatId;
         if (commonChatIds.isEmpty()) {
-            // Générer un nouveau chatId pour une nouvelle conversation
             chatId = UUID.randomUUID().toString();
             List<String> currentUserChatIds = new ArrayList<>(currentUser.getChatIds());
             List<String> otherUserChatIds = new ArrayList<>(otherUser.getChatIds());
@@ -81,30 +72,26 @@ public class ChatController {
             userRepository.save(otherUser);
             System.out.println("🆕 Nouvelle conversation créée avec chatId: " + chatId + " entre " + currentUserId + " et " + otherUserId);
         } else {
-            chatId = commonChatIds.get(0); // Utiliser le premier chatId commun
+            chatId = commonChatIds.get(0);
         }
 
-        // Filtrer les messages non supprimés
         List<Message> messages = messageRepository.findByChatIdAndIsDeletedFalse(chatId);
-        System.out.println("📥 Private messages fetched between " + currentUserId + " and " + otherUserId + ": " + messages);
+        System.out.println("📥 Private messages fetched between " + currentUserId + " et " + otherUserId + ": " + messages);
         return ResponseEntity.ok(messages);
     }
 
-    // Récupérer les messages d’un groupe
     @GetMapping("/group/{groupId}")
     public ResponseEntity<List<Message>> getGroupMessages(@PathVariable String groupId, Authentication authentication) {
         String currentUserId = authentication.getName();
         User user = userRepository.findById(currentUserId).orElseThrow(() -> new IllegalArgumentException("Utilisateur introuvable"));
         if (!user.getChatIds().contains(groupId)) {
-            return ResponseEntity.status(403).body(null); // Forbidden
+            return ResponseEntity.status(403).body(null);
         }
-        // Filtrer les messages non supprimés
         List<Message> messages = messageRepository.findByChatIdAndIsDeletedFalse(groupId);
         System.out.println("📥 Group messages fetched for group " + groupId + ": " + messages);
         return ResponseEntity.ok(messages);
     }
 
-    // Modifier un message
     @PutMapping("/{id}")
     public ResponseEntity<Message> updateMessage(@PathVariable String id, @RequestBody Message updatedMessage, Authentication authentication) {
         String currentUserId = authentication.getName();
@@ -116,18 +103,16 @@ public class ChatController {
 
         Message existingMessage = existingMessageOpt.get();
         if (!existingMessage.getFromUserId().equals(currentUserId)) {
-            return ResponseEntity.status(403).body(null); // Forbidden
+            return ResponseEntity.status(403).body(null);
         }
 
         existingMessage.setContent(updatedMessage.getContent());
         existingMessage.setTimestamp(Instant.now());
         Message savedMessage = messageRepository.save(existingMessage);
-        // Enregistrer dans l'historique
         chatHistoryService.recordMessageAction(savedMessage, "UPDATED");
         return ResponseEntity.ok(savedMessage);
     }
 
-    // Supprimer un message (suppression logique)
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteMessage(@PathVariable String id, Authentication authentication) {
         String currentUserId = authentication.getName();
@@ -139,36 +124,32 @@ public class ChatController {
 
         Message message = messageOpt.get();
         if (!message.getFromUserId().equals(currentUserId)) {
-            return ResponseEntity.status(403).build(); // Forbidden
+            return ResponseEntity.status(403).build();
         }
 
-        // Marquer le message comme supprimé (suppression logique)
         message.setIsDeleted(true);
         messageRepository.save(message);
-        // Enregistrer dans l'historique
         chatHistoryService.recordMessageAction(message, "DELETED");
         System.out.println("✅ Message " + id + " marqué comme supprimé et historisé");
         return ResponseEntity.noContent().build();
     }
 
-    // Récupérer tous les signalements (pour l'admin uniquement)
     @GetMapping("/reports")
     public ResponseEntity<List<Report>> getAllReports(Authentication authentication) {
         String currentUserId = authentication.getName();
         if (!currentUserId.equals(DEVELOPER_ID)) {
-            return ResponseEntity.status(403).build(); // Forbidden
+            return ResponseEntity.status(403).build();
         }
         List<Report> reports = reportRepository.findByStatus("PENDING");
         System.out.println("📋 Signalements récupérés pour l'admin: " + reports);
         return ResponseEntity.ok(reports);
     }
 
-    // Marquer un signalement comme traité
     @PutMapping("/reports/{id}/resolve")
     public ResponseEntity<Report> resolveReport(@PathVariable String id, Authentication authentication) {
         String currentUserId = authentication.getName();
         if (!currentUserId.equals(DEVELOPER_ID)) {
-            return ResponseEntity.status(403).build(); // Forbidden
+            return ResponseEntity.status(403).build();
         }
         Optional<Report> reportOpt = reportRepository.findById(id);
         if (reportOpt.isEmpty()) {
@@ -178,7 +159,6 @@ public class ChatController {
         report.setStatus("RESOLVED");
         Report updatedReport = reportRepository.save(report);
 
-        // Notifier le reporter via WebSocket
         try {
             Map<String, String> notificationData = new HashMap<>();
             notificationData.put("reportId", id);
@@ -201,5 +181,38 @@ public class ChatController {
 
         System.out.println("✅ Signalement " + id + " marqué comme résolu");
         return ResponseEntity.ok(updatedReport);
+    }
+
+    @PostMapping("/theme")
+    public ResponseEntity<String> saveChatTheme(@RequestBody Map<String, String> themeData, Authentication authentication) {
+        String currentUserId = authentication.getName();
+        User user = userRepository.findById(currentUserId)
+                .orElseThrow(() -> new IllegalArgumentException("Utilisateur introuvable"));
+
+        String theme = themeData.get("theme");
+        List<String> validThemes = Arrays.asList("light", "dark");
+        if (theme == null || !validThemes.contains(theme)) {
+            return ResponseEntity.badRequest().body("Thème invalide. Les valeurs autorisées sont : light, dark.");
+        }
+
+        user.setChatTheme(theme);
+        userRepository.save(user);
+        System.out.println("🎨 Thème " + theme + " sauvegardé pour l'utilisateur " + currentUserId);
+        return ResponseEntity.ok("Thème sauvegardé avec succès");
+    }
+
+    @GetMapping("/theme")
+    public ResponseEntity<Map<String, String>> getChatTheme(Authentication authentication) {
+        String currentUserId = authentication.getName();
+        User user = userRepository.findById(currentUserId)
+                .orElseThrow(() -> new IllegalArgumentException("Utilisateur introuvable"));
+
+        Map<String, String> response = new HashMap<>();
+        String userTheme = user.getChatTheme();
+        // Vérifie si le thème est valide, sinon retourne "light" par défaut
+        List<String> validThemes = Arrays.asList("light", "dark");
+        response.put("theme", validThemes.contains(userTheme) ? userTheme : "light");
+        System.out.println("🎨 Thème récupéré pour l'utilisateur " + currentUserId + ": " + response.get("theme"));
+        return ResponseEntity.ok(response);
     }
 }

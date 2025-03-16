@@ -55,7 +55,7 @@ const NotificationItem = memo(
     isRemoving,
   }: NotificationItemProps) => {
     useEffect(() => {
-      console.log(`🔄 NotificationItem re-rendu pour ID: ${notification.id}`);
+      // console.log(`🔄 NotificationItem re-rendu pour ID: ${notification.id}`);
     }, [notification.id]);
 
     return (
@@ -178,7 +178,7 @@ const NotificationDropdown = forwardRef<HTMLDivElement, NotificationDropdownProp
     const isInitialMount = useRef(true);
 
     useEffect(() => {
-      console.log("🔄 NotificationDropdown re-rendu");
+      // console.log("🔄 NotificationDropdown re-rendu");
       if (isInitialMount.current && isOpen) {
         console.log("🔍 Chargement initial des notifications pour userId:", userId);
         loadNotifications(userId); // Appel correct de loadNotifications depuis useNotificationActions

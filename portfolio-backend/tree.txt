@@ -19,6 +19,7 @@
 │   │   │               ├── config/
 │   │   │               │   ├── AppConfig.java
 │   │   │               │   ├── ChatWebSocketHandler.java
+│   │   │               │   ├── DotenvConfig.java
 │   │   │               │   ├── MessageConfig.java
 │   │   │               │   ├── RequestLoggingInterceptor.java
 │   │   │               │   └── WebSocketConfig.java
@@ -76,6 +77,7 @@
 │   │   │               │   ├── Interest.java
 │   │   │               │   ├── Language.java
 │   │   │               │   ├── Message.java
+│   │   │               │   ├── MessageHistory.java
 │   │   │               │   ├── Notification.java
 │   │   │               │   ├── Portfolio.java
 │   │   │               │   ├── PortfolioCard.java
@@ -100,6 +102,7 @@
 │   │   │               │   ├── ImageRepository.java
 │   │   │               │   ├── InterestRepository.java
 │   │   │               │   ├── LanguageRepository.java
+│   │   │               │   ├── MessageHistoryRepository.java
 │   │   │               │   ├── MessageRepository.java
 │   │   │               │   ├── NotificationRepository.java
 │   │   │               │   ├── PortfolioRepository.java
@@ -123,6 +126,7 @@
 │   │   │               │   │   ├── UserProfileService.java
 │   │   │               │   │   └── UserRelationService.java
 │   │   │               │   ├── CertificationService.java
+│   │   │               │   ├── ChatHistoryService.java
 │   │   │               │   ├── ContactService.java
 │   │   │               │   ├── EducationService.java
 │   │   │               │   ├── EmailService.java
@@ -172,6 +176,7 @@
 │   │   │           ├── config/
 │   │   │           │   ├── AppConfig.class
 │   │   │           │   ├── ChatWebSocketHandler.class
+│   │   │           │   ├── DotenvConfig.class
 │   │   │           │   ├── MessageConfig.class
 │   │   │           │   ├── RequestLoggingInterceptor.class
 │   │   │           │   ├── RequestLoggingInterceptor$CachedBodyHttpServletRequest.class
@@ -255,6 +260,12 @@
 │   │   │           │   ├── Language$LanguageBuilder.class
 │   │   │           │   ├── Message.class
 │   │   │           │   ├── Message$MessageBuilder.class
+│   │   │           │   ├── MessageHistory.class
+│   │   │           │   ├── MessageHistory$MessageEntry.class
+│   │   │           │   ├── MessageHistory$MessageEntry$MessageEntryBuilder.class
+│   │   │           │   ├── MessageHistory$MessageHistoryBuilder.class
+│   │   │           │   ├── MessageHistory$MessageVersion.class
+│   │   │           │   ├── MessageHistory$MessageVersion$MessageVersionBuilder.class
 │   │   │           │   ├── Notification.class
 │   │   │           │   ├── Notification$NotificationBuilder.class
 │   │   │           │   ├── Portfolio.class
@@ -288,6 +299,7 @@
 │   │   │           │   ├── ImageRepository.class
 │   │   │           │   ├── InterestRepository.class
 │   │   │           │   ├── LanguageRepository.class
+│   │   │           │   ├── MessageHistoryRepository.class
 │   │   │           │   ├── MessageRepository.class
 │   │   │           │   ├── NotificationRepository.class
 │   │   │           │   ├── PortfolioRepository.class
@@ -311,6 +323,7 @@
 │   │   │           │   │   ├── UserProfileService.class
 │   │   │           │   │   └── UserRelationService.class
 │   │   │           │   ├── CertificationService.class
+│   │   │           │   ├── ChatHistoryService.class
 │   │   │           │   ├── ContactService.class
 │   │   │           │   ├── EducationService.class
 │   │   │           │   ├── EmailService.class
@@ -349,11 +362,27 @@
 │   │   ├── application.yml
 │   │   ├── messages_ar.properties
 │   │   ├── messages_fr.properties
-│   │   └── messages.properties
+│   │   ├── messages.properties
+│   │   ├── PortfolioDTO.class
+│   │   └── PortfolioDTO$PortfolioDTOBuilder.class
 │   ├── generated-sources/
 │   │   └── annotations/
 │   ├── generated-test-sources/
 │   │   └── test-annotations/
+│   ├── maven-status/
+│   │   └── maven-compiler-plugin/
+│   │       ├── compile/
+│   │       │   └── default-compile/
+│   │       │       ├── createdFiles.lst
+│   │       │       └── inputFiles.lst
+│   │       └── testCompile/
+│   │           └── default-testCompile/
+│   │               ├── createdFiles.lst
+│   │               └── inputFiles.lst
+│   ├── surefire-reports/
+│   │   ├── 2025-03-14T04-33-20_628.dumpstream
+│   │   ├── com.Portbil.portfolio_backend.PortfolioBackendApplicationTests.txt
+│   │   └── TEST-com.Portbil.portfolio_backend.PortfolioBackendApplicationTests.xml
 │   └── test-classes/
 │       └── com/
 │           └── Portbil/

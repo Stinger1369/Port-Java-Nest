@@ -1,3 +1,4 @@
+// portfolio-backend/src/main/java/com/Portbil/portfolio_backend/entity/User.java
 package com.Portbil.portfolio_backend.entity;
 
 import lombok.*;
@@ -99,11 +100,13 @@ public class User implements UserDetails {
     @Builder.Default
     private List<String> friendRequestReceivedIds = new ArrayList<>();
 
-    // Nouveaux champs pour le blocage et le signalement
     @Builder.Default
-    private List<String> blockedUserIds = new ArrayList<>(); // Utilisateurs bloqués par cet utilisateur
+    private List<String> blockedUserIds = new ArrayList<>();
     @Builder.Default
-    private List<String> reportedByUserIds = new ArrayList<>(); // Utilisateurs qui ont signalé cet utilisateur
+    private List<String> reportedByUserIds = new ArrayList<>();
+
+    @Builder.Default
+    private String chatTheme = "default"; // Nouveau champ pour le thème, par défaut "default"
 
     public List<String> getAllPortfolioIds() {
         List<String> allIds = new ArrayList<>();

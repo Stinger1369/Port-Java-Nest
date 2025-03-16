@@ -1,0 +1,86 @@
+/* portfolio-frontend/src/pages/Chat/ChatComponents/ConfirmationModal.css */
+.confirm-modal {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 90%;
+  max-width: 400px;
+  background: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  padding: 20px;
+  outline: none;
+}
+
+.confirm-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+}
+
+.confirm-container {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.confirm-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #2d3748;
+  margin: 0;
+}
+
+.confirm-message {
+  font-size: 14px;
+  color: #4a5568;
+  margin: 0;
+}
+
+.confirm-input {
+  width: 100%;
+  padding: 10px;
+  font-size: 14px;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  resize: vertical;
+  min-height: 80px;
+}
+
+.confirm-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.confirm-button {
+  padding: 8px 16px;
+  font-size: 14px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.confirm-button.confirm {
+  background-color: #d4af37;
+  color: #1a1a1a;
+}
+
+.confirm-button.confirm:hover {
+  background-color: #b89729;
+}
+
+.confirm-button.cancel {
+  background-color: #e2e8f0;
+  color: #2d3748;
+}
+
+.confirm-button.cancel:hover {
+  background-color: #cbd5e0;
+}

@@ -84,7 +84,7 @@
   display: flex;
   align-items: center;
   gap: 8px; /* Espacement entre les éléments */
-  justify-content: flex-end;
+  justify-content: flex-end; /* Aligné à droite par défaut pour les messages envoyés */
 }
 
 /* Horodatage */
@@ -109,16 +109,24 @@
   transform: scale(1.2); /* Zoom plus marqué */
 }
 
-/* Conteneur des composants modaux (ContactInfo, ReportUser, etc.) */
-.cm-actions {
-  position: absolute;
-  top: 0;
-  right: 100%; /* Positionne à droite du message */
-  z-index: 20; /* Au-dessus des messages */
-  display: flex;
-  flex-direction: column;
-  background: none; /* Pas de fond pour les composants */
-  padding: 8px;
+/* Ajustements pour RTL */
+.arabic .cm-meta {
+  flex-direction: row-reverse;
+}
+
+.arabic .cm-timestamp {
+  margin-right: 0;
+  margin-left: 0.5rem;
+}
+
+.arabic .cm-action-icon {
+  margin-left: 0;
+  margin-right: 0.3rem;
+}
+
+/* Ajustements pour les messages reçus (alignement à gauche) */
+.cm-message.cm-received .cm-meta {
+  justify-content: flex-start; /* Aligné à gauche pour les messages reçus */
 }
 
 /* Responsive Design */
@@ -136,10 +144,5 @@
   .cm-action-icon {
     font-size: 12px;
     margin-left: 2px;
-  }
-
-  .cm-actions {
-    right: 0; /* Ajustement pour mobile */
-    top: 100%;
   }
 }

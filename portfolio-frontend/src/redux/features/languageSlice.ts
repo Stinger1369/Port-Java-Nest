@@ -1,6 +1,8 @@
+// src/redux/features/languageSlice.ts
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import axios from "axios";
 import { BASE_URL } from "../../config/hostname";
+import { RootState } from "../store"; // Importer RootState
 
 interface Language {
   id?: string;
@@ -8,7 +10,7 @@ interface Language {
   name: string;
   level?: string;
   proficiencyLevel: string;
-  isPublic?: boolean; // Ajouté
+  isPublic?: boolean;
 }
 
 interface LanguageState {
@@ -23,13 +25,12 @@ const initialState: LanguageState = {
   error: null,
 };
 
-const getAuthToken = () => localStorage.getItem("token");
-
 export const fetchLanguagesByUser = createAsyncThunk(
   "language/fetchByUser",
-  async (userId: string, { rejectWithValue }) => {
+  async (userId: string, { getState, rejectWithValue }) => {
     try {
-      const token = getAuthToken();
+      const state = getState() as RootState;
+      const token = state.auth.token;
       if (!token) return rejectWithValue("Token non trouvé, veuillez vous reconnecter.");
 
       const response = await axios.get<Language[]>(
@@ -46,10 +47,11 @@ export const fetchLanguagesByUser = createAsyncThunk(
 
 export const addLanguage = createAsyncThunk(
   "language/add",
-  async (languageData: Omit<Language, "id" | "userId">, { rejectWithValue }) => {
+  async (languageData: Omit<Language, "id" | "userId">, { getState, rejectWithValue }) => {
     try {
-      const token = getAuthToken();
-      const userId = localStorage.getItem("userId");
+      const state = getState() as RootState;
+      const token = state.auth.token;
+      const userId = state.auth.userId;
 
       if (!token) return rejectWithValue("Token non trouvé, veuillez vous reconnecter.");
       if (!userId) return rejectWithValue("ID utilisateur manquant, veuillez vous reconnecter.");
@@ -69,9 +71,10 @@ export const addLanguage = createAsyncThunk(
 
 export const updateLanguage = createAsyncThunk(
   "language/update",
-  async ({ id, languageData }: { id: string; languageData: Partial<Language> }, { rejectWithValue }) => {
+  async ({ id, languageData }: { id: string; languageData: Partial<Language> }, { getState, rejectWithValue }) => {
     try {
-      const token = getAuthToken();
+      const state = getState() as RootState;
+      const token = state.auth.token;
       if (!token) return rejectWithValue("Token non trouvé, veuillez vous reconnecter.");
 
       const response = await axios.put<Language>(
@@ -89,9 +92,10 @@ export const updateLanguage = createAsyncThunk(
 
 export const deleteLanguage = createAsyncThunk(
   "language/delete",
-  async (id: string, { rejectWithValue }) => {
+  async (id: string, { getState, rejectWithValue }) => {
     try {
-      const token = getAuthToken();
+      const state = getState() as RootState;
+      const token = state.auth.token;
       if (!token) return rejectWithValue("Token non trouvé, veuillez vous reconnecter.");
 
       await axios.delete(

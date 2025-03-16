@@ -13,6 +13,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
@@ -25,7 +26,7 @@ public class AuthController {
     private final UserDetailsService userDetailsService;
     private final UserService userService;
     private final JwtUtil jwtUtil;
-    private final MessageSource messageSource; // Injection de MessageSource
+    private final MessageSource messageSource;
 
     @PostMapping("/register")
     public ResponseEntity<?> register(
@@ -117,38 +118,40 @@ public class AuthController {
         }
 
         UserDetails userDetails = userDetailsService.loadUserByUsername(email);
-        String jwt = jwtUtil.generateToken(userDetails);
+        String accessToken = jwtUtil.generateAccessToken(userDetails);
+        String refreshToken = jwtUtil.generateRefreshToken(userDetails);
 
-        System.out.println("✅ Connexion réussie pour " + email + " - Token généré.");
+        System.out.println("✅ Connexion réussie pour " + email + " - Tokens générés.");
         return ResponseEntity.ok(Map.of(
-                "token", jwt,
+                "accessToken", accessToken,
+                "refreshToken", refreshToken,
                 "userId", user.getId()
         ));
     }
 
     @PostMapping("/refresh")
     public ResponseEntity<?> refreshToken(
-            @RequestHeader("Authorization") String authHeader,
+            @RequestBody Map<String, String> request,
             @RequestHeader(value = "Accept-Language", defaultValue = "en") String lang) {
+        String refreshToken = request.get("refreshToken");
         Locale locale = Locale.forLanguageTag(lang);
 
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            return ResponseEntity.status(401).body(Map.of("error", messageSource.getMessage("invalid.auth.header", null, locale)));
+        if (refreshToken == null) {
+            return ResponseEntity.status(401).body(Map.of("error", messageSource.getMessage("missing.refresh.token", null, locale)));
         }
 
-        String token = authHeader.substring(7);
         try {
-            String userId = jwtUtil.extractUserId(token);
+            String userId = jwtUtil.extractUserId(refreshToken);
             UserDetails userDetails = userDetailsService.loadUserByUsername(userId);
-            if (jwtUtil.validateToken(token, userDetails)) {
-                String newToken = jwtUtil.generateToken(userDetails);
-                return ResponseEntity.ok(Map.of("token", newToken));
+            if (jwtUtil.validateToken(refreshToken, userDetails)) {
+                String newAccessToken = jwtUtil.generateAccessToken(userDetails);
+                return ResponseEntity.ok(Map.of("accessToken", newAccessToken));
             } else {
-                return ResponseEntity.status(401).body(Map.of("error", messageSource.getMessage("invalid.token", null, locale)));
+                return ResponseEntity.status(401).body(Map.of("error", messageSource.getMessage("invalid.refresh.token", null, locale)));
             }
         } catch (Exception e) {
             System.out.println("🔴 Erreur lors du refresh du token: " + e.getMessage());
-            return ResponseEntity.status(401).body(Map.of("error", messageSource.getMessage("invalid.token", null, locale)));
+            return ResponseEntity.status(401).body(Map.of("error", messageSource.getMessage("invalid.refresh.token", null, locale)));
         }
     }
 

@@ -1,8 +1,9 @@
+// src/redux/features/portfolioCardSlice.ts
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import axios from "axios";
 import { BASE_URL } from "../../config/hostname";
+import { RootState } from "../store"; // Importer RootState
 
-// Interface pour les préférences des cartes
 interface PortfolioCard {
   section: string;
   position: number;
@@ -10,7 +11,6 @@ interface PortfolioCard {
   shape: string;
 }
 
-// État initial Redux pour les cartes
 interface PortfolioCardState {
   cards: PortfolioCard[];
   status: "idle" | "loading" | "succeeded" | "failed";
@@ -23,18 +23,15 @@ const initialState: PortfolioCardState = {
   error: null,
 };
 
-// Récupérer le token d'authentification
-const getAuthToken = () => localStorage.getItem("token");
-
-// Personnaliser les cartes du portfolio
 export const customizePortfolioCards = createAsyncThunk(
   "portfolioCard/customize",
   async (
     { userId, preferences }: { userId: string; preferences: PortfolioCard[] },
-    { rejectWithValue }
+    { getState, rejectWithValue }
   ) => {
     try {
-      const token = getAuthToken();
+      const state = getState() as RootState;
+      const token = state.auth.token;
       if (!token) return rejectWithValue("Token non trouvé, veuillez vous reconnecter.");
 
       const response = await axios.post<PortfolioCard[]>(

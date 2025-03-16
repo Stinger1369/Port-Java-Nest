@@ -1,3 +1,4 @@
+// portfolio-frontend/src/components/MembersList/MembersList.tsx
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState, AppDispatch } from "../../../redux/store";
@@ -14,6 +15,7 @@ const MembersList: React.FC = () => {
   const navigate = useNavigate();
   const { user, members, status, error } = useSelector((state: RootState) => state.user);
   const { images, status: imageStatus, error: imageError } = useSelector((state: RootState) => state.image);
+  const { token } = useSelector((state: RootState) => state.auth); // Récupérer token depuis Redux
   const {
     loadFriends,
     loadSentFriendRequests,
@@ -26,7 +28,6 @@ const MembersList: React.FC = () => {
   const [selectedMember, setSelectedMember] = useState<User | null>(null);
   const [selectedMemberImages, setSelectedMemberImages] = useState<Image[]>([]);
   const [imagesLoaded, setImagesLoaded] = useState(false);
-  const token = useSelector((state: RootState) => state.auth.token);
 
   useEffect(() => {
     if (!token) {

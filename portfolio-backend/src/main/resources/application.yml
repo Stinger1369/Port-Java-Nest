@@ -30,7 +30,8 @@ spring:
 
 jwt:
   secret: ${JWT_SECRET}
-  expirationMs: 86400000
+  expirationMs: 7200000  # 2 heures pour l'access token
+  refreshExpirationMs: 2592000000  # 30 jours pour le refresh token
 
 google:
   maps:

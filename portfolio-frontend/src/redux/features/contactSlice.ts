@@ -1,9 +1,10 @@
+// src/redux/features/contactSlice.ts
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import axios from "axios";
 import { BASE_URL } from "../../config/hostname";
-import { removeNotification } from "./notificationSlice"; // Ajout pour supprimer une notification
+import { removeNotification } from "./notificationSlice";
+import { RootState } from "../store"; // Importer RootState
 
-// Définir les types pour ContactDTO basé sur ton backend
 interface Contact {
   id: string;
   senderId: string | null;
@@ -19,7 +20,6 @@ interface Contact {
   acceptedAt?: string;
 }
 
-// État initial du slice
 interface ContactState {
   pendingContacts: Contact[];
   acceptedContacts: Contact[];
@@ -36,10 +36,6 @@ const initialState: ContactState = {
   error: null,
 };
 
-// Fonction utilitaire pour récupérer le token d'authentification
-const getAuthToken = () => localStorage.getItem("token");
-
-// Thunks pour les appels API
 export const sendContactRequest = createAsyncThunk(
   "contact/sendContactRequest",
   async (
@@ -54,10 +50,11 @@ export const sendContactRequest = createAsyncThunk(
       lastName: string;
       company?: string;
     },
-    { rejectWithValue }
+    { getState, rejectWithValue }
   ) => {
     try {
-      const token = getAuthToken();
+      const state = getState() as RootState;
+      const token = state.auth.token;
       if (!token) return rejectWithValue("Token non trouvé, veuillez vous reconnecter.");
 
       const response = await axios.post<Contact>(
@@ -74,9 +71,10 @@ export const sendContactRequest = createAsyncThunk(
 
 export const acceptContactRequest = createAsyncThunk(
   "contact/acceptContactRequest",
-  async (contactId: string, { rejectWithValue, getState, dispatch }) => {
+  async (contactId: string, { getState, rejectWithValue, dispatch }) => {
     try {
-      const token = getAuthToken();
+      const state = getState() as RootState;
+      const token = state.auth.token;
       if (!token) return rejectWithValue("Token non trouvé, veuillez vous reconnecter.");
 
       const response = await axios.post<Contact>(
@@ -84,7 +82,7 @@ export const acceptContactRequest = createAsyncThunk(
         {},
         { headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" } }
       );
-      dispatch(removeNotification(contactId)); // Supprime la notification associée
+      dispatch(removeNotification(contactId));
       return response.data;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || "Erreur lors de l'acceptation");
@@ -94,9 +92,10 @@ export const acceptContactRequest = createAsyncThunk(
 
 export const fetchPendingContacts = createAsyncThunk(
   "contact/fetchPendingContacts",
-  async (_, { rejectWithValue, getState }) => {
+  async (_, { getState, rejectWithValue }) => {
     try {
-      const token = getAuthToken();
+      const state = getState() as RootState;
+      const token = state.auth.token;
       if (!token) return rejectWithValue("Token non trouvé, veuillez vous reconnecter.");
 
       const response = await axios.get<Contact[]>(
@@ -112,9 +111,10 @@ export const fetchPendingContacts = createAsyncThunk(
 
 export const fetchAcceptedContacts = createAsyncThunk(
   "contact/fetchAcceptedContacts",
-  async (_, { rejectWithValue, getState }) => {
+  async (_, { getState, rejectWithValue }) => {
     try {
-      const token = getAuthToken();
+      const state = getState() as RootState;
+      const token = state.auth.token;
       if (!token) return rejectWithValue("Token non trouvé, veuillez vous reconnecter.");
 
       const response = await axios.get<Contact[]>(
@@ -130,9 +130,10 @@ export const fetchAcceptedContacts = createAsyncThunk(
 
 export const fetchDeveloperContacts = createAsyncThunk(
   "contact/fetchDeveloperContacts",
-  async (_, { rejectWithValue, getState }) => {
+  async (_, { getState, rejectWithValue }) => {
     try {
-      const token = getAuthToken();
+      const state = getState() as RootState;
+      const token = state.auth.token;
       if (!token) return rejectWithValue("Token non trouvé, veuillez vous reconnecter.");
 
       const response = await axios.get<Contact[]>(
@@ -146,7 +147,6 @@ export const fetchDeveloperContacts = createAsyncThunk(
   }
 );
 
-// Slice Redux
 const contactSlice = createSlice({
   name: "contact",
   initialState,

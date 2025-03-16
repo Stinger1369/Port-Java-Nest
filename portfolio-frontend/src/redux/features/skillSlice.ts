@@ -1,6 +1,8 @@
+// src/redux/features/skillSlice.ts
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import axios from "axios";
 import { BASE_URL } from "../../config/hostname";
+import { RootState } from "../store"; // Importer RootState
 
 interface Skill {
   id?: string;
@@ -8,7 +10,7 @@ interface Skill {
   name: string;
   level: number;
   description?: string;
-  isPublic?: boolean; // Ajouté
+  isPublic?: boolean;
 }
 
 interface SkillState {
@@ -23,13 +25,12 @@ const initialState: SkillState = {
   error: null,
 };
 
-const getAuthToken = () => localStorage.getItem("token");
-
 export const fetchSkillsByUser = createAsyncThunk(
   "skill/fetchByUser",
-  async (userId: string, { rejectWithValue }) => {
+  async (userId: string, { getState, rejectWithValue }) => {
     try {
-      const token = getAuthToken();
+      const state = getState() as RootState;
+      const token = state.auth.token;
       if (!token) return rejectWithValue("Token non trouvé, veuillez vous reconnecter.");
 
       const response = await axios.get<Skill[]>(
@@ -39,7 +40,7 @@ export const fetchSkillsByUser = createAsyncThunk(
 
       return response.data.map((skill) => ({
         ...skill,
-        isPublic: skill.isPublic ?? false, // Ajouté
+        isPublic: skill.isPublic ?? false,
       }));
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || "Échec du chargement des skills.");
@@ -49,10 +50,11 @@ export const fetchSkillsByUser = createAsyncThunk(
 
 export const addSkill = createAsyncThunk(
   "skill/add",
-  async (skillData: Omit<Skill, "id" | "userId">, { rejectWithValue }) => {
+  async (skillData: Omit<Skill, "id" | "userId">, { getState, rejectWithValue }) => {
     try {
-      const token = getAuthToken();
-      const userId = localStorage.getItem("userId");
+      const state = getState() as RootState;
+      const token = state.auth.token;
+      const userId = state.auth.userId;
 
       if (!token) return rejectWithValue("Token non trouvé, veuillez vous reconnecter.");
       if (!userId) return rejectWithValue("ID utilisateur manquant, veuillez vous reconnecter.");
@@ -65,7 +67,7 @@ export const addSkill = createAsyncThunk(
 
       return {
         ...response.data,
-        isPublic: response.data.isPublic ?? false, // Ajouté
+        isPublic: response.data.isPublic ?? false,
       };
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || "Échec de l'ajout du skill.");
@@ -75,9 +77,10 @@ export const addSkill = createAsyncThunk(
 
 export const updateSkill = createAsyncThunk(
   "skill/update",
-  async ({ id, skillData }: { id: string; skillData: Partial<Skill> }, { rejectWithValue }) => {
+  async ({ id, skillData }: { id: string; skillData: Partial<Skill> }, { getState, rejectWithValue }) => {
     try {
-      const token = getAuthToken();
+      const state = getState() as RootState;
+      const token = state.auth.token;
       if (!token) return rejectWithValue("Token non trouvé, veuillez vous reconnecter.");
 
       const response = await axios.put<Skill>(
@@ -88,7 +91,7 @@ export const updateSkill = createAsyncThunk(
 
       return {
         ...response.data,
-        isPublic: response.data.isPublic ?? false, // Ajouté
+        isPublic: response.data.isPublic ?? false,
       };
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || "Échec de la mise à jour du skill.");
@@ -98,9 +101,10 @@ export const updateSkill = createAsyncThunk(
 
 export const deleteSkill = createAsyncThunk(
   "skill/delete",
-  async (id: string, { rejectWithValue }) => {
+  async (id: string, { getState, rejectWithValue }) => {
     try {
-      const token = getAuthToken();
+      const state = getState() as RootState;
+      const token = state.auth.token;
       if (!token) return rejectWithValue("Token non trouvé, veuillez vous reconnecter.");
 
       await axios.delete(

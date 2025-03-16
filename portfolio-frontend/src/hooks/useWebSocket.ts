@@ -1,3 +1,4 @@
+// src/hooks/useWebSocket.ts
 import { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "../redux/store";
@@ -7,8 +8,9 @@ import { BASE_URL } from "../config/hostname";
 import { v4 as uuidv4 } from "uuid";
 import { handleFriendNotifications } from "./handleFriendNotifications";
 
-export const useWebSocket = (token: string | null) => {
+export const useWebSocket = () => { // Suppression du paramètre `token`, car il est récupéré via useSelector
   const dispatch = useDispatch<AppDispatch>();
+  const token = useSelector((state: RootState) => state.auth.token); // Récupérer le token depuis le state Redux
   const userId = useSelector((state: RootState) => state.auth.userId);
   const messages = useSelector((state: RootState) => state.chat.messages);
   const { friends, sentRequests, receivedRequests } = useSelector((state: RootState) => state.friend);
@@ -60,13 +62,12 @@ export const useWebSocket = (token: string | null) => {
       };
 
       if (normalizedMessage.type === "notification" || normalizedMessage.notificationType) {
-        // Ne pas ajouter une notification générique si le message est spécifique
         if (message.message && message.notificationType !== "connected") {
           dispatch(addNotification({
             id: normalizedMessage.id,
             userId: normalizedMessage.userId,
             type: normalizedMessage.notificationType,
-            message: message.message, // Utiliser uniquement le message spécifique fourni par le backend
+            message: message.message,
             timestamp: normalizedTimestamp,
             isRead: message.isRead || false,
             data: normalizedMessage.data,
@@ -141,7 +142,7 @@ export const useWebSocket = (token: string | null) => {
             id: normalizedMessage.id,
             userId: normalizedMessage.userId,
             type: "user_like",
-            message: message.message || "Quelqu'un a aimé votre profil !",
+            message: message.message || "Quelqu’un a aimé votre profil !",
             timestamp: normalizedTimestamp,
             isRead: false,
             data: normalizedMessage.data,
@@ -152,7 +153,7 @@ export const useWebSocket = (token: string | null) => {
             id: normalizedMessage.id,
             userId: normalizedMessage.userId,
             type: "user_unlike",
-            message: message.message || "Quelqu'un a retiré son like de votre profil !",
+            message: message.message || "Quelqu’un a retiré son like de votre profil !",
             timestamp: normalizedTimestamp,
             isRead: false,
             data: normalizedMessage.data,
@@ -177,8 +178,6 @@ export const useWebSocket = (token: string | null) => {
               ? `Nouveau message de ${message.fromUserId}`
               : `Nouveau message dans le groupe ${message.groupId}`;
 
-            // Supprimer la notification "new_chat" pour éviter le doublon
-            // Ajouter uniquement la notification spécifique au message
             dispatch(addNotification({
               id: `msg-${normalizedMessage.id}`,
               userId: userId || "",

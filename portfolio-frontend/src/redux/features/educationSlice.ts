@@ -1,6 +1,8 @@
+// src/redux/features/educationSlice.ts
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import axios from "axios";
 import { BASE_URL } from "../../config/hostname";
+import { RootState } from "../store"; // Importer RootState
 
 interface Education {
   id?: string;
@@ -12,7 +14,7 @@ interface Education {
   endDate?: string;
   currentlyStudying: boolean;
   description?: string;
-  isPublic?: boolean; // Ajouté
+  isPublic?: boolean;
 }
 
 interface EducationState {
@@ -27,13 +29,12 @@ const initialState: EducationState = {
   error: null,
 };
 
-const getAuthToken = () => localStorage.getItem("token");
-
 export const fetchEducationsByUser = createAsyncThunk(
   "education/fetchByUser",
-  async (userId: string, { rejectWithValue }) => {
+  async (userId: string, { getState, rejectWithValue }) => {
     try {
-      const token = getAuthToken();
+      const state = getState() as RootState;
+      const token = state.auth.token;
       if (!token) {
         return rejectWithValue("Token non trouvé, veuillez vous reconnecter.");
       }
@@ -45,7 +46,7 @@ export const fetchEducationsByUser = createAsyncThunk(
 
       return response.data.map((edu) => ({
         ...edu,
-        isPublic: edu.isPublic ?? false, // Assurer une valeur par défaut
+        isPublic: edu.isPublic ?? false,
       }));
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || "Échec du chargement des formations.");
@@ -55,10 +56,11 @@ export const fetchEducationsByUser = createAsyncThunk(
 
 export const addEducation = createAsyncThunk(
   "education/add",
-  async (educationData: Omit<Education, "id" | "userId">, { rejectWithValue }) => {
+  async (educationData: Omit<Education, "id" | "userId">, { getState, rejectWithValue }) => {
     try {
-      const token = getAuthToken();
-      const userId = localStorage.getItem("userId");
+      const state = getState() as RootState;
+      const token = state.auth.token;
+      const userId = state.auth.userId;
 
       if (!token) {
         return rejectWithValue("Token non trouvé, veuillez vous reconnecter.");
@@ -75,7 +77,7 @@ export const addEducation = createAsyncThunk(
 
       return {
         ...response.data,
-        isPublic: response.data.isPublic ?? false, // Assurer une valeur par défaut
+        isPublic: response.data.isPublic ?? false,
       };
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || "Échec de l'ajout de la formation.");
@@ -85,9 +87,10 @@ export const addEducation = createAsyncThunk(
 
 export const updateEducation = createAsyncThunk(
   "education/update",
-  async ({ id, educationData }: { id: string; educationData: Partial<Education> }, { rejectWithValue }) => {
+  async ({ id, educationData }: { id: string; educationData: Partial<Education> }, { getState, rejectWithValue }) => {
     try {
-      const token = getAuthToken();
+      const state = getState() as RootState;
+      const token = state.auth.token;
       if (!token) {
         return rejectWithValue("Token non trouvé, veuillez vous reconnecter.");
       }
@@ -100,7 +103,7 @@ export const updateEducation = createAsyncThunk(
 
       return {
         ...response.data,
-        isPublic: response.data.isPublic ?? false, // Assurer une valeur par défaut
+        isPublic: response.data.isPublic ?? false,
       };
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || "Échec de la mise à jour de la formation.");
@@ -110,9 +113,10 @@ export const updateEducation = createAsyncThunk(
 
 export const deleteEducation = createAsyncThunk(
   "education/delete",
-  async (id: string, { rejectWithValue }) => {
+  async (id: string, { getState, rejectWithValue }) => {
     try {
-      const token = getAuthToken();
+      const state = getState() as RootState;
+      const token = state.auth.token;
       if (!token) {
         return rejectWithValue("Token non trouvé, veuillez vous reconnecter.");
       }

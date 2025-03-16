@@ -1,6 +1,8 @@
+// src/redux/features/socialLinkSlice.ts
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import axios from "axios";
-import { BASE_URL } from "../../config/hostname"; // Import de la configuration de l'URL
+import { BASE_URL } from "../../config/hostname";
+import { RootState } from "../store"; // Importer RootState
 
 interface SocialLink {
   id?: string;
@@ -21,13 +23,13 @@ const initialState: SocialLinkState = {
   status: "idle",
   error: null,
 };
-const getAuthToken = () => localStorage.getItem("token");
 
 export const fetchSocialLinksByUser = createAsyncThunk(
   "socialLink/fetchByUser",
-  async (userId: string, { rejectWithValue }) => {
+  async (userId: string, { getState, rejectWithValue }) => {
     try {
-      const token = getAuthToken();
+      const state = getState() as RootState;
+      const token = state.auth.token;
       if (!token) return rejectWithValue("Token non trouvé, veuillez vous reconnecter.");
 
       const response = await axios.get<SocialLink[]>(
@@ -44,10 +46,11 @@ export const fetchSocialLinksByUser = createAsyncThunk(
 
 export const addSocialLink = createAsyncThunk(
   "socialLink/add",
-  async (socialLinkData: Omit<SocialLink, "id" | "userId">, { rejectWithValue }) => {
+  async (socialLinkData: Omit<SocialLink, "id" | "userId">, { getState, rejectWithValue }) => {
     try {
-      const token = getAuthToken();
-      const userId = localStorage.getItem("userId");
+      const state = getState() as RootState;
+      const token = state.auth.token;
+      const userId = state.auth.userId;
 
       if (!token) return rejectWithValue("Token non trouvé, veuillez vous reconnecter.");
       if (!userId) return rejectWithValue("ID utilisateur manquant, veuillez vous reconnecter.");
@@ -67,9 +70,13 @@ export const addSocialLink = createAsyncThunk(
 
 export const updateSocialLink = createAsyncThunk(
   "socialLink/update",
-  async ({ id, socialLinkData }: { id: string; socialLinkData: Partial<SocialLink> }, { rejectWithValue }) => {
+  async (
+    { id, socialLinkData }: { id: string; socialLinkData: Partial<SocialLink> },
+    { getState, rejectWithValue }
+  ) => {
     try {
-      const token = getAuthToken();
+      const state = getState() as RootState;
+      const token = state.auth.token;
       if (!token) return rejectWithValue("Token non trouvé, veuillez vous reconnecter.");
 
       const response = await axios.put<SocialLink>(
@@ -87,9 +94,10 @@ export const updateSocialLink = createAsyncThunk(
 
 export const deleteSocialLink = createAsyncThunk(
   "socialLink/delete",
-  async (id: string, { rejectWithValue }) => {
+  async (id: string, { getState, rejectWithValue }) => {
     try {
-      const token = getAuthToken();
+      const state = getState() as RootState;
+      const token = state.auth.token;
       if (!token) return rejectWithValue("Token non trouvé, veuillez vous reconnecter.");
 
       await axios.delete(

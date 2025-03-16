@@ -1,55 +1,84 @@
 /* portfolio-frontend/src/pages/Chat/ChatPage.css */
 
-/* Reset et styles généraux */
+/* Variables CSS par défaut (thème "light") */
+:root {
+  --chat-background: #f8f9fa;
+  --chat-text-color: #000000;
+  --sidebar-background: linear-gradient(145deg, #ffffff 0%, #f0f0f0 100%);
+  --sidebar-text-color: #555;
+  --header-background: linear-gradient(90deg, #e0e0e0 0%, #f0f0f0 100%);
+  --header-text-color: #d4af37;
+  --main-background: #f8f9fa;
+  --sidebar-border-color: #ddd;
+  --avatar-placeholder-bg: #ccc;
+  --item-hover-bg: #e0e2e5;
+}
+
+/* Thème dark */
+[data-theme="dark"] {
+  --chat-background: #1a1a1a;
+  --chat-text-color: #ffffff;
+  --sidebar-background: linear-gradient(145deg, #2a2a2a 0%, #1f1f1f 100%);
+  --sidebar-text-color: #d1d5db;
+  --header-background: linear-gradient(90deg, #1a1a1a 0%, #2d2d2d 100%);
+  --header-text-color: #d4af37;
+  --main-background: #1a1a1a;
+  --sidebar-border-color: #444;
+  --avatar-placeholder-bg: #444;
+  --item-hover-bg: #3a3a3a;
+}
+
+/* Styles généraux */
 .chat-page-container * {
   box-sizing: border-box;
   font-family: "Roboto", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
 }
 
-/* Conteneur principal */
 .chat-page-container {
   display: flex;
   justify-content: center;
   align-items: center;
-  min-height: calc(100vh - 130px); /* Hauteur ajustée pour Navbar (80px) + Footer (50px) */
+  min-height: calc(100vh - 130px);
   width: 100%;
-  background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%); /* Fond sombre luxueux */
-  padding: 20px; /* Marge pour les futures publicités */
-  overflow: auto; /* Permet le scroll si nécessaire */
+  background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+  padding: 20px;
+  overflow: auto;
+  position: relative;
+  z-index: 1;
 }
 
-/* Conteneur du chat */
 .chat-page-chat-container {
   display: flex;
   width: 100%;
-  max-width: 900px; /* Réduction de la largeur maximale pour un look plus compact */
-  height: 600px; /* Hauteur fixe pour ne pas prendre toute la page */
-  background: #ffffff; /* Fond blanc pour contraste avec le fond sombre */
-  border-radius: 16px; /* Bordures arrondies plus marquées */
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3); /* Ombre plus douce et luxueuse */
-  border: 1px solid #d4af37; /* Bordure dorée subtile pour un effet luxueux */
-  overflow: hidden; /* Assure que le contenu reste dans les bordures */
+  max-width: 900px;
+  height: 600px;
+  background: var(--chat-background);
+  color: var(--chat-text-color);
+  border-radius: 16px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+  border: 1px solid #d4af37;
+  overflow: hidden;
 }
 
-/* Barre latérale (liste des conversations) */
 .chat-page-sidebar {
-  width: 35%; /* Légère augmentation pour un meilleur équilibre */
+  width: 35%;
   min-width: 220px;
-  background: linear-gradient(145deg, #2a2a2a 0%, #1f1f1f 100%); /* Fond sombre élégant */
-  border-right: 1px solid #d4af37; /* Bordure dorée pour un effet luxueux */
+  background: var(--sidebar-background);
+  border-right: 1px solid #d4af37;
   display: flex;
   flex-direction: column;
   overflow-y: auto;
   min-height: 0;
+  color: var(--sidebar-text-color);
 }
 
 .chat-page-sidebar-title {
   padding: 20px 24px;
   font-size: 20px;
   font-weight: 600;
-  color: #d4af37; /* Texte doré pour un look luxueux */
-  border-bottom: 1px solid #444; /* Bordure sombre subtile */
-  background: #1a1a1a; /* Fond sombre pour l’en-tête */
+  color: var(--header-text-color);
+  background: var(--header-background);
+  border-bottom: 1px solid var(--sidebar-border-color);
   flex-shrink: 0;
   text-transform: uppercase;
   letter-spacing: 1px;
@@ -58,8 +87,8 @@
 .chat-page-sidebar-refresh {
   margin: 12px 24px;
   padding: 10px 20px;
-  background: linear-gradient(90deg, #d4af37 0%, #b89729 100%); /* Bouton doré luxueux */
-  color: #1a1a1a; /* Texte sombre pour contraste */
+  background: linear-gradient(90deg, #d4af37 0%, #b89729 100%);
+  color: #1a1a1a;
   border: none;
   border-radius: 8px;
   cursor: pointer;
@@ -69,7 +98,7 @@
 }
 
 .chat-page-sidebar-refresh:hover {
-  background: linear-gradient(90deg, #b89729 0%, #d4af37 100%); /* Inversion du dégradé au survol */
+  background: linear-gradient(90deg, #b89729 0%, #d4af37 100%);
   transform: translateY(-1px);
 }
 
@@ -78,14 +107,16 @@
   flex-grow: 1;
   overflow-y: auto;
   min-height: 0;
+  margin: 0;
+  padding: 0;
 }
 
 .chat-page-sidebar-item {
   padding: 16px 24px;
   cursor: pointer;
   font-size: 16px;
-  color: #d1d5db; /* Texte gris clair pour contraste */
-  border-bottom: 1px solid #444; /* Bordure sombre */
+  color: var(--sidebar-text-color);
+  border-bottom: 1px solid var(--sidebar-border-color);
   transition: background-color 0.3s ease, color 0.3s ease;
   display: flex;
   align-items: center;
@@ -93,15 +124,15 @@
 }
 
 .chat-page-sidebar-item:hover {
-  background-color: #3a3a3a; /* Fond plus clair au survol */
-  color: #d4af37; /* Texte doré au survol */
+  background-color: var(--item-hover-bg);
+  color: #d4af37;
 }
 
 .chat-page-sidebar-item.active {
-  background: linear-gradient(90deg, #d4af37 0%, #b89729 100%); /* Dégradé doré pour l’élément actif */
+  background: linear-gradient(90deg, #d4af37 0%, #b89729 100%);
   font-weight: 600;
-  color: #1a1a1a; /* Texte sombre pour contraste */
-  border-left: 4px solid #d4af37; /* Indicateur visuel doré */
+  color: #1a1a1a;
+  border-left: 4px solid #d4af37;
 }
 
 .chat-page-chat-item {
@@ -115,7 +146,7 @@
   height: 44px;
   border-radius: 50%;
   overflow: hidden;
-  border: 2px solid #d4af37; /* Bordure dorée pour un look luxueux */
+  border: 2px solid #d4af37;
 }
 
 .chat-page-avatar-img {
@@ -128,11 +159,11 @@
   width: 44px;
   height: 44px;
   border-radius: 50%;
-  background-color: #444;
+  background-color: var(--avatar-placeholder-bg);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #d4af37; /* Icône dorée */
+  color: #d4af37;
   font-size: 22px;
   border: 2px solid #d4af37;
 }
@@ -143,20 +174,19 @@
   font-weight: 500;
 }
 
-/* Zone principale du chat */
 .chat-page-main {
   flex-grow: 1;
   display: flex;
   flex-direction: column;
   min-height: 0;
-  background: #f8f9fa; /* Fond légèrement clair pour contraste */
+  background: var(--main-background);
+  color: var(--chat-text-color);
 }
 
-/* En-tête du chat */
 .chat-page-header {
   padding: 16px 24px;
-  background: linear-gradient(90deg, #1a1a1a 0%, #2d2d2d 100%); /* Dégradé sombre luxueux */
-  border-bottom: 1px solid #d4af37; /* Bordure dorée */
+  background: var(--header-background);
+  border-bottom: 1px solid #d4af37;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -166,7 +196,7 @@
 .chat-page-header-title {
   font-size: 18px;
   font-weight: 600;
-  color: #d4af37; /* Texte doré */
+  color: var(--header-text-color);
   letter-spacing: 0.2px;
 }
 
@@ -177,17 +207,16 @@
 
 .chat-page-header-icon {
   font-size: 20px;
-  color: #d4af37; /* Icônes dorées */
+  color: #d4af37;
   cursor: pointer;
   transition: color 0.3s ease, transform 0.2s ease;
 }
 
 .chat-page-header-icon:hover {
-  color: #b89729; /* Doré plus foncé au survol */
-  transform: scale(1.1); /* Effet de zoom au survol */
+  color: #b89729;
+  transform: scale(1.1);
 }
 
-/* Responsive Design */
 @media (max-width: 768px) {
   .chat-page-container {
     padding: 10px;
@@ -195,7 +224,7 @@
 
   .chat-page-chat-container {
     width: 100%;
-    height: 500px; /* Hauteur réduite pour mobile */
+    height: 500px;
     flex-direction: column;
     border-radius: 8px;
     margin: 0;
@@ -203,12 +232,12 @@
 
   .chat-page-sidebar {
     width: 100%;
-    height: 40%; /* Ajuste la hauteur de la sidebar en mobile */
+    height: 40%;
     min-width: unset;
   }
 
   .chat-page-main {
-    height: 60%; /* Ajuste la hauteur principale en mobile */
+    height: 60%;
   }
 
   .chat-page-sidebar-item {

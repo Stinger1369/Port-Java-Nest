@@ -1,9 +1,9 @@
-// src/redux/features/notificationSlice.ts
+// portfolio-frontend/src/redux/features/notificationSlice.ts
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import axios from "axios";
 import { BASE_URL } from "../../config/hostname";
+import { RootState } from "../store"; // Importer RootState pour accéder au state
 
-// Interface pour représenter une notification
 interface Notification {
   id: string;
   userId: string;
@@ -26,12 +26,17 @@ const initialState: NotificationState = {
   error: null,
 };
 
-// Thunk pour récupérer les notifications persistées depuis le backend
 export const fetchNotifications = createAsyncThunk(
   "notification/fetchNotifications",
-  async (userId: string, { rejectWithValue }) => {
+  async (userId: string, { getState, rejectWithValue }) => {
     try {
-      const token = localStorage.getItem("token") || "";
+      const state = getState() as RootState;
+      const token = state.auth.token; // Utilise state.auth.token (alias de accessToken)
+      if (!token) {
+        console.warn("❌ Aucun token trouvé dans le state");
+        return rejectWithValue("No token found");
+      }
+
       const response = await axios.get<Notification[]>(
         `${BASE_URL}/api/notifications/${userId}`,
         {
@@ -44,17 +49,23 @@ export const fetchNotifications = createAsyncThunk(
       }));
       return normalizedNotifications;
     } catch (error: any) {
+      console.error("❌ Échec de fetchNotifications:", error.response?.data || error.message);
       return rejectWithValue(error.response?.data?.error || "Failed to fetch notifications");
     }
   }
 );
 
-// Thunk pour marquer une notification comme lue
 export const markNotificationAsRead = createAsyncThunk(
   "notification/markAsRead",
-  async ({ notificationId, userId }: { notificationId: string; userId: string }, { rejectWithValue }) => {
+  async ({ notificationId, userId }: { notificationId: string; userId: string }, { getState, rejectWithValue }) => {
     try {
-      const token = localStorage.getItem("token") || "";
+      const state = getState() as RootState;
+      const token = state.auth.token;
+      if (!token) {
+        console.warn("❌ Aucun token trouvé dans le state");
+        return rejectWithValue("No token found");
+      }
+
       await axios.put(
         `${BASE_URL}/api/notifications/${notificationId}/read`,
         {},
@@ -62,17 +73,23 @@ export const markNotificationAsRead = createAsyncThunk(
       );
       return { notificationId, userId };
     } catch (error: any) {
+      console.error("❌ Échec de markNotificationAsRead:", error.response?.data || error.message);
       return rejectWithValue(error.response?.data?.error || "Failed to mark notification as read");
     }
   }
 );
 
-// Thunk pour supprimer toutes les notifications d'un utilisateur
 export const clearAllNotifications = createAsyncThunk(
   "notification/clearAllNotifications",
-  async (userId: string, { rejectWithValue }) => {
+  async (userId: string, { getState, rejectWithValue }) => {
     try {
-      const token = localStorage.getItem("token") || "";
+      const state = getState() as RootState;
+      const token = state.auth.token;
+      if (!token) {
+        console.warn("❌ Aucun token trouvé dans le state");
+        return rejectWithValue("No token found");
+      }
+
       const response = await axios.delete(`${BASE_URL}/api/notifications/${userId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -85,17 +102,23 @@ export const clearAllNotifications = createAsyncThunk(
   }
 );
 
-// Nouveau thunk pour supprimer une notification spécifique
 export const deleteNotification = createAsyncThunk(
   "notification/deleteNotification",
-  async ({ notificationId, userId }: { notificationId: string; userId: string }, { rejectWithValue }) => {
+  async ({ notificationId, userId }: { notificationId: string; userId: string }, { getState, rejectWithValue }) => {
     try {
-      const token = localStorage.getItem("token") || "";
+      const state = getState() as RootState;
+      const token = state.auth.token;
+      if (!token) {
+        console.warn("❌ Aucun token trouvé dans le state");
+        return rejectWithValue("No token found");
+      }
+
       await axios.delete(`${BASE_URL}/api/notifications/${userId}/${notificationId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       return notificationId;
     } catch (error: any) {
+      console.error("❌ Échec de deleteNotification:", error.response?.data || error.message);
       return rejectWithValue(error.response?.data?.error || "Failed to delete notification");
     }
   }

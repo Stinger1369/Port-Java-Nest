@@ -1,6 +1,8 @@
+// src/redux/features/certificationSlice.ts
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import axios from "axios";
 import { BASE_URL } from "../../config/hostname";
+import { RootState } from "../store"; // Importer RootState
 
 interface Certification {
   id?: string;
@@ -12,7 +14,7 @@ interface Certification {
   doesNotExpire: boolean;
   credentialId?: string;
   credentialUrl?: string;
-  isPublic?: boolean; // Ajouté
+  isPublic?: boolean;
 }
 
 interface CertificationState {
@@ -27,13 +29,12 @@ const initialState: CertificationState = {
   error: null,
 };
 
-const getAuthToken = () => localStorage.getItem("token");
-
 export const fetchCertificationsByUser = createAsyncThunk(
   "certification/fetchByUser",
-  async (userId: string, { rejectWithValue }) => {
+  async (userId: string, { getState, rejectWithValue }) => {
     try {
-      const token = getAuthToken();
+      const state = getState() as RootState;
+      const token = state.auth.token;
       if (!token) return rejectWithValue("Token non trouvé, veuillez vous reconnecter.");
 
       const response = await axios.get(`${BASE_URL}/api/certifications/user/${userId}`, {
@@ -50,7 +51,7 @@ export const fetchCertificationsByUser = createAsyncThunk(
         doesNotExpire: cert.doesNotExpire ?? false,
         credentialId: cert.credentialId || "",
         credentialUrl: cert.credentialUrl || "",
-        isPublic: cert.isPublic ?? false, // Ajouté
+        isPublic: cert.isPublic ?? false,
       }));
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || "Échec du chargement des certifications.");
@@ -60,10 +61,11 @@ export const fetchCertificationsByUser = createAsyncThunk(
 
 export const addCertification = createAsyncThunk(
   "certification/add",
-  async (certificationData: Omit<Certification, "id" | "userId">, { rejectWithValue, getState }) => {
+  async (certificationData: Omit<Certification, "id" | "userId">, { getState, rejectWithValue }) => {
     try {
-      const token = getAuthToken();
-      const userId = localStorage.getItem("userId");
+      const state = getState() as RootState;
+      const token = state.auth.token;
+      const userId = state.auth.userId;
 
       if (!token) return rejectWithValue("Token non trouvé, veuillez vous reconnecter.");
       if (!userId) return rejectWithValue("ID utilisateur manquant, veuillez vous reconnecter.");
@@ -84,7 +86,7 @@ export const addCertification = createAsyncThunk(
         doesNotExpire: response.data.doesNotExpire ?? false,
         credentialId: response.data.credentialId || "",
         credentialUrl: response.data.credentialUrl || "",
-        isPublic: response.data.isPublic ?? false, // Ajouté
+        isPublic: response.data.isPublic ?? false,
       };
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || "Échec de l'ajout de la certification.");
@@ -94,9 +96,10 @@ export const addCertification = createAsyncThunk(
 
 export const updateCertification = createAsyncThunk(
   "certification/update",
-  async ({ id, certificationData }: { id: string; certificationData: Partial<Certification> }, { rejectWithValue }) => {
+  async ({ id, certificationData }: { id: string; certificationData: Partial<Certification> }, { getState, rejectWithValue }) => {
     try {
-      const token = getAuthToken();
+      const state = getState() as RootState;
+      const token = state.auth.token;
       if (!token) return rejectWithValue("Token non trouvé, veuillez vous reconnecter.");
 
       const response = await axios.put(
@@ -115,7 +118,7 @@ export const updateCertification = createAsyncThunk(
         doesNotExpire: response.data.doesNotExpire ?? false,
         credentialId: response.data.credentialId || "",
         credentialUrl: response.data.credentialUrl || "",
-        isPublic: response.data.isPublic ?? false, // Ajouté
+        isPublic: response.data.isPublic ?? false,
       };
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || "Échec de la mise à jour de la certification.");
@@ -125,9 +128,10 @@ export const updateCertification = createAsyncThunk(
 
 export const deleteCertification = createAsyncThunk(
   "certification/delete",
-  async (id: string, { rejectWithValue }) => {
+  async (id: string, { getState, rejectWithValue }) => {
     try {
-      const token = getAuthToken();
+      const state = getState() as RootState;
+      const token = state.auth.token;
       if (!token) return rejectWithValue("Token non trouvé, veuillez vous reconnecter.");
 
       await axios.delete(`${BASE_URL}/api/certifications/${id}`, {

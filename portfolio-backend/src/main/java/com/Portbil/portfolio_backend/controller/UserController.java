@@ -7,7 +7,7 @@ import com.Portbil.portfolio_backend.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.context.MessageSource; // Déjà présent
+import org.springframework.context.MessageSource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -72,12 +72,14 @@ public class UserController {
                         .friendIds(user.getFriendIds())
                         .friendRequestSentIds(user.getFriendRequestSentIds())
                         .friendRequestReceivedIds(user.getFriendRequestReceivedIds())
+                        .chatTheme(user.getChatTheme()) // Ajout de chatTheme
                         .build())
                 .collect(Collectors.toList());
 
         System.out.println("✅ Tous les utilisateurs récupérés pour l'utilisateur authentifié: " + userDTOs);
         return ResponseEntity.ok(userDTOs);
     }
+
     @GetMapping("/verified")
     public ResponseEntity<List<UserDTO>> getVerifiedUsers() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -118,13 +120,15 @@ public class UserController {
                         .friendIds(user.getFriendIds())
                         .friendRequestSentIds(user.getFriendRequestSentIds())
                         .friendRequestReceivedIds(user.getFriendRequestReceivedIds())
-                        .isVerified(user.isVerified()) // Ajouté
+                        .isVerified(user.isVerified())
+                        .chatTheme(user.getChatTheme()) // Ajout de chatTheme
                         .build())
                 .collect(Collectors.toList());
 
         System.out.println("✅ Utilisateurs vérifiés récupérés: " + verifiedUserDTOs.size());
         return ResponseEntity.ok(verifiedUserDTOs);
     }
+
     @GetMapping("/{id}")
     @PreAuthorize("hasAuthority('ADMIN') or #id == authentication.principal.username")
     public ResponseEntity<UserDTO> getUserById(@PathVariable String id) {
@@ -148,7 +152,8 @@ public class UserController {
                 ", imageIds=" + user.getImageIds() +
                 ", friendIds=" + user.getFriendIds() +
                 ", friendRequestSentIds=" + user.getFriendRequestSentIds() +
-                ", friendRequestReceivedIds=" + user.getFriendRequestReceivedIds());
+                ", friendRequestReceivedIds=" + user.getFriendRequestReceivedIds() +
+                ", chatTheme=" + user.getChatTheme()); // Log ajouté pour chatTheme
 
         UserDTO userDTO = UserDTO.builder()
                 .id(user.getId())
@@ -173,6 +178,7 @@ public class UserController {
                 .friendIds(user.getFriendIds())
                 .friendRequestSentIds(user.getFriendRequestSentIds())
                 .friendRequestReceivedIds(user.getFriendRequestReceivedIds())
+                .chatTheme(user.getChatTheme()) // Ajout de chatTheme
                 .build();
         return ResponseEntity.ok(userDTO);
     }
@@ -241,6 +247,7 @@ public class UserController {
                         .friendIds(updatedUser.getFriendIds())
                         .friendRequestSentIds(updatedUser.getFriendRequestSentIds())
                         .friendRequestReceivedIds(updatedUser.getFriendRequestReceivedIds())
+                        .chatTheme(updatedUser.getChatTheme()) // Ajout de chatTheme
                         .build();
 
                 log.info("✅ Mise à jour des coordonnées réussie pour l'utilisateur ID: {}", id);
@@ -261,6 +268,7 @@ public class UserController {
                         .showBirthdate(requestBody.get("showBirthdate") != null ? Boolean.parseBoolean(String.valueOf(requestBody.get("showBirthdate"))) : false)
                         .latitude(requestBody.get("latitude") != null ? String.valueOf(requestBody.get("latitude")) : null)
                         .longitude(requestBody.get("longitude") != null ? String.valueOf(requestBody.get("longitude")) : null)
+                        .chatTheme((String) requestBody.get("chatTheme")) // Ajout de chatTheme dans la requête
                         .build();
 
                 Optional<User> updatedUserOpt = userService.updateUser(id, userDTO, locale);
@@ -293,6 +301,7 @@ public class UserController {
                         .friendIds(updatedUser.getFriendIds())
                         .friendRequestSentIds(updatedUser.getFriendRequestSentIds())
                         .friendRequestReceivedIds(updatedUser.getFriendRequestReceivedIds())
+                        .chatTheme(updatedUser.getChatTheme()) // Ajout de chatTheme
                         .build();
 
                 log.info("✅ Mise à jour réussie pour l'utilisateur ID: {}", id);
@@ -332,7 +341,7 @@ public class UserController {
         }
 
         try {
-            userService.deleteUser(id); // Pas besoin de Locale ici car pas d'exception traduite
+            userService.deleteUser(id);
             System.out.println("✅ Suppression réussie pour l'utilisateur ID: " + id);
             return ResponseEntity.noContent().build();
         } catch (IllegalArgumentException e) {
@@ -392,7 +401,7 @@ public class UserController {
             @RequestHeader(value = "Accept-Language", defaultValue = "en") String lang) {
         Locale locale = Locale.forLanguageTag(lang);
         String reason = requestBody.getOrDefault("reason", "Non spécifié");
-        String messageId = requestBody.get("messageId"); // Récupérer messageId du body (optionnel)
+        String messageId = requestBody.get("messageId");
         System.out.println("🔹 Tentative de signalement de " + reportedId + " par " + reporterId + " pour : " + reason + (messageId != null ? " (Message ID: " + messageId + ")" : ""));
         try {
             userService.reportUser(reporterId, reportedId, reason, messageId, locale);
@@ -420,7 +429,7 @@ public class UserController {
             return ResponseEntity.ok().build();
         } catch (IllegalArgumentException | IllegalStateException e) {
             System.out.println("❌ Erreur lors du like : " + e.getMessage());
-            return ResponseEntity.badRequest().body(null); // Retourne Void, pas de message
+            return ResponseEntity.badRequest().body(null);
         }
     }
 
@@ -437,7 +446,7 @@ public class UserController {
             return ResponseEntity.noContent().build();
         } catch (IllegalArgumentException | IllegalStateException e) {
             System.out.println("❌ Erreur lors du unlike : " + e.getMessage());
-            return ResponseEntity.badRequest().body(null); // Retourne Void, pas de message
+            return ResponseEntity.badRequest().body(null);
         }
     }
 }

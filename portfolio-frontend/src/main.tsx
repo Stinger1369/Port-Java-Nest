@@ -1,9 +1,10 @@
-// portfolio-frontend/src/index.tsx
+// portfolio-frontend/src/main.tsx
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { Provider } from "react-redux";
 import { store } from "./redux/store";
 import App from "./App";
+import Modal from "react-modal"; // Import de react-modal
 import "./index.css";
 import "./i18n"; // Initialisation de react-i18next
 import { library } from "@fortawesome/fontawesome-svg-core"; // Ajout pour configurer FontAwesome
@@ -12,6 +13,9 @@ import "react-datepicker/dist/react-datepicker.css"; // Importer ici
 
 // Ajouter les icônes à la bibliothèque FontAwesome
 library.add(faUser, faFlag, faBan, faSmile, faGift, faPaperPlane, faUsers, faUserCircle);
+
+// Définir l'élément racine pour react-modal
+Modal.setAppElement("#root");
 
 // Vérifier si la clé API Google Maps est définie (pour le débogage)
 if (import.meta.env.VITE_GOOGLE_MAPS_API_KEY) {

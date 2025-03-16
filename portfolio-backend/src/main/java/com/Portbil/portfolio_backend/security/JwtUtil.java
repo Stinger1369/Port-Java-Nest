@@ -16,7 +16,10 @@ public class JwtUtil {
     private String secret;
 
     @Value("${jwt.expirationMs}")
-    private long expirationMs; // Récupère la valeur depuis application.yml
+    private long expirationMs; // Access token expiration (ex. 2 hours)
+
+    @Value("${jwt.refreshExpirationMs}")
+    private long refreshExpirationMs; // Refresh token expiration (ex. 30 days)
 
     private static final long CLOCK_SKEW = 1000 * 60 * 5; // 5 minutes de tolérance
 
@@ -37,7 +40,7 @@ public class JwtUtil {
         try {
             return Jwts.parserBuilder()
                     .setSigningKey(secret)
-                    .setAllowedClockSkewSeconds(CLOCK_SKEW / 1000) // Tolérance de 5 minutes
+                    .setAllowedClockSkewSeconds(CLOCK_SKEW / 1000)
                     .build()
                     .parseClaimsJws(token)
                     .getBody();
@@ -56,16 +59,30 @@ public class JwtUtil {
         return expired;
     }
 
-    public String generateToken(UserDetails userDetails) {
+    public String generateAccessToken(UserDetails userDetails) {
         Date now = new Date();
-        Date expiryDate = new Date(now.getTime() + expirationMs); // Utilise expirationMs
+        Date expiryDate = new Date(now.getTime() + expirationMs);
         String token = Jwts.builder()
                 .setSubject(userDetails.getUsername())
                 .setIssuedAt(now)
                 .setExpiration(expiryDate)
                 .signWith(SignatureAlgorithm.HS256, secret)
                 .compact();
-        System.out.println("✅ Token généré - Issued at: " + now + ", Expires at: " + expiryDate);
+        System.out.println("✅ Access Token généré - Issued at: " + now + ", Expires at: " + expiryDate);
+        return token;
+    }
+
+    public String generateRefreshToken(UserDetails userDetails) {
+        Date now = new Date();
+        Date expiryDate = new Date(now.getTime() + refreshExpirationMs);
+        String token = Jwts.builder()
+                .setSubject(userDetails.getUsername())
+                .setIssuedAt(now)
+                .setExpiration(expiryDate)
+                .claim("type", "refresh") // Marquer comme refresh token
+                .signWith(SignatureAlgorithm.HS256, secret)
+                .compact();
+        System.out.println("✅ Refresh Token généré - Issued at: " + now + ", Expires at: " + expiryDate);
         return token;
     }
 

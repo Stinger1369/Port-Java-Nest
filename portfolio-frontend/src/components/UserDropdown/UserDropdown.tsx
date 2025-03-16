@@ -17,6 +17,7 @@ const UserDropdown = forwardRef<HTMLDivElement, UserDropdownProps>((props, ref) 
   const { t, i18n } = useTranslation();
   const isArabic = i18n.language === "ar";
   const { user } = useSelector((state: RootState) => state.user);
+  const { token } = useSelector((state: RootState) => state.auth); // Ajout du token pour vérification
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const handleItemClick = () => {
@@ -24,7 +25,7 @@ const UserDropdown = forwardRef<HTMLDivElement, UserDropdownProps>((props, ref) 
   };
 
   const handleMemberClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
-    if (!user?.firstName || !user?.lastName) {
+    if (!token || !user?.firstName || !user?.lastName) {
       e.preventDefault();
       setIsModalOpen(true);
     } else {
@@ -106,7 +107,6 @@ const UserDropdown = forwardRef<HTMLDivElement, UserDropdownProps>((props, ref) 
             <i className="fas fa-envelope"></i>
             <span>{t("navbar.messagesReceived")}</span>
           </Link>
-          {/* Suppression de la route notifications, car intégrée dans Navbar */}
         </div>
       </div>
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />

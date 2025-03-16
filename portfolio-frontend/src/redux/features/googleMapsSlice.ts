@@ -1,6 +1,8 @@
+// src/redux/features/googleMapsSlice.ts
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import axios from "axios";
 import { BASE_URL } from "../../config/hostname";
+import { RootState } from "../store"; // Importer RootState
 
 interface GoogleMapsState {
   address: string | null;
@@ -22,17 +24,17 @@ const initialState: GoogleMapsState = {
   error: null,
 };
 
-// Fonction pour récupérer le token stocké
-const getAuthToken = () => localStorage.getItem("token");
-
-// Mettre à jour l'adresse via Google Maps
 export const updateUserAddress = createAsyncThunk(
   "googleMaps/updateUserAddress",
-  async ({ userId, latitude, longitude }: { userId: string; latitude: number; longitude: number }, { rejectWithValue }) => {
+  async (
+    { userId, latitude, longitude }: { userId: string; latitude: number; longitude: number },
+    { getState, rejectWithValue }
+  ) => {
     try {
-      const token = getAuthToken();
+      const state = getState() as RootState;
+      const token = state.auth.token;
       if (!token) {
-        console.warn("❌ Aucun token trouvé dans localStorage");
+        console.warn("❌ Aucun token trouvé dans le state");
         return rejectWithValue("Token non trouvé, veuillez vous reconnecter.");
       }
 
@@ -65,17 +67,17 @@ export const updateUserAddress = createAsyncThunk(
   }
 );
 
-// Mettre à jour la géolocalisation
 export const updateGeolocation = createAsyncThunk(
   "googleMaps/updateGeolocation",
   async (
     { userId, latitude, longitude }: { userId: string; latitude: number; longitude: number },
-    { rejectWithValue }
+    { getState, rejectWithValue }
   ) => {
     try {
-      const token = getAuthToken();
+      const state = getState() as RootState;
+      const token = state.auth.token;
       if (!token) {
-        console.warn("❌ Aucun token trouvé dans localStorage");
+        console.warn("❌ Aucun token trouvé dans le state");
         return rejectWithValue("Token non trouvé, veuillez vous reconnecter.");
       }
 
@@ -89,9 +91,8 @@ export const updateGeolocation = createAsyncThunk(
       const data = response.data;
       console.log("✅ Réponse de updateGeolocation:", data);
 
-      // S'assurer que les champs city et country sont présents
       return {
-        address: data.address || null, // L'adresse peut être absente si elle n'est pas mise à jour ici
+        address: data.address || null,
         latitude,
         longitude,
         city: data.city || null,
@@ -127,7 +128,10 @@ const googleMapsSlice = createSlice({
       })
       .addCase(
         updateUserAddress.fulfilled,
-        (state, action: PayloadAction<{ address: string; latitude: number; longitude: number; city: string; country: string }>) => {
+        (
+          state,
+          action: PayloadAction<{ address: string; latitude: number; longitude: number; city: string; country: string }>
+        ) => {
           state.status = "succeeded";
           state.address = action.payload.address;
           state.latitude = action.payload.latitude;
@@ -147,13 +151,22 @@ const googleMapsSlice = createSlice({
       })
       .addCase(
         updateGeolocation.fulfilled,
-        (state, action: PayloadAction<{ address: string | null; latitude: number; longitude: number; city: string | null; country: string | null }>) => {
+        (
+          state,
+          action: PayloadAction<{
+            address: string | null;
+            latitude: number;
+            longitude: number;
+            city: string | null;
+            country: string | null;
+          }>
+        ) => {
           state.status = "succeeded";
-          state.address = action.payload.address ?? state.address; // Conserver l'adresse actuelle si non fournie
+          state.address = action.payload.address ?? state.address;
           state.latitude = action.payload.latitude;
           state.longitude = action.payload.longitude;
-          state.city = action.payload.city ?? state.city; // Conserver la ville actuelle si non fournie
-          state.country = action.payload.country ?? state.country; // Conserver le pays actuel si non fourni
+          state.city = action.payload.city ?? state.city;
+          state.country = action.payload.country ?? state.country;
           state.error = null;
         }
       )

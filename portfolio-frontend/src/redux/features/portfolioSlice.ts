@@ -1,6 +1,8 @@
+// src/redux/features/portfolioSlice.ts
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import axios from "axios";
 import { BASE_URL } from "../../config/hostname";
+import { RootState } from "../store"; // Importer RootState
 
 interface Education {
   id: string;
@@ -10,24 +12,24 @@ interface Education {
   endDate?: string;
   currentlyStudying: boolean;
   description?: string;
-  isPublic?: boolean; // Ajouté
+  isPublic?: boolean;
 }
 
 interface Experience {
   id: string;
-  jobTitle: string; // Changé de "position" à "jobTitle"
+  jobTitle: string;
   companyName: string;
   startDate: string;
   endDate?: string;
   currentlyWorking: boolean;
   description?: string;
-  isPublic?: boolean; // Ajouté
+  isPublic?: boolean;
 }
 
 interface Skill {
   id: string;
   name: string;
-  isPublic?: boolean; // Ajouté
+  isPublic?: boolean;
 }
 
 interface Project {
@@ -46,19 +48,19 @@ interface SocialLink {
   id: string;
   platform: string;
   url: string;
-  isPublic?: boolean; // Ajouté
+  isPublic?: boolean;
 }
 
 interface Language {
   id: string;
   name: string;
-  isPublic?: boolean; // Ajouté
+  isPublic?: boolean;
 }
 
 interface Recommendation {
   id: string;
   content: string;
-  isPublic?: boolean; // Ajouté
+  isPublic?: boolean;
 }
 
 interface Interest {
@@ -106,18 +108,16 @@ const initialState: PortfolioState = {
   lastFetchedUserId: null,
 };
 
-const getAuthToken = () => localStorage.getItem("token");
-
 export const fetchPortfolioByUser = createAsyncThunk(
   "portfolio/fetchByUser",
-  async (userId: string, { rejectWithValue, getState }) => {
-    const state = getState() as { portfolio: PortfolioState };
+  async (userId: string, { getState, rejectWithValue }) => {
+    const state = getState() as RootState; // Typé avec RootState
     if (state.portfolio.lastFetchedUserId === userId && state.portfolio.portfolio) {
       return state.portfolio.portfolio;
     }
 
     try {
-      const token = getAuthToken();
+      const token = state.auth.token;
       if (!token) return rejectWithValue("Token non trouvé, veuillez vous reconnecter.");
 
       const response = await axios.get<Portfolio>(
@@ -161,9 +161,10 @@ export const fetchPortfolioByUsername = createAsyncThunk(
 
 export const updatePortfolio = createAsyncThunk(
   "portfolio/update",
-  async (userId: string, { rejectWithValue }) => {
+  async (userId: string, { getState, rejectWithValue }) => {
     try {
-      const token = getAuthToken();
+      const state = getState() as RootState;
+      const token = state.auth.token;
       if (!token) return rejectWithValue("Token non trouvé, veuillez vous reconnecter.");
 
       const response = await axios.post<Portfolio>(

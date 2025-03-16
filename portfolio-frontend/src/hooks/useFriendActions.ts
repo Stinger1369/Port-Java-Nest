@@ -1,3 +1,4 @@
+// src/hooks/useFriendActions.ts
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "../redux/store";
 import {
@@ -10,6 +11,7 @@ import {
   fetchSentFriendRequests,
   fetchReceivedFriendRequests,
 } from "../redux/features/friendSlice";
+import { fetchUser } from "../redux/features/userSlice"; // Ajout pour synchroniser userSlice
 
 export const useFriendActions = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -30,9 +32,8 @@ export const useFriendActions = () => {
     if (user?.id && status !== "loading") {
       dispatch(fetchSentFriendRequests(user.id))
         .unwrap()
-        .catch((err) =>
-          console.error("❌ Erreur lors du chargement des demandes envoyées:", err)
-        );
+        .then(() => console.log("✅ Demandes envoyées chargées:", sentRequests))
+        .catch((err) => console.error("❌ Erreur lors du chargement des demandes envoyées:", err));
     }
   };
 
@@ -40,12 +41,8 @@ export const useFriendActions = () => {
     if (user?.id && status !== "loading") {
       dispatch(fetchReceivedFriendRequests(user.id))
         .unwrap()
-        .then(() => {
-          console.log("✅ Demandes d'amis reçues chargées.");
-        })
-        .catch((err) =>
-          console.error("❌ Erreur lors du chargement des demandes reçues:", err)
-        );
+        .then(() => console.log("✅ Demandes reçues chargées:", receivedRequests))
+        .catch((err) => console.error("❌ Erreur lors du chargement des demandes reçues:", err));
     }
   };
 
@@ -57,6 +54,7 @@ export const useFriendActions = () => {
           console.log("✅ Demande d'ami envoyée avec succès !");
           loadSentFriendRequests();
           dispatch(fetchReceivedFriendRequests(receiverId));
+          dispatch(fetchUser()); // Synchroniser userSlice
         })
         .catch((err) => {
           console.error("❌ Erreur lors de l'envoi de la demande d'ami:", err);
@@ -78,6 +76,7 @@ export const useFriendActions = () => {
           loadFriends();
           loadReceivedFriendRequests();
           dispatch(fetchSentFriendRequests(friendId));
+          dispatch(fetchUser()); // Synchroniser userSlice
         })
         .catch((err) => {
           console.error("❌ Erreur lors de l'acceptation de la demande d'ami:", err);
@@ -97,8 +96,9 @@ export const useFriendActions = () => {
         .then(() => {
           console.log("✅ Demande d'ami refusée avec succès !");
           loadReceivedFriendRequests();
-          dispatch(fetchSentFriendRequests(friendId)); // Synchronisation pour l'expéditeur
-          loadSentFriendRequests(); // Synchronisation pour le sender si c'est lui qui rejette
+          dispatch(fetchSentFriendRequests(friendId));
+          loadSentFriendRequests();
+          dispatch(fetchUser()); // Synchroniser userSlice
         })
         .catch((err) => {
           console.error("❌ Erreur lors du refus de la demande d'ami:", err);
@@ -123,6 +123,7 @@ export const useFriendActions = () => {
           loadSentFriendRequests();
           dispatch(fetchFriends(friendId));
           dispatch(fetchReceivedFriendRequests(friendId));
+          dispatch(fetchUser()); // Synchroniser userSlice
         })
         .catch((err) => {
           console.error("❌ Erreur lors de la suppression de l'ami:", err);
@@ -143,11 +144,13 @@ export const useFriendActions = () => {
           console.log("✅ Demande d'ami annulée avec succès !");
           loadSentFriendRequests();
           dispatch(fetchReceivedFriendRequests(receiverId));
+          dispatch(fetchUser()); // Synchroniser userSlice
         })
         .catch((err) => {
           console.error("❌ Erreur lors de l'annulation de la demande d'ami:", err);
           loadSentFriendRequests();
           dispatch(fetchReceivedFriendRequests(receiverId));
+          dispatch(fetchUser()); // Synchroniser userSlice même en cas d'échec
           if (onError && typeof err === "string") {
             onError(err);
           } else if (onError) {

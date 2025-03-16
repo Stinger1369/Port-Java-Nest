@@ -1,13 +1,14 @@
+// src/redux/features/experienceSlice.ts
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import axios from "axios";
 import { BASE_URL } from "../../config/hostname";
+import { RootState } from "../store"; // Importer RootState
 
-// ✅ **Interface Experience**
 interface Experience {
   id?: string;
   userId: string;
   companyName: string;
-  jobTitle: string; // Changé de "position" à "jobTitle"
+  jobTitle: string;
   startDate: string;
   endDate?: string;
   currentlyWorking: boolean;
@@ -15,7 +16,6 @@ interface Experience {
   isPublic?: boolean;
 }
 
-// ✅ **État initial**
 interface ExperienceState {
   experiences: Experience[];
   status: "idle" | "loading" | "succeeded" | "failed";
@@ -28,15 +28,12 @@ const initialState: ExperienceState = {
   error: null,
 };
 
-// ✅ **Fonction pour récupérer le token stocké**
-const getAuthToken = () => localStorage.getItem("token");
-
-// ✅ **Récupérer toutes les expériences d'un utilisateur avec le token**
 export const fetchExperiencesByUser = createAsyncThunk(
   "experience/fetchByUser",
-  async (userId: string, { rejectWithValue }) => {
+  async (userId: string, { getState, rejectWithValue }) => {
     try {
-      const token = getAuthToken();
+      const state = getState() as RootState;
+      const token = state.auth.token;
       if (!token) {
         return rejectWithValue("Token non trouvé, veuillez vous reconnecter.");
       }
@@ -56,13 +53,13 @@ export const fetchExperiencesByUser = createAsyncThunk(
   }
 );
 
-// ✅ **Ajouter une expérience avec le token**
 export const addExperience = createAsyncThunk(
   "experience/add",
-  async (experienceData: Omit<Experience, "id" | "userId">, { rejectWithValue }) => {
+  async (experienceData: Omit<Experience, "id" | "userId">, { getState, rejectWithValue }) => {
     try {
-      const token = getAuthToken();
-      const userId = localStorage.getItem("userId");
+      const state = getState() as RootState;
+      const token = state.auth.token;
+      const userId = state.auth.userId;
 
       if (!token) {
         return rejectWithValue("Token non trouvé, veuillez vous reconnecter.");
@@ -87,12 +84,12 @@ export const addExperience = createAsyncThunk(
   }
 );
 
-// ✅ **Mettre à jour une expérience avec le token**
 export const updateExperience = createAsyncThunk(
   "experience/update",
-  async ({ id, experienceData }: { id: string; experienceData: Partial<Experience> }, { rejectWithValue }) => {
+  async ({ id, experienceData }: { id: string; experienceData: Partial<Experience> }, { getState, rejectWithValue }) => {
     try {
-      const token = getAuthToken();
+      const state = getState() as RootState;
+      const token = state.auth.token;
       if (!token) {
         return rejectWithValue("Token non trouvé, veuillez vous reconnecter.");
       }
@@ -113,12 +110,12 @@ export const updateExperience = createAsyncThunk(
   }
 );
 
-// ✅ **Supprimer une expérience avec le token**
 export const deleteExperience = createAsyncThunk(
   "experience/delete",
-  async (id: string, { rejectWithValue }) => {
+  async (id: string, { getState, rejectWithValue }) => {
     try {
-      const token = getAuthToken();
+      const state = getState() as RootState;
+      const token = state.auth.token;
       if (!token) {
         return rejectWithValue("Token non trouvé, veuillez vous reconnecter.");
       }
@@ -135,7 +132,6 @@ export const deleteExperience = createAsyncThunk(
   }
 );
 
-// ✅ **Création du slice Redux**
 const experienceSlice = createSlice({
   name: "experience",
   initialState,
@@ -192,5 +188,4 @@ const experienceSlice = createSlice({
   },
 });
 
-// ✅ **Exports**
 export default experienceSlice.reducer;

@@ -7,11 +7,14 @@
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  position: relative; /* Assure que les enfants fixes ne sont pas limités */
+  z-index: 1; /* Bas pour ne pas interférer avec les modales */
 }
 
 .main-content {
   flex: 1;
   padding-top: 70px;
+  position: relative; /* Clarifie le contexte de positionnement */
 }
 
 /* Responsivité globale */
@@ -21,7 +24,7 @@
   }
 
   .main-content {
-    padding-top: 60px; /* Réduit le padding sur mobile */
+    padding-top: 60px;
   }
 }
 
@@ -31,6 +34,6 @@
   }
 
   .main-content {
-    padding-top: 50px; /* Réduit encore sur petit mobile */
+    padding-top: 50px;
   }
 }

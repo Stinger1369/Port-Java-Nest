@@ -1,6 +1,8 @@
+// src/redux/features/projectSlice.ts
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import axios from "axios";
 import { BASE_URL } from "../../config/hostname";
+import { RootState } from "../store"; // Importer RootState
 
 interface Project {
   id?: string;
@@ -13,7 +15,7 @@ interface Project {
   startDate: string;
   endDate?: string;
   currentlyWorkingOn: boolean;
-  isPublic?: boolean; // Ajouté
+  isPublic?: boolean;
 }
 
 interface ProjectState {
@@ -28,13 +30,12 @@ const initialState: ProjectState = {
   error: null,
 };
 
-const getAuthToken = () => localStorage.getItem("token");
-
 export const fetchProjectsByUser = createAsyncThunk(
   "project/fetchByUser",
-  async (userId: string, { rejectWithValue }) => {
+  async (userId: string, { getState, rejectWithValue }) => {
     try {
-      const token = getAuthToken();
+      const state = getState() as RootState;
+      const token = state.auth.token;
       if (!token) return rejectWithValue("Token non trouvé, veuillez vous reconnecter.");
 
       const response = await axios.get<Project[]>(
@@ -53,7 +54,7 @@ export const fetchProjectsByUser = createAsyncThunk(
         startDate: proj.startDate.toString(),
         endDate: proj.endDate?.toString() || "",
         currentlyWorkingOn: proj.currentlyWorkingOn || false,
-        isPublic: proj.isPublic ?? false, // Ajouté
+        isPublic: proj.isPublic ?? false,
       }));
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || "Échec du chargement des projets.");
@@ -63,10 +64,11 @@ export const fetchProjectsByUser = createAsyncThunk(
 
 export const addProject = createAsyncThunk(
   "project/add",
-  async (projectData: Omit<Project, "id" | "userId">, { rejectWithValue }) => {
+  async (projectData: Omit<Project, "id" | "userId">, { getState, rejectWithValue }) => {
     try {
-      const token = getAuthToken();
-      const userId = localStorage.getItem("userId");
+      const state = getState() as RootState;
+      const token = state.auth.token;
+      const userId = state.auth.userId;
 
       if (!token) return rejectWithValue("Token non trouvé, veuillez vous reconnecter.");
       if (!userId) return rejectWithValue("ID utilisateur manquant, veuillez vous reconnecter.");
@@ -85,7 +87,7 @@ export const addProject = createAsyncThunk(
         liveDemoUrl: response.data.liveDemoUrl || "",
         repositoryUrl: response.data.repositoryUrl || "",
         currentlyWorkingOn: response.data.currentlyWorkingOn || false,
-        isPublic: response.data.isPublic ?? false, // Ajouté
+        isPublic: response.data.isPublic ?? false,
       };
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || "Échec de l'ajout du projet.");
@@ -95,9 +97,10 @@ export const addProject = createAsyncThunk(
 
 export const updateProject = createAsyncThunk(
   "project/update",
-  async ({ id, projectData }: { id: string; projectData: Partial<Project> }, { rejectWithValue }) => {
+  async ({ id, projectData }: { id: string; projectData: Partial<Project> }, { getState, rejectWithValue }) => {
     try {
-      const token = getAuthToken();
+      const state = getState() as RootState;
+      const token = state.auth.token;
       if (!token) return rejectWithValue("Token non trouvé, veuillez vous reconnecter.");
 
       const response = await axios.put<Project>(
@@ -113,7 +116,7 @@ export const updateProject = createAsyncThunk(
         liveDemoUrl: response.data.liveDemoUrl || "",
         repositoryUrl: response.data.repositoryUrl || "",
         currentlyWorkingOn: response.data.currentlyWorkingOn || false,
-        isPublic: response.data.isPublic ?? false, // Ajouté
+        isPublic: response.data.isPublic ?? false,
       };
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || "Échec de la mise à jour du projet.");
@@ -123,9 +126,10 @@ export const updateProject = createAsyncThunk(
 
 export const deleteProject = createAsyncThunk(
   "project/delete",
-  async (id: string, { rejectWithValue }) => {
+  async (id: string, { getState, rejectWithValue }) => {
     try {
-      const token = getAuthToken();
+      const state = getState() as RootState;
+      const token = state.auth.token;
       if (!token) return rejectWithValue("Token non trouvé, veuillez vous reconnecter.");
 
       await axios.delete(

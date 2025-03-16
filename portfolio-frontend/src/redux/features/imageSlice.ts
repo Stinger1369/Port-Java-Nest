@@ -1,6 +1,8 @@
+// src/redux/features/imageSlice.ts
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import axios from "axios";
 import { BASE_URL } from "../../config/hostname";
+import { RootState } from "../store"; // Importer RootState
 
 interface Image {
   id: string | null;
@@ -26,16 +28,15 @@ const initialState: ImageState = {
   message: null,
 };
 
-const getAuthToken = () => localStorage.getItem("token");
-
 export const uploadImage = createAsyncThunk(
   "image/uploadImage",
   async (
     { userId, name, file, isProfilePicture }: { userId: string; name: string; file: File; isProfilePicture?: boolean },
-    { rejectWithValue }
+    { getState, rejectWithValue }
   ) => {
     try {
-      const token = getAuthToken();
+      const state = getState() as RootState;
+      const token = state.auth.token;
       if (!token) {
         return rejectWithValue("Token non trouvé, veuillez vous reconnecter.");
       }
@@ -70,9 +71,10 @@ export const uploadImage = createAsyncThunk(
 
 export const getUserImages = createAsyncThunk(
   "image/getUserImages",
-  async (userId: string, { rejectWithValue }) => {
+  async (userId: string, { getState, rejectWithValue }) => {
     try {
-      const token = getAuthToken();
+      const state = getState() as RootState;
+      const token = state.auth.token;
       if (!token) {
         return rejectWithValue("Token non trouvé, veuillez vous reconnecter.");
       }
@@ -95,10 +97,11 @@ export const deleteImage = createAsyncThunk(
   "image/deleteImage",
   async (
     { userId, name }: { userId: string; name: string },
-    { rejectWithValue }
+    { getState, rejectWithValue }
   ) => {
     try {
-      const token = getAuthToken();
+      const state = getState() as RootState;
+      const token = state.auth.token;
       if (!token) {
         return rejectWithValue("Token non trouvé, veuillez vous reconnecter.");
       }
@@ -119,9 +122,10 @@ export const deleteImage = createAsyncThunk(
 
 export const getAllImagesByUserId = createAsyncThunk(
   "image/getAllImagesByUserId",
-  async (userId: string, { rejectWithValue }) => {
+  async (userId: string, { getState, rejectWithValue }) => {
     try {
-      const token = getAuthToken();
+      const state = getState() as RootState;
+      const token = state.auth.token;
       if (!token) {
         return rejectWithValue("Token non trouvé, veuillez vous reconnecter.");
       }
@@ -152,9 +156,10 @@ export const getAllImagesByUserId = createAsyncThunk(
 
 export const getImagesByIds = createAsyncThunk(
   "image/getImagesByIds",
-  async (imageIds: string[], { rejectWithValue }) => {
+  async (imageIds: string[], { getState, rejectWithValue }) => {
     try {
-      const token = getAuthToken();
+      const state = getState() as RootState;
+      const token = state.auth.token;
       if (!token) {
         return rejectWithValue("Token non trouvé, veuillez vous reconnecter.");
       }
@@ -182,9 +187,10 @@ export const getImagesByIds = createAsyncThunk(
 
 export const getProfileImagesByUserId = createAsyncThunk(
   "image/getProfileImagesByUserId",
-  async (userId: string, { rejectWithValue }) => {
+  async (userId: string, { getState, rejectWithValue }) => {
     try {
-      const token = getAuthToken();
+      const state = getState() as RootState;
+      const token = state.auth.token;
       if (!token) {
         return rejectWithValue("Token non trouvé, veuillez vous reconnecter.");
       }
@@ -214,9 +220,10 @@ export const getProfileImagesByUserId = createAsyncThunk(
 
 export const setProfilePicture = createAsyncThunk(
   "image/setProfilePicture",
-  async (imageId: string, { rejectWithValue }) => {
+  async (imageId: string, { getState, rejectWithValue }) => {
     try {
-      const token = getAuthToken();
+      const state = getState() as RootState;
+      const token = state.auth.token;
       if (!token) {
         return rejectWithValue("Token non trouvé, veuillez vous reconnecter.");
       }
@@ -280,7 +287,6 @@ const imageSlice = createSlice({
       })
       .addCase(getUserImages.fulfilled, (state, action: PayloadAction<Image[]>) => {
         state.status = "succeeded";
-        // Fusionner les images au lieu de remplacer
         action.payload.forEach((newImage) => {
           const index = state.images.findIndex((img) => img.id === newImage.id);
           if (index !== -1) {
@@ -318,13 +324,12 @@ const imageSlice = createSlice({
       })
       .addCase(getAllImagesByUserId.fulfilled, (state, action: PayloadAction<{ userId: string; images: Image[] }>) => {
         state.status = "succeeded";
-        // Fusionner les nouvelles images avec les existantes
         action.payload.images.forEach((newImage) => {
           const index = state.images.findIndex((img) => img.id === newImage.id);
           if (index !== -1) {
-            state.images[index] = newImage; // Mettre à jour si l'image existe
+            state.images[index] = newImage;
           } else {
-            state.images.push(newImage); // Ajouter si nouvelle
+            state.images.push(newImage);
           }
         });
         console.log("🔍 Nouvel état des images après getAllImagesByUserId:", state.images);
@@ -363,7 +368,6 @@ const imageSlice = createSlice({
       })
       .addCase(getProfileImagesByUserId.fulfilled, (state, action: PayloadAction<Image[]>) => {
         state.status = "succeeded";
-        // Fusionner les images de profil
         action.payload.forEach((newImage) => {
           const index = state.images.findIndex((img) => img.id === newImage.id);
           if (index !== -1) {

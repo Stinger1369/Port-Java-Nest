@@ -1,4 +1,4 @@
-// portfolio-frontend/src/components/MemberCard/MemberCard.tsx
+// src/components/MemberCard/MemberCard.tsx
 import React, { useState, useCallback, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState, AppDispatch } from "../../redux/store";
@@ -13,12 +13,12 @@ interface MemberCardProps {
   member: User;
   profileImage: string | null;
   onClick: () => void;
-  disableChat?: boolean; // Désactive le bouton "Chatter"
-  disableLike?: boolean; // Désactive le bouton "Liker"
-  friendActionText?: string; // Texte personnalisé pour l'action ami (facultatif, sera ignoré pour icônes)
-  onFriendAction?: (e: React.MouseEvent) => void; // Gestion personnalisée de l'action ami
-  hideReceivedRequests?: boolean; // Masque les boutons d'acceptation/refus
-  onChat?: (e: React.MouseEvent) => void; // Nouvelle prop pour gérer le clic sur "Chatter"
+  disableChat?: boolean;
+  disableLike?: boolean;
+  friendActionText?: string;
+  onFriendAction?: (e: React.MouseEvent) => void;
+  hideReceivedRequests?: boolean;
+  onChat?: (e: React.MouseEvent) => void;
 }
 
 const MemberCard: React.FC<MemberCardProps> = ({
@@ -30,10 +30,11 @@ const MemberCard: React.FC<MemberCardProps> = ({
   friendActionText,
   onFriendAction,
   hideReceivedRequests = false,
-  onChat, // Ajout de la prop
+  onChat,
 }) => {
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
+  const { token, userId } = useSelector((state: RootState) => state.auth);
   const currentUser = useSelector((state: RootState) => state.user.user);
   const {
     friends,
@@ -49,7 +50,7 @@ const MemberCard: React.FC<MemberCardProps> = ({
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const isCurrentUser = currentUser?.id === member.id;
+  const isCurrentUser = currentUser?.id === member.id || userId === member.id;
   const hasLiked = currentUser?.likedUserIds?.includes(member.id);
   const isFriend = friends.some((friend) => friend.id === member.id);
   const hasSentRequest = sentRequests.some((request) => request.id === member.id);
@@ -61,7 +62,6 @@ const MemberCard: React.FC<MemberCardProps> = ({
     );
   }, [isFriend, hasSentRequest, hasReceivedRequest, member.id]);
 
-  // Efface les messages après 3 secondes
   useEffect(() => {
     if (successMessage) {
       const timer = setTimeout(() => setSuccessMessage(null), 3000);
@@ -85,14 +85,14 @@ const MemberCard: React.FC<MemberCardProps> = ({
   const handleLikeToggle = useCallback(
     (e: React.MouseEvent) => {
       e.stopPropagation();
-      if (!currentUser || isCurrentUser || disableLike) return;
+      if (!token || !userId || isCurrentUser || disableLike) return;
       if (hasLiked) {
-        dispatch(unlikeUser({ likerId: currentUser.id, likedId: member.id }));
+        dispatch(unlikeUser({ likerId: userId, likedId: member.id }));
       } else {
-        dispatch(likeUser({ likerId: currentUser.id, likedId: member.id }));
+        dispatch(likeUser({ likerId: userId, likedId: member.id }));
       }
     },
-    [currentUser, isCurrentUser, hasLiked, disableLike, dispatch, member.id]
+    [token, userId, isCurrentUser, hasLiked, disableLike, dispatch, member.id]
   );
 
   const handleChat = useCallback(
@@ -100,9 +100,8 @@ const MemberCard: React.FC<MemberCardProps> = ({
       e.stopPropagation();
       e.preventDefault();
       if (onChat) {
-        // Si onChat est défini (par exemple, dans ContactInfo), appelle cette fonction
         onChat(e);
-      } else if (!currentUser || isCurrentUser || disableChat) {
+      } else if (!token || !userId || isCurrentUser || disableChat) {
         return;
       } else if (isProfileIncomplete()) {
         setIsModalOpen(true);
@@ -111,7 +110,7 @@ const MemberCard: React.FC<MemberCardProps> = ({
         navigate(`/chat/private/${member.id}`);
       }
     },
-    [onChat, currentUser, isCurrentUser, disableChat, isProfileIncomplete, dispatch, member.id, navigate]
+    [onChat, token, userId, isCurrentUser, disableChat, isProfileIncomplete, dispatch, member.id, navigate]
   );
 
   const closeModal = useCallback(() => setIsModalOpen(false), []);
@@ -130,13 +129,52 @@ const MemberCard: React.FC<MemberCardProps> = ({
     [onClick]
   );
 
-  const handleFriendAction = useCallback(
+  const handleFriendActionClick = useCallback(
     (e: React.MouseEvent) => {
       e.stopPropagation();
-      if (!currentUser || isCurrentUser || !onFriendAction) return;
-      onFriendAction(e); // Utilise la prop personnalisée pour gérer l'action
+      if (!token || !userId || isCurrentUser) return;
+
+      console.log(`🔍 Action sur ${member.id} - isFriend: ${isFriend}, hasSentRequest: ${hasSentRequest}, hasReceivedRequest: ${hasReceivedRequest}`);
+
+      if (isFriend) {
+        handleRemoveFriend(member.id, (errorMessage) => {
+          setErrorMessage(errorMessage);
+          setSuccessMessage(null);
+        });
+      } else if (hasSentRequest) {
+        handleCancelFriendRequest(member.id, (errorMessage) => {
+          if (errorMessage) {
+            setErrorMessage(errorMessage);
+            setSuccessMessage(null);
+          } else {
+            setSuccessMessage("Demande annulée");
+            setErrorMessage(null);
+          }
+        });
+      } else {
+        handleSendFriendRequest(member.id, (errorMessage) => {
+          if (errorMessage) {
+            setErrorMessage(errorMessage);
+            setSuccessMessage(null);
+          } else {
+            setSuccessMessage("Demande envoyée");
+            setErrorMessage(null);
+          }
+        });
+      }
     },
-    [currentUser, isCurrentUser, onFriendAction]
+    [
+      token,
+      userId,
+      isCurrentUser,
+      isFriend,
+      hasSentRequest,
+      hasReceivedRequest,
+      member.id,
+      handleSendFriendRequest,
+      handleCancelFriendRequest,
+      handleRemoveFriend,
+    ]
   );
 
   const handleAccept = useCallback(
@@ -146,8 +184,10 @@ const MemberCard: React.FC<MemberCardProps> = ({
         handleAcceptFriendRequest(member.id, (errorMessage) => {
           if (errorMessage) {
             setErrorMessage(errorMessage);
+            setSuccessMessage(null);
           } else {
-            setSuccessMessage("Demande d’ami acceptée");
+            setSuccessMessage("Demande acceptée");
+            setErrorMessage(null);
           }
         });
       }
@@ -162,8 +202,10 @@ const MemberCard: React.FC<MemberCardProps> = ({
         handleRejectFriendRequest(member.id, (errorMessage) => {
           if (errorMessage) {
             setErrorMessage(errorMessage);
+            setSuccessMessage(null);
           } else {
-            setSuccessMessage("Demande d’ami refusée");
+            setSuccessMessage("Demande refusée");
+            setErrorMessage(null);
           }
         });
       }
@@ -195,12 +237,8 @@ const MemberCard: React.FC<MemberCardProps> = ({
         </h3>
         <p className="email">{member.email}</p>
       </div>
-      {successMessage && (
-        <p className="success-message">{successMessage}</p>
-      )}
-      {errorMessage && (
-        <p className="error-message">{errorMessage}</p>
-      )}
+      {successMessage && <p className="success-message">{successMessage}</p>}
+      {errorMessage && <p className="error-message">{errorMessage}</p>}
       <div className="member-details">
         {member.phone && (
           <p>
@@ -238,7 +276,7 @@ const MemberCard: React.FC<MemberCardProps> = ({
           )}
           <button
             className={buttonProps.className}
-            onClick={handleFriendAction}
+            onClick={handleFriendActionClick}
             title={friendActionText || buttonProps.title}
           >
             <i className={buttonProps.icon}></i>

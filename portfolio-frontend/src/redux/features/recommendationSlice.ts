@@ -1,14 +1,15 @@
+// src/redux/features/recommendationSlice.ts
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import axios from "axios";
-import { BASE_URL } from "../../config/hostname"; // Import de la configuration de l'URL
+import { BASE_URL } from "../../config/hostname";
+import { RootState } from "../store"; // Importer RootState
 
-// ✅ **Interface correspondant au backend**
 interface Recommendation {
   id?: string;
-  userId: string; // Identifiant de l'utilisateur recevant la recommandation
-  recommenderId: string; // Identifiant de l'utilisateur qui recommande
-  content: string; // Contenu de la recommandation
-  createdAt: string; // Format YYYY-MM-DD
+  userId: string;
+  recommenderId: string;
+  content: string;
+  createdAt: string;
 }
 
 interface RecommendationState {
@@ -23,29 +24,25 @@ const initialState: RecommendationState = {
   error: null,
 };
 
-// ✅ **Récupérer le token d'authentification**
-const getAuthToken = () => localStorage.getItem("token");
-
-// ✅ **Récupérer les recommandations d'un utilisateur**
 export const fetchRecommendationsByUser = createAsyncThunk(
   "recommendation/fetchByUser",
-  async (userId: string, { rejectWithValue }) => {
+  async (userId: string, { getState, rejectWithValue }) => {
     try {
-      const token = getAuthToken();
+      const state = getState() as RootState;
+      const token = state.auth.token;
       if (!token) return rejectWithValue("Token non trouvé, veuillez vous reconnecter.");
 
       const response = await axios.get<Recommendation[]>(
         `${BASE_URL}/api/recommendations/user/${userId}`,
-        { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } }
+        { headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" } }
       );
 
-      // Adaptation des champs du backend au Redux (si nécessaire)
       return response.data.map((rec) => ({
         id: rec.id || rec._id?.$oid || "",
         userId: rec.userId,
         recommenderId: rec.recommenderId,
         content: rec.content || "",
-        createdAt: rec.createdAt.split("T")[0] || new Date().toISOString().split("T")[0], // Format YYYY-MM-DD
+        createdAt: rec.createdAt.split("T")[0] || new Date().toISOString().split("T")[0],
       }));
     } catch (error: any) {
       const message =
@@ -57,18 +54,18 @@ export const fetchRecommendationsByUser = createAsyncThunk(
   }
 );
 
-// ✅ **Ajouter une recommandation**
 export const addRecommendation = createAsyncThunk(
   "recommendation/add",
-  async (recommendationData: Omit<Recommendation, "id">, { rejectWithValue }) => {
+  async (recommendationData: Omit<Recommendation, "id">, { getState, rejectWithValue }) => {
     try {
-      const token = getAuthToken();
+      const state = getState() as RootState;
+      const token = state.auth.token;
       if (!token) return rejectWithValue("Token non trouvé, veuillez vous reconnecter.");
 
       const response = await axios.post<Recommendation>(
         `${BASE_URL}/api/recommendations`,
         recommendationData,
-        { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } }
+        { headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" } }
       );
 
       return {
@@ -84,18 +81,21 @@ export const addRecommendation = createAsyncThunk(
   }
 );
 
-// ✅ **Mettre à jour une recommandation**
 export const updateRecommendation = createAsyncThunk(
   "recommendation/update",
-  async ({ id, recommendationData }: { id: string; recommendationData: Partial<Recommendation> }, { rejectWithValue }) => {
+  async (
+    { id, recommendationData }: { id: string; recommendationData: Partial<Recommendation> },
+    { getState, rejectWithValue }
+  ) => {
     try {
-      const token = getAuthToken();
+      const state = getState() as RootState;
+      const token = state.auth.token;
       if (!token) return rejectWithValue("Token non trouvé, veuillez vous reconnecter.");
 
       const response = await axios.put<Recommendation>(
         `${BASE_URL}/api/recommendations/${id}`,
         recommendationData,
-        { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } }
+        { headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" } }
       );
 
       return {
@@ -111,17 +111,17 @@ export const updateRecommendation = createAsyncThunk(
   }
 );
 
-// ✅ **Supprimer une recommandation**
 export const deleteRecommendation = createAsyncThunk(
   "recommendation/delete",
-  async (id: string, { rejectWithValue }) => {
+  async (id: string, { getState, rejectWithValue }) => {
     try {
-      const token = getAuthToken();
+      const state = getState() as RootState;
+      const token = state.auth.token;
       if (!token) return rejectWithValue("Token non trouvé, veuillez vous reconnecter.");
 
       await axios.delete(
         `${BASE_URL}/api/recommendations/${id}`,
-        { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } }
+        { headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" } }
       );
 
       return id;
@@ -131,7 +131,6 @@ export const deleteRecommendation = createAsyncThunk(
   }
 );
 
-// ✅ **Création du slice Redux**
 const recommendationSlice = createSlice({
   name: "recommendation",
   initialState,
@@ -188,5 +187,4 @@ const recommendationSlice = createSlice({
   },
 });
 
-// ✅ **Exports**
 export default recommendationSlice.reducer;

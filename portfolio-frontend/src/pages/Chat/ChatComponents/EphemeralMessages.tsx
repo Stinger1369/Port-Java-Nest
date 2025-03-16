@@ -15,7 +15,7 @@ interface EphemeralMessagesProps {
 const EphemeralMessages: React.FC<EphemeralMessagesProps> = ({ chatId, isOpen, onClose }) => {
   const handleSetEphemeral = () => {
     console.log(`🔹 Activation des messages éphémères pour chat ${chatId} (fonctionnalité à implémenter)`);
-    onClose();
+    onClose(); // Ferme la modale après l'action
   };
 
   return (

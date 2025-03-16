@@ -1,0 +1,77 @@
+/* Thème Light */
+:root {
+  --chat-background: #f8f9fa;
+  --chat-text-color: #000000;
+  --sidebar-background: linear-gradient(145deg, #ffffff 0%, #f0f0f0 100%);
+  --sidebar-text-color: #555;
+  --header-background: linear-gradient(90deg, #e0e0e0 0%, #f0f0f0 100%);
+  --header-text-color: #d4af37;
+  --main-background: #f8f9fa;
+  --sidebar-border-color: #ddd;
+  --avatar-placeholder-bg: #ccc;
+  --item-hover-bg: #e0e2e5;
+}
+
+/* Styles généraux appliqués au thème light */
+.chat-page-container {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e0e0e0 100%);
+}
+
+.chat-page-chat-container {
+  background: var(--chat-background);
+  color: var(--chat-text-color);
+}
+
+.chat-page-sidebar {
+  background: var(--sidebar-background);
+  color: var(--sidebar-text-color);
+  border-right: 1px solid var(--sidebar-border-color);
+}
+
+.chat-page-sidebar-title {
+  color: var(--header-text-color);
+  background: var(--header-background);
+  border-bottom: 1px solid var(--sidebar-border-color);
+}
+
+.chat-page-sidebar-refresh {
+  background: linear-gradient(90deg, #d4af37 0%, #b89729 100%);
+  color: #1a1a1a;
+}
+
+.chat-page-sidebar-refresh:hover {
+  background: linear-gradient(90deg, #b89729 0%, #d4af37 100%);
+}
+
+.chat-page-sidebar-item {
+  color: var(--sidebar-text-color);
+  border-bottom: 1px solid var(--sidebar-border-color);
+}
+
+.chat-page-sidebar-item:hover {
+  background-color: var(--item-hover-bg);
+  color: #d4af37;
+}
+
+.chat-page-sidebar-item.active {
+  background: linear-gradient(90deg, #d4af37 0%, #b89729 100%);
+  color: #1a1a1a;
+}
+
+.chat-page-avatar-placeholder {
+  background-color: var(--avatar-placeholder-bg);
+}
+
+.chat-page-main {
+  background: var(--main-background);
+  color: var(--chat-text-color);
+}
+
+.chat-page-header {
+  background: var(--header-background);
+  border-bottom: 1px solid var(--sidebar-border-color);
+}
+
+.chat-page-header-title {
+  color: var(--header-text-color);
+}

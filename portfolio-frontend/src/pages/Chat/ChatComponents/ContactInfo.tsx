@@ -1,9 +1,10 @@
 // portfolio-frontend/src/pages/Chat/ChatComponents/ContactInfo.tsx
 import React, { useCallback } from "react";
 import { useSelector, useDispatch } from "react-redux";
+import { createSelector } from "@reduxjs/toolkit"; // Importer createSelector
 import Modal from "react-modal";
 import { RootState, AppDispatch } from "../../../redux/store";
-import MemberCard from "../../../components/MemberCard/MemberCard"; // Import de MemberCard
+import MemberCard from "../../../components/MemberCard/MemberCard";
 import { fetchPrivateMessages } from "../../../redux/features/chatSlice";
 import { useNavigate } from "react-router-dom";
 import { useFriendActions } from "../../../hooks/useFriendActions";
@@ -16,43 +17,62 @@ interface ContactInfoProps {
   userId: string;
   isOpen: boolean;
   onClose: () => void;
-  selectedChatId: string | null; // Ajout pour vérifier si dans le chat
+  selectedChatId: string | null;
 }
+
+// Sélecteur mémoïsé pour obtenir le membre
+const selectMemberById = createSelector(
+  (state: RootState) => state.user.members,
+  (_: RootState, userId: string) => userId,
+  (members, userId) => members.find((m) => m.id === userId)
+);
+
+// Sélecteur mémoïsé pour obtenir les images filtrées
+const selectImagesByUserId = createSelector(
+  (state: RootState) => state.image.images,
+  (_: RootState, userId: string) => userId,
+  (images, userId) => images.filter((img) => img.userId === userId)
+);
+
+// Sélecteur mémoïsé pour obtenir l'image de profil
+const selectProfileImage = createSelector(
+  selectImagesByUserId,
+  (images) => images.find((img) => img.name === "profile-picture.jpg" && !img.isNSFW) || images[0] || null
+);
 
 const ContactInfo: React.FC<ContactInfoProps> = ({ userId, isOpen, onClose, selectedChatId }) => {
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
-  const member = useSelector((state: RootState) => state.user.members.find((m) => m.id === userId));
-  const images = useSelector((state: RootState) => state.image.images.filter((img) => img.userId === userId));
-  const profileImage = images.find((img) => img.name === "profile-picture.jpg" && !img.isNSFW) || images[0] || null;
+
+  // Utiliser les sélecteurs mémoïsés
+  const member = useSelector((state: RootState) => selectMemberById(state, userId));
+  const images = useSelector((state: RootState) => selectImagesByUserId(state, userId));
+  const profileImage = useSelector((state: RootState) => selectProfileImage(state, userId));
+
   const currentUserId = useSelector((state: RootState) => state.auth.userId);
   const { friends, sentRequests, receivedRequests, handleRemoveFriend, handleSendFriendRequest } = useFriendActions();
   const isFriend = friends.some((friend) => friend.id === userId);
   const hasSentRequest = sentRequests.some((request) => request.id === userId);
   const hasReceivedRequest = receivedRequests.some((request) => request.id === userId);
 
-  // Gestion du clic sur la carte (peut être vide ou utilisé pour une action spécifique)
   const handleCardClick = () => {
-    // Pas d'action nécessaire dans le modal, mais on peut garder la prop pour compatibilité
+    // Pas d'action nécessaire dans le modal
   };
 
-  // Gestion du clic sur "Chatter"
   const handleChat = useCallback(
     (e: React.MouseEvent) => {
       e.stopPropagation();
       if (selectedChatId && (selectedChatId.startsWith(`temp-${userId}`) || selectedChatId === userId)) {
-        // Si déjà dans le chat avec cet utilisateur, ferme le modal et retourne à la conversation
         onClose();
       } else if (currentUserId) {
         dispatch(fetchPrivateMessages(userId));
         navigate(`/chat/private/${userId}`);
-        onClose(); // Ferme le modal après navigation
+        onClose();
       }
     },
     [dispatch, navigate, userId, currentUserId, selectedChatId, onClose]
   );
 
-  // Gestion de l'action d'ami
   const handleFriendAction = useCallback(
     (e: React.MouseEvent) => {
       e.stopPropagation();
@@ -79,17 +99,16 @@ const ContactInfo: React.FC<ContactInfoProps> = ({ userId, isOpen, onClose, sele
     [currentUserId, isFriend, hasSentRequest, hasReceivedRequest, userId, handleRemoveFriend, handleSendFriendRequest]
   );
 
-  // Props personnalisées pour MemberCard dans le contexte du modal
   const memberCardProps = {
     member,
     profileImage: profileImage ? profileImage.path : null,
     onClick: handleCardClick,
-    disableChat: !!selectedChatId && (selectedChatId.startsWith(`temp-${userId}`) || selectedChatId === userId), // Désactive "Chatter" si déjà dans le chat
-    disableLike: true, // Désactive "Liker" dans le modal
-    friendActionText: isFriend ? "Supprimer un ami" : "Ajouter un ami", // Affiche "Supprimer" si déjà amis
+    disableChat: !!selectedChatId && (selectedChatId.startsWith(`temp-${userId}`) || selectedChatId === userId),
+    disableLike: true,
+    friendActionText: isFriend ? "Supprimer un ami" : "Ajouter un ami",
     onFriendAction: handleFriendAction,
-    hideReceivedRequests: true, // Masque les boutons d'acceptation/refus dans le modal
-    onChat: handleChat, // Passe la fonction handleChat personnalisée
+    hideReceivedRequests: true,
+    onChat: handleChat,
   };
 
   return (
@@ -107,7 +126,9 @@ const ContactInfo: React.FC<ContactInfoProps> = ({ userId, isOpen, onClose, sele
         ) : (
           <p className="ci-error">Utilisateur non trouvé</p>
         )}
-        <button className="ci-button" onClick={onClose}>Fermer</button>
+        <button className="ci-button" onClick={onClose}>
+          Fermer
+        </button>
       </div>
     </Modal>
   );

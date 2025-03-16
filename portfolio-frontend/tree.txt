@@ -77,6 +77,7 @@ portfolio-frontend/
 │   │   │   │   ├── BlockUser.tsx
 │   │   │   │   ├── ChatMessages.css
 │   │   │   │   ├── ChatMessages.tsx
+│   │   │   │   ├── ChatTheme.css
 │   │   │   │   ├── ChatTheme.tsx
 │   │   │   │   ├── ContactInfo.css
 │   │   │   │   ├── ContactInfo.tsx
@@ -84,6 +85,7 @@ portfolio-frontend/
 │   │   │   │   ├── EphemeralMessages.tsx
 │   │   │   │   ├── MessageInput.css
 │   │   │   │   ├── MessageInput.tsx
+│   │   │   │   ├── MessageMenu.css
 │   │   │   │   ├── MessageMenu.tsx
 │   │   │   │   ├── ReportUser.css
 │   │   │   │   ├── ReportUser.tsx

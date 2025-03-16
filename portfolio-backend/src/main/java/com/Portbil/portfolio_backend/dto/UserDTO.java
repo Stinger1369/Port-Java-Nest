@@ -58,6 +58,7 @@ public class UserDTO {
     private int verificationCodeRequestCount;
 
     private boolean isVerified;
+    private String chatTheme;
 
     public Double getLatitudeAsDouble() {
         if (latitude == null) return null;

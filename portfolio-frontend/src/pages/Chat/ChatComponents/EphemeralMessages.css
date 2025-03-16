@@ -1,16 +1,13 @@
 /* portfolio-frontend/src/pages/Chat/ChatComponents/EphemeralMessages.css */
+
 .ephemeral-messages-modal {
   position: relative;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 90%;
-  max-width: 400px;
-  background-color: #fff;
+  background: #fff;
   border-radius: 8px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
   padding: 20px;
-  outline: none;
+  max-width: 300px;
+  margin: 0 auto;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
 }
 
 .ephemeral-messages-overlay {
@@ -19,28 +16,28 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   z-index: 1000;
 }
 
 .ephemeral-messages-container {
   display: flex;
   flex-direction: column;
-  align-items: center;
+  gap: 15px;
 }
 
 .ephemeral-messages-title {
-  font-size: 18px;
-  font-weight: 500;
-  color: #111b21;
-  margin-bottom: 15px;
+  font-size: 1.2em;
+  font-weight: bold;
+  color: #333;
 }
 
 .ephemeral-messages-text {
-  font-size: 14px;
-  color: #111b21;
-  margin-bottom: 20px;
-  text-align: center;
+  font-size: 1em;
+  color: #666;
 }
 
 .ephemeral-messages-buttons {
@@ -49,28 +46,27 @@
 }
 
 .ephemeral-messages-button {
-  padding: 10px 20px;
+  padding: 8px 16px;
   border: none;
-  border-radius: 5px;
+  border-radius: 4px;
   cursor: pointer;
-  font-size: 14px;
-  transition: background-color 0.2s;
+  font-size: 1em;
 }
 
 .ephemeral-messages-button.activate {
-  background-color: #075e54;
+  background-color: #28a745;
   color: white;
 }
 
-.ephemeral-messages-button.activate:hover {
-  background-color: #064f45;
+.ephemeral-messages-button.cancel {
+  background-color: #ccc;
+  color: #333;
 }
 
-.ephemeral-messages-button.cancel {
-  background-color: #e0e0e0;
-  color: #111b21;
+.ephemeral-messages-button.activate:hover {
+  background-color: #218838;
 }
 
 .ephemeral-messages-button.cancel:hover {
-  background-color: #d0d0d0;
+  background-color: #999;
 }
